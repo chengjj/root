@@ -1,0 +1,7 @@
+INERT INTO {table} (fields) VALUES (VALUES)
+
+INSERT INTO {table} (VALUES)
+
+mysqldump -t -u root -p dbname adv_block_items > adv_block_items.sql
+
+INSERT INTO adv_block_items ((iid,bid, entity_id) VALUES (iid,bid, entity_id)
