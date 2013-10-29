@@ -1,0 +1,62 @@
+{#
+*
+* Variables:
+*  @catalog: 搜索区块
+*  @ad_foods: 餐饮美食(促销推荐)
+*  @ad_banner_1: banner(adv)
+*  @ad_banner_2: banner(adv) 
+*  @ad_banner_3: banner(adv) 
+*  @ad_live: 生活服务(促销推荐)
+*  @ad_coupon_remote_top:首页周边热点排行(促销推荐)
+*  @ad_shop: 品牌商家(adv)
+*  @ad_play: 休闲娱乐(促销推荐)
+*
+* see template_preprocess_coupon_front_page($variables).
+*/
+#}
+
+<div class="szbconbox">
+  <div class="con_left">
+    <div class="assort wrap_border space">
+      {{ catalog }}
+    </div> <!-- catalog -->
+    <div class="szbconlist wrap_border space">
+     <h2>餐饮美食</h2>
+     {{ ad_foods }}
+    </div> <!-- 餐饮美食 -->
+    <div class="ad_smallbanner space">
+     {{ ad_banner_1 }}
+    </div> <!-- banner1 -->
+    <div class="szbconlist wrap_border space">
+     <h2>生活服务</h2>
+     {{ ad_live }}
+    </div><!-- 生活服务 -->
+    <div class="ad_smallbanner space">
+     {{ ad_banner_2 }}
+    </div> <!-- banner2 -->
+    <div class="szbconlist wrap_border space">
+     <h2>休闲娱乐</h2>
+      {{ ad_play }}
+    </div> <!-- 休闲娱乐 -->
+  </div>
+  <div class="con_right">
+    <div class="hotlist wrap_border space">
+      <h3>周边热点排行</h3>
+       {{ ad_coupon_remote_top }}
+    </div> <!-- 周边热点排行 -->
+    <div class="shoplist wrap_border space">
+      <h3>品牌商家</h3>
+      <div class="shop_ad">
+        {{ ad_shop }}
+      </div>
+    </div> <!-- 品牌商家 -->
+    <div id="ad_rightbar">
+      {{ ad_banner_3 }}
+    </div> <!-- ad_banner_3 -->
+  </div>
+</div>
+  <div class="searchbox">
+    <div class="search_form">
+      {{ search }}
+    </div>
+  </div>

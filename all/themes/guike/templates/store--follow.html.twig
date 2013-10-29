@@ -1,0 +1,10 @@
+<article{{ attributes }}>
+  {% if picture %}
+  <div class="pic"><a target="_blank" href="{{ store_url }}" title=" picture.alt">{{ picture }}</a></div>
+  {% endif %}
+    <div class="text">
+     <p class="name"><a href="{{ store_url }}">{{ label }}</a></p>
+     <p>优惠信息：<em>{{ store.coupon_count.value }}</em> |  评价：<em>{{ store.comment_count.value }}</em></p>
+     <p><a title="" class="store_follow" href="" sid="{{ store.id }}">取消关注</a></p>
+    </div>
+</article>

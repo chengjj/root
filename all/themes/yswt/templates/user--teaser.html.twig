@@ -1,0 +1,44 @@
+{#
+/**
+ * @file
+ * Default theme implementation to present all user data.
+ *
+ * This template is used when viewing a registered user's page,
+ * e.g., example.com/user/123. 123 being the user's ID.
+ *
+ * Available variables:
+ * - content: A list of content items. Use 'content' to print all content, or
+ *   print a subset such as 'content.field_example'.
+ * - Field variables: For each field instance attached to the user a
+ *   corresponding variable is defined; e.g., account.field_example has a
+ *   variable 'field_example' defined. When needing to access a field's raw
+ *   values, developers/themers are strongly encouraged to use these
+ *   variables. Otherwise they will have to explicitly specify the desired
+ *   field language, e.g. account.field_example.en, thus overriding any
+ *   language negotiation rule that was previously applied.
+ * - attributes: HTML attributes for the container element.
+ *
+ * @see template_preprocess_user()
+ *
+ * @ingroup themeable
+ */
+#}
+<article{{ attributes }}>
+  <div class="pic"><a target="_blank" href="{{ user_url }}">{{ picture }}</a></div>
+  <div class="text">
+	<p class="name"><a href="{{ user_url }}">{{ account.nickname }}</a></p>
+		<p>
+		{% if account.sex==0 %}
+		<span class="male">男</span>
+		 {% else %} 
+		 <span class="female">女</span>
+		 {% endif %}
+    {% if city %}
+    < class="address">
+    {{ city.label }}
+    {% endif %}
+		</p>
+    <p>粉丝：<em>{{ account.fans_count }}</em> |  关注：<em>{{ account.follow_count }}</em></p>
+    <p><a title="点击后变成已关注" class="btn follow" href="{{ follow_url }}" uid="{{ account.id }}">+关注</a></p>
+  </div>
+</article>

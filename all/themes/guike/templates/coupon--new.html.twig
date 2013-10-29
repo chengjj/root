@@ -1,0 +1,9 @@
+<article{{ attributes }}>
+<div class="img"><a target="_blank" href="{{ coupon_url }}" title="{{ picture.alt }}">{{ picture }}</a></div>
+  <div class="txt">
+    <a target="_blank" href="{{ coupon_url }}" title="{{ picture.alt }}">{{ coupon.label }}</a>
+    <p>{{ coupon.body.value|truncate(70) }}</p>
+    <p class="name">{{ store.label }}</p>
+    <p><span class="first"><strong>{{ store.deal_count.value }}</strong>人已享受优惠</span><span><strong>{{ store.follow_count.value }}</strong>人已关注</span><span>基础折扣率：<strong>{{ store.discount.value }}</strong>折</span><a class="collect coupon_bookmark" cid="{{ coupon.id }}" href="{{ bookmark_url }}" >收藏</a></p>
+  </div>
+</article>

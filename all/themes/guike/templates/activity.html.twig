@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * Default theme implementation for activities.
+ *
+ * Available variables:
+ * - activity: activity对象.
+ *
+ * @see template_preprocess_activity()
+ *
+ * @ingroup themeable
+ */
+#}
+<article{{ attributes }}>
+  <div class="follow_left" title="{{ user_picture.title }}">
+    {{ user_picture }}
+  </div>
+  <div class="follow_right">
+    <div class="follow_name">
+      <p>{{ author }}{{ action }}</p><span class="time">{{ created }}</span>
+    </div>
+    <div class="follow_con">
+      {{ content }}
+    </div>
+</article>

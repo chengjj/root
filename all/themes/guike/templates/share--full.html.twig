@@ -1,0 +1,79 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a share.
+ *
+ * Available variable:
+ * - share: Full share entity.
+ */
+#}
+<article class="{{ attributes.class }}"{{ attributes }}>
+  <div class="left-side">
+    <div class="picture" title = "{{picture.title}}">
+      {{ picture }}
+    </div>
+    {% if guess_like %}
+    <div class="guess_like">
+      <h2>猜您喜欢</h2>
+    <ul>
+      {{ guess_like }}
+    </ul>
+    </div>
+    {% endif %}
+  </div>
+  <div class="right-side">
+    <section class="details_txt">
+      <h1><a target="_blank" href="{{ product_url }}">{{ label }}</a></h1>
+      <p>{{ description }}</p>
+      <p class="buy"><a class="price" href="{{ product_url }}">￥ {{ price }} 去购买</a></p>
+    </section>
+    <div class="details_share">
+      <span>由{{ author }}分享</span>
+      <span class="like" id="share-like-bookmark"><a target="_blank" href="{{ bookmark_url }}" class="bookmark" sid="{{ share.sid.value }}">喜欢</a><span> {{ share_bookmarks }} </span></span>
+      <!-- JiaThis Button BEGIN -->
+        <div class="jiathis_style share"><span class="jiathis_txt">分享到：</span>
+        <a class="jiathis_button_tsina"></a>
+        </div>
+        <script type="text/javascript" >
+        var jiathis_config={
+                summary:"",
+                title:"我在贵商网淘到了宝贝，快来围观吧。",
+                shortUrl:true,
+                hideMore:false
+        }
+        </script>
+        <script type="text/javascript" src="http://v3.jiathis.com/code_mini/jia.js" charset="utf-8"></script>
+        <!-- JiaThis Button END -->
+
+    </div>
+    <div class="pub_area">
+      {{ comment_form }}
+    </div>
+    {% if comments %}
+    <div class="note_comment">
+      {{ comments }}
+      {{ pager }}
+    </div>
+    {% endif %}
+  </div>
+</article>
+
+<script type="text/javascript">
+    (function(win,doc){
+        var s = doc.createElement("script"), h =
+doc.getElementsByTagName("head")[0];
+        if (!win.alimamatk_show) {
+            s.charset = "utf-8";
+            s.async = true;
+            s.src = "http://a.alimama.cn/tkapi.js";
+            h.insertBefore(s, h.firstChild);
+        };
+        var o = {
+pid: "mm_45311238_4186065_13696720",
+appkey: "",
+unid: ""
+        };
+        win.alimamatk_onload = win.alimamatk_onload || [];
+        win.alimamatk_onload.push(o);
+    })(window,document);
+</script>

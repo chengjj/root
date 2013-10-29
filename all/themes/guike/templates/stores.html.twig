@@ -1,0 +1,63 @@
+<div class="search_assort wrap_border">
+  <div class="assortlist">
+    <label>分类</label>
+    <a class="all" href="{{ all_catalog_url }}">全部</a>
+    {{ catalogs }}
+  </div>
+  {% if sub_catalogs %}
+  <div class="open">
+    {{ sub_catalogs }}
+  </div>
+  {% endif %}
+  <div class="assortlist">
+    <label>区域</label>
+    <a class="all" href="{{ all_district_url }}">全部</a>
+    {{ districts }}
+  </div>
+</div>
+
+{% if keywords %}
+<div class="szbsstext">与“{{ keywords }}”相关的信息</div>
+{% endif %}
+
+<div class="szbconbox space">
+  <div class="con_left">
+    <div class="szbconlist wrap_border space">
+      {% if stores %}
+      {{ stores }}
+      {% else %}
+      <div class="no_info">没有找到符合您要求的信息，请换个关键词试试。</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="con_right">
+    <div class="hotlist wrap_border space">
+      <h3>周边热点排行</h3>
+      {{ hot_stores }}
+    </div>
+  </div>
+  <div class="shoplist wrap_border space">
+    <h3>品牌商家</h3>
+    <div class="shop_ad">
+      {{ brands }}
+    </div>
+  </div>
+  <div id="ad_rightbar">
+    {{ right_advs }}
+  </div>
+</div>
+
+{% if pager %}
+<div class="page_number">
+  <div class="pageNav">
+    {{ pager }}
+  </div>
+</div>
+{% endif %}
+
+<div class="searchbox">
+  <div class="search_form">
+    {{ search }}
+  </div>
+</div>

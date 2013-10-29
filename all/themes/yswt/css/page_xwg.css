@@ -1,0 +1,292 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+
+
+
+
+#content{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+
+}
+
+.wrap_border{
+	border:1px solid #e2e2e2;
+	background:#ffffff;
+}
+.col{
+	width:978px;
+	height:auto;
+	overflow:hidden;
+}
+.space{
+	margin-bottom:20px;
+}
+.recommend{
+	margin-top:40px;
+}
+ 
+.assort{
+	margin-top:20px;
+}
+.assortlist{
+	padding:15px 10px;
+	width:958px;
+	height:auto;
+	overflow:hidden;
+}
+.assortlist label{
+	width:72px;
+	height:30px;
+	line-height:30px;
+	text-align:center;
+	font-weight:bold;
+	font-size:18px;
+	color:#ffffff;
+	background:#ff6666;
+	border-radius:3px;
+	display:inline-block;
+	float:left;
+	margin:0 10px 0 5px;
+}
+.assortlist a.all{	
+	display:inline-block;
+	float:left;
+	line-height:30px;
+	font-size:14px;
+	padding:0 5px;
+	color:#ff6666;
+	font-weight:bold;
+}
+.assortlist a.all:hover{
+	color:#ff6666;
+}
+.assortlist ul{
+	float:left;
+}
+.assortlist ul li{
+	float:left;
+	padding:0 10px;
+	height:30px;
+	line-height:30px;
+}
+.assortlist ul li a{
+	cursor: pointer;
+    padding: 0 2px;
+}
+.assortlist ul li a:hover{
+	background: none repeat scroll 0 0 #ff6666;
+    border-radius: 2px 2px 2px 2px;
+    color: #FFFFFF;	
+}
+.assortlist ul li a.seclect{
+	background: none repeat scroll 0 0 #ff6666;
+    border-radius: 2px 2px 2px 2px;
+    color: #FFFFFF;
+}
+.assort .open{
+	margin-left:90px;
+	background:#f5f5f5;
+	padding:10px;
+	border-radius:3px;
+	height:auto;
+	margin-bottom:15px;
+	margin-right:10px;
+	overflow:hidden;
+	width:858px;
+}
+.assort .open a{
+	padding:0 10px;
+	white-space:nowrap;
+	line-height:24px;
+	float:left;
+}
+.assort .open a.c{
+	color:#ff6666;
+	font-weight:bold;
+}
+.wgpic{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+}
+.wgpic .piclist{
+	width:236px;
+	height:auto;
+	overflow:hidden;
+	margin-right:12px;
+	float:left;
+}
+.wgpic .mr0{
+	margin-right:0;
+}
+.wgpic .piclist ul li{
+	width:213px;
+	height:auto;
+	overflow:hidden;
+	border:1px solid #e2e2e2;
+	margin-bottom:15px;
+	background:#ffffff;
+	padding:10px 10px 5px;
+	box-shadow: 1px 1px #eeeeee;
+}
+.wgpic .piclist .img_box{
+	width:213px;
+	height:auto;
+	overflow:hidden;
+	position:relative;
+}
+.wgpic .piclist .img_box .price{
+	bottom: 4px;
+    height: 18px;
+    line-height: 18px;
+    opacity: 0.8;
+    padding: 0 5px;
+    position: absolute;
+    right: 2px;
+	background:#ffffff;
+	text-align:center;
+}
+.wgpic .piclist .img_box a.img{
+	display:block;
+	width:100%;
+	text-align:center;
+}
+.wgpic .piclist .img_box a.img img{
+	width:213px;
+	height:auto;
+	overflow:hidden;
+}
+.wgpic .piclist .comm_box{
+	width:100%;
+	height:auto;
+	position:relative;
+}
+.wgpic .piclist .comm_box p{
+	padding:5px 0;
+
+}
+.wgpic .piclist .comm_box .imgtxt{
+	line-height:22px;
+}
+/*.wgpic .piclist .comm_box span{
+	display:inline-block;
+}*/
+.wgpic .piclist .comm_box span.share{
+	color:#99cc66;
+	float:left;
+	line-height:22px;
+}
+.wgpic .piclist .comm_box span.share a{
+	color:#999999;
+	padding-right:6px;
+	line-height:22px;
+}
+.wgpic .piclist .comm_box span.share a:hover{
+	color:#ff6666;
+}
+.wgpic .piclist .comm_box span.collect{
+	float:right;
+	color:#ff6666;
+	line-height:22px;
+
+}
+.wgpic .piclist .comm_box span.collect a{
+	display:inline-block;
+	width:30px;
+	height:22px;
+	color:#ffffff;
+	padding-left:22px;
+	line-height:22px;
+	background:url(../images/base_bg.png) no-repeat -245px -135px transparent;
+	margin-right:5px;
+}
+.wgpic .piclist .comm_box span.collect a.like{
+	display:inline-block;
+	width:30px;
+	height:22px;
+	color:#ffffff;
+	padding-left:22px;
+	line-height:22px;
+	background:url(../images/base_bg.png) no-repeat -180px -135px transparent;
+	margin-right:5px;
+}
+	
+.page_number{
+	width:980px;
+	height:auto;
+	padding:30px 0;
+	
+}
+.page_number .pageNav{
+	text-align:center;
+	padding:30px 0 20px 0;
+	border-top:1px dotted #FF6600;
+}
+.pageNav a{
+	background:#ffcc00;
+	border:1px solid #ff6600;
+	color:#ffffff;
+	display:inline-block;
+	font-size:14px;
+	font-weight:bold;
+	min-width:12px;
+	height:22px;
+	line-height:22px;
+	padding:0 4px;
+	margin:0 1px;
+	text-align:center;
+	white-space:nowrap;
+}
+.pageNav .pagePrev, .pageNav .pageNext{
+	width:50px;
+	height:22px;
+	font-size:14px;
+	font-weight:normal;
+}
+.pageNav .currentpage{
+	background:#ffffff;
+	border-color:#dddddd;
+	color:#000000;
+}
+
+
+.collect_ok,.collect_del{
+	width:75px;
+	height:30px;
+	text-align:center;
+	padding:0 10px;
+	font-size:12px;
+	color:#ff6666;
+	background:#fdebef;
+	border:1px solid #ff9cbf;
+	line-height:30px;
+	position:absolute;
+	left:0;
+	top:-35px;
+	z-index:9999;
+
+}
+
+.collect_ok span{
+	width:75px;
+	height:30px;
+	padding-left:25px;
+	background:url(../images/tick.png) no-repeat 0 0;
+}
+.collect_del span{
+	width:75px;
+	height:30px;
+	padding-left:25px;
+	background:url(../images/base_bg.png) no-repeat -245px -850px;
+}

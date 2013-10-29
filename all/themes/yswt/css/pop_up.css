@@ -1,0 +1,217 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/ 
+.ui-dialog-titlebar {
+  width:auto;
+	height:44px;
+  border-radius: 5px 5px 0 0;
+	background:url(../images/popw_bg.png) repeat-x;
+}
+.ui-dialog-title {
+	color:#ff6666;
+	font-size:15px;
+	line-height:44px;
+	padding-left:20px;
+	display:inline-block;
+	float:left;
+  font-weight: normal;
+}
+.ui-dialog button.ui-button {
+  cursor: pointer;
+  top: 12px;
+}
+#pop_up{
+	width:785px;
+	height:auto;
+	overflow:hidden;
+	background:#c7c7c7;
+}
+.pw_box{	
+	width:785px;
+	height:auto;
+	overflow:hidden;
+	background:#fff;
+}
+.pw_con{
+	padding:35px;
+	width:715px;
+	height:auto;
+	overflow:hidden;
+}
+.show_pd{
+	padding-bottom:20px;
+	border-bottom:1px dashed #cccccc;
+	width:715px;
+	height:auto;
+	overflow:hidden;
+}
+.show_pd .web{
+	border: 1px solid #CFCFCF;
+    float: left;
+    height: 30px;
+    line-height: 30px;
+    margin-right:25px;
+    padding: 0 8px;
+    width: 460px;
+	color:#999999;
+	box-shadow:2px 2px 2px #ebebeb inset;
+}
+.show_pd .botton{
+	font-weight:bold;
+	cursor:pointer;
+	width:73px;
+	height:28px;
+	text-align:center;
+	color:#ffffff;
+	border:none;
+	background:url(../images/base_bg.png) no-repeat -350px -180px;
+	font-family: Microsoft Yahei;
+	float:left;
+}
+.show_pd p{
+	width:710px;
+	padding-top:20px;
+	float:left;
+	color:#666666;
+	font-size:12px;
+}
+.show_pd .pic{
+	float:left;
+	margin-right:20px;
+	width:170px;
+	height:auto;
+	overflow:hidden;
+}
+.show_pd .pic img{
+	width:170px;
+}
+.show_pd .pic_txt{
+	float:left;
+	width:520px;
+	height:auto;
+	overflow:hidden;
+}
+.show_pd .pic_txt h2{
+	font-size:18px;
+	color:#333333;
+	line-height:40px;
+}
+.show_pd .pic_txt p.price{
+	color:#ff0066;
+	font-size:30px;
+	width:520px;
+}
+
+.show_form{
+	padding:20px 0 0;
+	width:715px;
+	height:auto;
+	overflow:hidden;
+}
+
+.show_form .field{
+	margin-bottom:25px;
+	width:710px;
+	height:auto;
+	overflow:hidden;
+}
+.show_form .field label{
+	width:70px;
+	text-align:right;
+	font-size:12px;
+	color:#333333;
+	vertical-align:middle;
+	float:left;
+	line-height:36px;
+}
+.show_form .field select{
+	width:180px;
+	height:25px;
+	font-size:12px;
+	color:#333333;
+	vertical-align:middle;
+	float:left;
+	line-height:25px;
+	margin:7px 10px 0 5px;
+}
+.show_form .field .text{
+    border: 1px solid #CFCFCF;
+    float: left;
+    height: 30px;
+    line-height: 30px;
+    margin-left: 5px;
+    padding: 0 8px;
+    width: 460px;
+	color:#999999;
+	box-shadow:2px 2px 2px #ebebeb inset;
+}
+
+.show_form .field .pub_txt{
+	width:460px;
+	height:180px;
+	color:#999999;
+    border: 1px solid #CFCFCF;
+	border-radius:3px;
+	font-size:12px;
+	line-height:24px;
+	padding:8px;
+	margin-left:5px;
+	box-shadow:2px 2px 2px #ebebeb inset;
+}
+.show_form .field .sub{
+	margin-left:75px;
+	font-weight:bold;
+	cursor:pointer;
+	width:107px;
+	height:37px;
+	text-align:center;
+	color:#ffffff;
+	font-size:14px;
+	border:none;
+	background:url(../images/base_bg.png) no-repeat -350px -135px;
+	font-family: Microsoft Yahei;
+}
+.show_form .field span{
+	display:inline-block;
+	vertical-align:top;
+	color:#999999;
+	padding-left:5px;
+}
+
+
+/*.share{
+	width:300px;
+	height:90px;
+	margin:70px auto 140px;
+	background:url(../images/base_bg.png) no-repeat -400px -720px;
+}*/
+/*.share p{
+	font-size:12px;
+	color:#3333ff;
+	line-height:50px;
+	padding-left:100px;
+}*/
+.share p.note{
+	font-size:36px;
+	color:#ff6666;
+	line-height:30px;
+}
+/*.share p a{
+	font-size:12px;
+	color:#3333ff;
+	padding-left:5px;
+}*/
+.share p a:hover{
+	color:#ff6666;
+	text-decoration:underline;
+}
+
+.r3 {
+    border-radius: 3px 3px 3px 3px;
+}

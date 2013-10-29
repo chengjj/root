@@ -1,0 +1,88 @@
+ html,body,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,code,del,dfn,em,img,q,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,u{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: none;
+	font: 12px/1.125 Arial,Helvetica,sans-serif;
+	font-weight:normal;
+	text-decoration:none;
+}
+img { max-width: 100%;}
+a{
+	color:#666;
+	font-size: 12px;
+   font-family: Tahoma;
+	text-decoration:none;
+}
+a:hover{
+	text-decoration: underline;
+}
+.outer{
+  width:auto;
+}
+.warpper{
+   background: url("../images/bg-store.png") no-repeat;
+}
+.content{
+	width:90%;
+   height: 100%;
+	margin: 0 auto;
+   padding: 30px 0 0 0;
+}
+.content .gk_icon{
+   width:173px;
+   height: 172px;
+	background: url("../images/guike1.png") no-repeat;
+	margin: 0 auto;
+}
+.mark_title{
+  margin: 0 auto;
+  	text-align:center;
+	padding: 20px 0;
+}
+.content p{
+    line-height: 36px;
+	 font-size: 1.7em;
+	 font-family: Tahoma;
+	 text-align: center;
+	 color: #666;
+	 margin: 0 auto;
+	 font-weight: bold;
+}
+.btn{
+	  	 text-align: center;
+	  margin: 0 auto;
+}
+.btn a{
+	  width: 214px;
+	  height: 84px;
+	  overflow: hidden;
+	  text-indent: -9999px;
+	  margin:10px ;
+     display: inline-block;
+}
+.btn a.gk_andorid{
+		background: url("../images/andorid.png") no-repeat;
+		margin-right: 20px;
+}
+.btn a.gk_andorid:hover{
+		background: url("../images/andorid_active.png") no-repeat;
+		margin-right: 20px;
+}
+.btn a.gk_iphone{
+		background: url("../images/iphone.png") no-repeat;
+}
+.btn a.gk_iphone:hover{
+		background: url("../images/iphone_active.png") no-repeat;
+}
+.phone_img{
+	text-align:center;
+	margin: 0 auto;
+
+}
+
+#block-content .content {
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+}

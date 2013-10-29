@@ -1,0 +1,50 @@
+<div class="assort wrap_border space">
+  <div class="assortlist">
+    <label>分类</label>
+    <a class="all" href="{{ all_catalog_url }}">全部</a>
+    {{ catalogs }}
+  </div>
+  {% if sub_catalogs %}
+  <div class="open">
+    {{ sub_catalogs }}
+  </div>
+  {% endif %}
+</div>
+
+{% if keywords %}
+<div class="xwgsstext">与“{{ keywords }}”相关的信息</div>
+{% endif %}
+
+<div class="xwgconbox">
+  <div class="con_left">
+    {% if shares %}
+    {{ shares }}
+    {% else %}
+    <div class="no_info wrap_border">没有找到符合您要求的信息，请换个关键词试试。</div>
+    {% endif %}
+  </div>
+
+  <div class="con_right">
+    {% if shares %}
+    <div class="zxfb wrap_border space">
+      <h3>最新发布</h3>
+      {{ new_shares }}
+    </div>
+    <div class="buylist wrap_border space">
+      <h3>网购流行榜</h3>
+      {{ popular_shares }}
+    </div>
+    {% endif %}
+    <div id="ad_rightbar">
+      {{ right_advs }}
+    </div>
+  </div>
+</div>
+
+{% if pager %}
+<div class="page_number">
+  <div class="pageNav">
+    {{ pager }}
+  </div>
+</div>
+{% endif %}

@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implemention of comments.
+ *
+ * 可用的变量:
+ * - author: 作者
+ * - created: 评论时间
+ * - user_picture: 用户头像
+ * - title: 评论内容
+ */
+#}
+<article{{ attributes }}>
+  <div class="pj_con">
+    <p>{{ title }}</p><span class="time">{{ created }}</span>
+  </div>
+  <div class="spbox">
+    {{ share }}
+  </div>
+</article>

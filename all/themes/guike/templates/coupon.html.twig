@@ -1,0 +1,17 @@
+<article{{ attributes }}>
+  <div class="sale_title">{{ label }}</div>
+  <div class="sale_con">
+    <div class="sale_info">
+      <p>{{ coupon.body.value }}</p>
+      <p class="sale_tips"><em>促销有效期</em>{{ expire }}</p>
+      <p class="sale_tips"><em>使用限制</em>{{ coupon.note.value }}</p>
+      {% if picture %}
+      <p class="pic" title="{{ picture.alt }}">{{ picture }}</p>
+      {% endif %}
+    </div>
+    <div class="sale_hz">
+      <p class="code">凭手机贵客身份二维码,到店享优惠</p>
+      <p><a href="{{ bookmark_url }}" class="coupon_bookmark" cid="{{ coupon.id }}">还不错，先收藏</a></p>
+    </div>
+  </div>
+</article>

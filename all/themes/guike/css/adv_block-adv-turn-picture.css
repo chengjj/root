@@ -1,0 +1,42 @@
+#rc-list {
+  height: 290px;
+  overflow: hidden;
+}
+.rc-title {
+  float: left;
+  width: 182px;
+  height: 290px;
+}
+#slider li {
+  cursor: pointer;
+  background: url('../images/focus_left_01.png');
+  color:#333;
+}
+#slider li.active {
+  background: url('../images/focus_left_02.png');
+  color:#ff6699;
+  font-weight: bold;
+}
+#rc-list .show {
+  color: #FF0000;
+  float: left;
+  height: 290px;
+  overflow: hidden;
+  width: 473px;
+}
+.turn-title {
+  width: 110px;
+  float: right;
+  height: 72px;
+  line-height: 72px;
+}
+/*For Firefox Chrome*/
+.turn-pic{width:72px;height:70px;overflow:hidden;text-align:center;display:table;float:left;;position:relative;}
+.turn-pic a{display:table-cell;vertical-align:middle;width:72px;height:70px;}
+.turn-pic a img{border:1px #ddd solid;margin-top:10px;max-width:72px;max-height:70px;}
+/*For IE7*/
+*+html .turn-pic a{position:absolute;top:50%;width:100%;text-align:center;height:auto;}
+*+html .turn-pic a img{position:relative;top:-50%;left:-50%;}
+/*For IE6*/
+*html .turn-pic a{position:absolute;top:51%;width:100%;text-align:center;height:auto;display:block;}
+*html .turn-pic a img{position:relative;top:-50%;left:-50%;width:expression(this.width>72?“72px”:“auto”);height:expression(this.height>70?“70px”:“auto”);}

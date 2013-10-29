@@ -1,0 +1,22 @@
+<div class="assort wrap_border space" exit-target=".open">
+  <div class="assortlist">
+    <label>分类</label>
+    <a class="all" href="{{ shares_url }}">全部</a>
+    {{ catalogs }}
+  </div>
+  {% if sub_catalogs %}
+  <div class="open">
+    {{ sub_catalogs }}
+  </div>
+  {% endif %}
+</div>
+
+{{ shares }}
+
+{% if pager %}
+<div class="page_number">
+  <div class="pageNav">
+    {{ pager }}
+  </div>
+</div>
+{% endif %}

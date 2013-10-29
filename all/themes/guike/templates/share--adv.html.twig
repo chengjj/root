@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a share.
+ *
+ * Available variable:
+ * - share: Full share entity.
+ * - author: 作者
+ * - picture: 图片
+ * - price: 价格
+ * - share_url: 详情页网址
+ */
+#}
+<article{{ attributes }} hover-class="open">
+  {% if number > 3 %}
+  <p class="teaser"><span>{{ number }}</span>{{ label_short }}</p>
+  {% else %}
+  <p class="teaser highlight"><span>{{ number }}</span>{{ label_short }}</p>
+  {% endif %}
+  <div class="openbox">
+    <div class="img"><a target="_blank" href="{{ share_url }}" title = "{{picture.title}}">{{ picture }}</a></div>
+    <div class="txt"><a target="_blank" href="{{ share_url }}">{{ label }}</a><p>￥{{ price }}</p></div>
+  </div>
+</article>

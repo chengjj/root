@@ -1,0 +1,17 @@
+<article{{ attributes }}>
+  {{ header }}
+
+  <div class="home_body_box">
+    {{ links }}
+    <div class="body_con">
+      {{ contents }}
+    </div>
+  </div>
+  {% if pager %}
+  <div class="page_number">
+    <div class="pageNav">
+      {{ pager }}
+    </div>
+  </div>
+  {% endif %}
+</article>

@@ -1,0 +1,36 @@
+<div class="center_box space_top space">
+  <div class="center_name">
+    <div class="pic"><a target="_blank" href="{{ user_url }}">{{ picture }}</a></div>
+    <div class="text">
+      <p class="name"><a target="_blank" href="{{ user_url }}">{{ user.nickname }}</a></p>
+    </div>
+  </div>
+
+  <div class="center_con">
+    <div class="center_left">
+      <h2>个人中心</h2>
+      <div class="center_nav">
+        <h3 class="grzl">个人资料</h3>
+        {{ info_links }}
+        <h3 class="grzl">绑定与同步</h3>
+        {{ sync_links }}
+      </div>
+      <h2>商家中心</h2>
+      <div class="center_nav">
+        <h3 class="grzl">商家资料</h3>
+        {{ store_links }}
+        <h3 class="grzl">促销管理</h3>
+        {{ conpou_links }}
+        <h3 class="grzl">运营数据</h3>
+        {{ run_links }}
+      </div>
+    </div>
+
+    <div class="center_right">
+      <h1>{{ title }}</h1>
+      {% if form %}
+      {{ form }}
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,327 @@
+<?php
+
+/**
+ * @file
+ * Functions to support theming in the Bartik theme.
+ */
+
+/**
+ * Implements hook_preprocess_HOOK() for html.tpl.php.
+ *
+ * Adds body classes if certain regions have content.
+ */
+function yswt_preprocess_html(&$variables) {
+  if (!empty($variables['page']['featured'])) {
+    $variables['attributes']['class'][] = 'featured';
+  }
+
+  if (!empty($variables['page']['triptych_first'])
+    || !empty($variables['page']['triptych_middle'])
+    || !empty($variables['page']['triptych_last'])) {
+    $variables['attributes']['class'][] = 'triptych';
+  }
+
+  if (!empty($variables['page']['footer_firstcolumn'])
+    || !empty($variables['page']['footer_secondcolumn'])
+    || !empty($variables['page']['footer_thirdcolumn'])
+    || !empty($variables['page']['footer_fourthcolumn'])) {
+    $variables['attributes']['class'][] = 'footer-columns';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for page.html.twig.
+ */
+function yswt_preprocess_page(&$variables) {
+  // Pass the main menu and secondary menu to the template as render arrays.
+  if (!empty($variables['main_menu'])) {
+    $variables['main_menu']['#attributes']['id'] = 'main-menu-links';
+    $variables['main_menu']['#attributes']['class'] = array('links', 'clearfix');
+  }
+  if (!empty($variables['secondary_menu'])) {
+    $variables['secondary_menu']['#attributes']['id'] = 'secondary-menu-links';
+    $variables['secondary_menu']['#attributes']['class'] = array('links', 'inline', 'clearfix');
+  }
+
+  $site_config = Drupal::config('system.site');
+  // Always print the site name and slogan, but if they are toggled off, we'll
+  // just hide them visually.
+  $variables['hide_site_name']   = theme_get_setting('features.name') ? FALSE : TRUE;
+  $variables['hide_site_slogan'] = theme_get_setting('features.slogan') ? FALSE : TRUE;
+  if ($variables['hide_site_name']) {
+    // If toggle_name is FALSE, the site_name will be empty, so we rebuild it.
+    $variables['site_name'] = check_plain($site_config->get('name'));
+  }
+  if ($variables['hide_site_slogan']) {
+    // If toggle_site_slogan is FALSE, the site_slogan will be empty, so we rebuild it.
+    $variables['site_slogan'] = filter_xss_admin($site_config->get('slogan'));
+  }
+  // Since the title and the shortcut link are both block level elements,
+  // positioning them next to each other is much simpler with a wrapper div.
+  if (!empty($variables['title_suffix']['add_or_remove_shortcut']) && $variables['title']) {
+    // Add a wrapper div using the title_prefix and title_suffix render elements.
+    $variables['title_prefix']['shortcut_wrapper'] = array(
+      '#markup' => '<div class="shortcut-wrapper clearfix">',
+      '#weight' => 100,
+    );
+    $variables['title_suffix']['shortcut_wrapper'] = array(
+      '#markup' => '</div>',
+      '#weight' => -99,
+    );
+    // Make sure the shortcut link is the first item in title_suffix.
+    $variables['title_suffix']['add_or_remove_shortcut']['#weight'] = -100;
+  }
+
+  //TODO add css
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/base_header.css');
+  $variables['styles'] = drupal_get_css();
+
+  $variables['guike_header'] = theme('guike_header');
+  $variables['guike_footer'] = theme('guike_footer');
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for maintenance-page.html.twig.
+ */
+function yswt_preprocess_maintenance_page(&$variables) {
+  // By default, site_name is set to Drupal if no db connection is available
+  // or during site installation. Setting site_name to an empty string makes
+  // the site and update pages look cleaner.
+  // @see template_preprocess_maintenance_page
+  if (!$variables['db_is_active']) {
+    $variables['site_name'] = '';
+  }
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/maintenance-page.css');
+  $variables['styles'] = drupal_get_css();
+
+  $site_config = Drupal::config('system.site');
+  // Always print the site name and slogan, but if they are toggled off, we'll
+  // just hide them visually.
+  $variables['hide_site_name']   = theme_get_setting('features.name') ? FALSE : TRUE;
+  $variables['hide_site_slogan'] = theme_get_setting('features.slogan') ? FALSE : TRUE;
+  if ($variables['hide_site_name']) {
+    // If toggle_name is FALSE, the site_name will be empty, so we rebuild it.
+    $variables['site_name'] = check_plain($site_config->get('name'));
+  }
+  if ($variables['hide_site_slogan']) {
+    // If toggle_site_slogan is FALSE, the site_slogan will be empty, so we rebuild it.
+    $variables['site_slogan'] = filter_xss_admin($site_config->get('slogan'));
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for node.html.twig.
+ */
+function yswt_preprocess_node(&$variables) {
+  // Remove the "Add new comment" link on teasers or when the comment form is
+  // displayed on the page.
+  if ($variables['teaser'] || !empty($variables['content']['comments']['comment_form'])) {
+    unset($variables['content']['links']['comment']['#links']['comment-add']);
+  }
+}
+
+/**
+ * Implements theme_menu_tree().
+ */
+function yswt_menu_tree($variables) {
+  return '<ul class="menu clearfix">' . $variables['tree'] . '</ul>';
+}
+
+/**
+ * Implements theme_menu_tree__shortcut_default() {
+ */
+function yswt_menu_tree__shortcut_default($variables) {
+  return '<ul class="menu">' . $variables['tree'] . '</ul>';
+}
+
+/**
+ * Implements theme_field__field_type().
+ */
+function yswt_field__taxonomy_term_reference($variables) {
+  $output = '';
+
+  // Render the label, if it's not hidden.
+  if (!$variables['label_hidden']) {
+    $output .= '<h3 class="field-label">' . $variables['label'] . ': </h3>';
+  }
+
+  // Render the items.
+  $output .= ($variables['element']['#label_display'] == 'inline') ? '<ul class="links inline">' : '<ul class="links">';
+  foreach ($variables['items'] as $delta => $item) {
+    $output .= '<li class="taxonomy-term-reference-' . $delta . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</li>';
+  }
+  $output .= '</ul>';
+
+  // Render the top-level DIV.
+  $variables['attributes']['class'][] = 'clearfix';
+  $output = '<div ' . $variables['attributes'] . '>' . $output . '</div>';
+
+  return $output;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_download_page(&$variables) {
+  //TODO move to guike.theme
+  global $base_url;
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/download.css');
+  $variables['styles'] = drupal_get_css();
+  $variables['guike_font_src'] = $base_url . '/' .drupal_get_path('theme', 'yswt') . '/images/font1.png';
+  $variables['guike_phone_img_src'] = $base_url . '/' . drupal_get_path('theme', 'yswte') . '/images/phone.png';
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_download_store_android_page(&$variables) {
+  global $base_url;
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/download.css');
+  $variables['styles'] = drupal_get_css();
+  $variables['guike_font_src'] = $base_url . '/' . drupal_get_path('theme', 'yswt') . '/images/font1.png';
+  $variables['guike_phone_img_src'] = $base_url . '/' . drupal_get_path('theme', 'yswt') . '/images/phone-store.png';
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_share_add_link(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/pop_up.css');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_share_editor(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/pop_up.css');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_front_page(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_index.css');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_coupon_front_page(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_szb.css');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_guike_header(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'jsp') . '/js/select.js');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function yswt_preprocess_adv_block_adv_turn_picture(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/adv_block-adv-turn-picture.css');
+}
+
+function yswt_preprocess_user(&$variables) {
+  if ($variables['view_mode'] == 'full') {
+    drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_homepage.css');
+    drupal_add_js(drupal_get_path('theme', 'yswt') . '/js/user.js');
+  }
+}
+
+function yswt_preprocess_shares(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_xwg.css');
+}
+
+function yswt_preprocess_store(&$variables) {
+  if ($variables['view_mode'] == 'full') {
+    drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_szb_list.css');
+    drupal_add_js(drupal_get_path('theme', 'yswt') . '/js/store.js');
+
+    // 对促销列表特殊展示
+    if ($elements = $variables['coupons']) {
+      $i = 0;
+      $children = element_children($elements);
+      foreach ($children as $key) {
+        $i ++;
+        if ($i == 1) {
+          $build['recent'] = $elements[$key];
+        }
+        else {
+          $build['more'][$key] = $elements[$key];
+          $build['more'][$key]['#view_mode'] = 'more';
+        }
+      }
+      $build['recent']['#prefix'] = '<div class="newsale wrap_border space"><h2>最新促销</h2>';
+      $build['recent']['#suffix'] = '</div>';
+      if ($i > 1) {
+        $build['more']['#weight'] = 10;
+        $build['more']['#prefix'] = '<div class="newsale wrap_border space"><h2>更多促销</h2>';
+        $build['more']['#suffix'] = '</div>';
+      }
+      $variables['coupons'] = $build;
+    }
+  }
+}
+
+function yswt_preprocess_account(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_homepage.css');
+}
+
+function yswt_preprocess_share(&$variables) {
+  if ($variables['view_mode'] == 'full') {
+    drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_xwg_details.css');
+  }
+   drupal_add_js(drupal_get_path('module', 'share') . '/js/share-comment.js');
+}
+
+function yswt_preprocess_account_admin(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_center.css');
+}
+
+function yswt_preprocess_account_login(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_stores(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_szb_search.css');
+}
+
+function yswt_preprocess_share_search(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_xwg_search.css');
+}
+
+function yswt_preprocess_account_register(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_account_reset_passwd(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_account_reset_passwd_msg(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_account_reset_passwd_login(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_feedback_form(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_feedback.css');
+}
+
+function yswt_preprocess_user_agreement(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/about_us.css');
+}
+
+function yswt_preprocess_account_reset_passwd_login_for_email(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_register.css');
+}
+
+function yswt_preprocess_share_editor_list(&$variables) {
+  drupal_add_css(drupal_get_path('theme', 'yswt') . '/css/page_recommend.css');
+}
+

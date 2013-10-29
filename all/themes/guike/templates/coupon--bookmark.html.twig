@@ -1,0 +1,10 @@
+<article{{ attributes }}>
+  {% if picture %}
+  <div class="pic"><a target="_blank" href="{{ coupon_url }}" title="{{ picture.alt }}">{{ picture }}</a></div>
+  {% endif %}
+  <div class="txt">
+    <a target="_blank" href="{{ coupon_url }}" class="title" >{{ label }}</a>
+    <p>{{ store.label }}</p>
+    <p class="address"><span class="icon"></span>{{ store.address.value }}</p>
+  </div>
+</article>

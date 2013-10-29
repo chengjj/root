@@ -1,0 +1,82 @@
+{{ store_breadcrumb }}
+
+<article{{ attributes }}>
+  <div class="szbconbox space">
+    <div class="con_left">
+      <div class="assort wrap_border space">
+        <div class="assortlist">
+          <label>分类</label>
+          <a class="all" href="{{ links.catalog_all }}" data-cid="0">全部</a>
+          {{ catalogs }}
+        </div>
+        <div class="assortlist">
+          <label>区域</label>
+          <a class="all" href="{{ links.district_all }}" data-did="0">全部</a>
+          {{ districts }}
+        </div>
+      </div>
+
+      <div class="sjxx wrap_border space">
+        <h1>{{ label }}</h1>
+        <div class="sjxx_attention">
+          <p>商家已受到关注：<em>{{ store.follow_count.value }}</em>商家累计优惠信息：<em>{{ store.coupon_count.value }}</em>总评价数：<em>{{ store.comment_count.value }}</em>好评数：<em>50</em></p>
+          <a href="{{ follow_url }}" class="store_follow" sid="{{ store.id }}">+ 关注</a>
+        </div>
+        <div class="sjxx_info">
+          <p>门店地址：<span>{{ store.address.value }}</span></p>
+          <p>门店电话：<span>{{ store.phone.value }}</span></p>
+          <p>营业时间：<span>{{ store.hours.value }}</span></p>
+          <p>基础折扣：<span>{{ store.discount.value }}</span></p>
+        </div>
+        <div style="display:none;" class="sjpic_big"><img data-pinit="registered" src="" id="defaultImg"></div>
+        <div class="sjpic">
+          {{ pictures }}
+        </div>
+      </div>
+
+      {{ coupons }}
+
+      <div class="user_pj wrap_border space">
+        <ul class="user_pj_nav">
+          <li class="tab-comments seclect"><a href="tab">用户评价</a></li>
+          <li class="tab-comment-add"><a href="{{ login_url }}">我要评价</a></li>
+        </ul>
+        <div class="pj_num">（总共{{ store.comment_count.value }}条评论）</div>
+        <div class="user_pj_con">
+          {{ comments }}
+        </div>
+        {% if pager %}
+        <div class="pj_number">
+          <div class="pageNav">
+            {{ pager }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div id="wypj">
+          <h3>我要评价</h3>
+          <div class="pj_form">
+            {{ comment_form }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="con_right">
+      <div class="hotlist wrap_border space">
+        <h3>周边热点排行</h3>
+        {{ hot_stores }}
+      </div>
+      <div class="tips wrap_border space">
+        <h3>温馨提示</h3>
+        <p>1、除特殊注明外，本优惠不能与其他优惠同时享受；</p>
+        <p>2、本优惠由商家提供，如有疑问请与商家联系；</p>
+      </div>
+      <div class="tips wrap_border space">
+        <h3>意见反馈</h3>
+        <p>贵商网乐意倾听您的任何想法</p>
+        <p><a target="_blank" href="{{ url('feedback/create') }}">提交意见反馈》</a></p>
+      </div>
+    </div>
+  </div>
+</article>

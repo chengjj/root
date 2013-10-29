@@ -1,0 +1,230 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+
+
+
+
+#content{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+
+}
+
+.wrap_border{
+	border:1px solid #e2e2e2;
+	background:#ffffff;
+}
+.col{
+	width:978px;
+	height:auto;
+	overflow:hidden;
+}
+.space{
+	margin-bottom:20px;
+}
+
+.about_box{
+	width:978px;
+	min-height:560px;
+	overflow:hidden;
+	margin-top:20px;
+}
+
+.about_top{
+	width:978px;
+	height:120px;
+	border-bottom:2px solid #a5ca39;
+	background:url(../images/about_topbg.png) no-repeat 0 0;
+	position:relative;
+}
+.about_nav{
+	width:978px;
+	height:30px;
+	margin-top:90px;
+	position:absolute;
+}
+
+.about_nav ul{
+	padding-left:62px;
+	height:30px;
+	width:916px;
+	overflow:hidden;
+}
+.about_nav ul li{
+	width:103px;
+	height:29px;
+	line-height:29px;
+	float:left;
+	border:1px solid #c4c4c4;
+	border-bottom:none;
+	background:#f5f5f5;
+	text-align:center;
+	border-radius:3px 3px 0 0;
+	margin-right:10px;
+}
+.about_nav ul li a{
+	font-size:15px;
+	color:#666666;
+	line-height:29px;
+}
+.about_nav ul li a:hover{
+	color:#91b232;
+}
+
+.about_nav ul li.c{
+	background:#a5ca39;
+	border-color:#91b232;
+}
+.about_nav ul li.c a{
+	color:#ffffff;
+}
+
+.about_con,.about_contact,.about_help,.protocol_con{
+	width:878px;
+	padding:40px 50px;
+	height:auto;
+	overflow:hidden;
+}
+.about_con p{
+	color:#333333;
+	font-size:14px;
+	line-height:25px;
+	margin-bottom:25px;
+	text-indent:28px;
+}
+.protocol_con p{
+	color:#333333;
+	font-size:12px;
+	line-height:25px;
+	margin-bottom:20px;
+}
+.about_con p b{
+	font-weight:bold;
+	font-size:14px;
+}
+.protocol_con p b{
+	font-weight:bold;
+	font-size:12px;
+}
+h1{
+	font-size:30px;
+	color:#ff6699;
+	margin-bottom:25px;
+}
+.about_contact p,.about_help p{
+	color:#333333;
+	font-size:14px;
+	line-height:25px;
+	margin-bottom:25px;
+}
+.about_contact p b{
+	font-weight:bold;
+	font-size:14px;
+}
+.about_help_con{
+	width:80%;
+	height:auto;
+	overflow:hidden;
+	float:left;
+}
+.about_help_menu{
+	position:absolute;
+	width:90px;
+	height:auto;
+/*	overflow:hidden;*/
+	border:1px solid #cccccc;
+	padding:20px;
+	top:500px;
+	right:350px;
+	background:#ffffff;
+}
+.about_help .fixed{
+	position:fixed;
+	top:0;
+}
+.about_help_menu li a{
+	font-size:14px;
+	line-height:30px;
+	display:block;
+	width:60px;
+	height:30px;
+	padding-left:18px;
+	background:url(../images/base_bg.png) no-repeat -180px -809px;
+}
+.about_help_con h2{
+	font-size:14px;
+	font-weight:bold;
+	line-height:40px;
+	border-bottom:1px solid #dddddd;
+	padding:0 5px;
+	color:#333333;
+}
+.about_help_con ol{
+	padding:25px 5px;
+	width:690px;
+	height:auto;
+	overflow:hidden;
+
+}
+.about_help_con ol li{
+	padding:5px 0;
+}
+.about_help_con ol li a{
+	font-size:14px;
+	color:#333333;
+	line-height:28px;
+	cursor:pointer;
+	height:28px;
+
+}
+.about_help_con ol li a:hover{
+	color:#ff6699;
+}
+.about_help_con ol li a.open{
+	font-weight:bold;
+	color:#ff6699;
+}
+.about_help_con ol li a span{
+	display:inline-block;
+	height:12px;
+	width:20px;
+
+}
+.about_help_con ol li a.open span{
+	background:url(../images/base_bg.png) no-repeat -180px -792px;
+
+}
+.about_help_con ol li a.colse span{
+	background:url(../images/base_bg.png) no-repeat -238px -790px;
+
+}
+.about_help_con ol li .con{
+	width:645px;
+	height:auto;
+	border:1px solid #dfe6c0;
+	background:#f9faf2;
+	padding:20px;
+	font-size:14px;
+	color:#666666;
+	line-height:24px;
+	
+}
+.about_help_con ol li .con b{
+	font-size:14px;
+	font-weight:bold;
+}
+
+
+.r5 {
+    border-radius: 5px 5px 5px 5px;
+}

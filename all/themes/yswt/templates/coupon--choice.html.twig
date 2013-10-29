@@ -1,0 +1,11 @@
+<article{{ attributes }} hover-class="open">
+  {% if number > 3 %}
+  <p class="teaser"><span>{{ number }}</span><b>{{ store_label_short }}</b>{{ label_short }}</p>
+  {% else %}
+  <p class="highlight teaser"><span>{{ number }}</span><b>{{ store_label_short }}</b>{{ label_short }}</p>
+  {% endif %}
+  <div class="openbox">
+    <div class="img"><a target="_blank" href="{{ coupon_url }}">{{ picture }}</a></div>
+    <div class="txt"><a target="_blank" href="{{ coupon_url }}">{{ label }}</a><p>{{ coupon.body.value }}</p></div>
+  </div>
+</article>

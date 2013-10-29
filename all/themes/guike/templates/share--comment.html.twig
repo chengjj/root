@@ -1,0 +1,23 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a share.
+ *
+ * Available variable:
+ * - share: Full share entity.
+ * - author: 作者
+ * - picture: 图片
+ * - price: 价格
+ * - share_url: 详情页网址
+ */
+#}
+<article{{ attributes }}>
+  <div class="pic"><a target="{{ share_url }}" href="" title = "{{picture.title}}">{{ picture }}</a></div>
+  <div class="txt">
+    <p><a target="_blank" href="{{ share_url }}" class="title">{{ label }}</a></p>
+    <p class="user">
+      <span class="share">{{ author }}分享</span>
+      <span class="collect"><a href="" class="bookmark" sid="{{ share.sid.value }}">喜欢</a></span>
+    </p>
+  </div>
+</article>
