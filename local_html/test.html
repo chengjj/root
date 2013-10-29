@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript" src="./script/soundmanager2-nodebug-jsmin.js"></script>
+<style>
+.cc{
+	width:200px;
+	height:200px;
+	background:#0FF;
+	animation:myfirst 10s;
+	animation-iteration-count:3;
+	-moz-animation:myfirst 10s; /* Firefox */
+	-moz-animation-iteration-count:3;
+	-webkit-animation:myfirst 10s; /* Safari and Chrome */
+	-webkit-animation-iteration-count:3;
+	-o-animation:myfirst 10s; /* Opera */
+	}
+.gg{
+	position:absolute;
+	-webkit-animation-name: fadeInOut;/* Safari and Chrome */
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-duration: 5s;
+	-webkit-animation-direction: alternate;
+	}
+@keyframes myfirst{
+	from {background:#0FF;}
+	to {background:#60F;}
+	}
+@-moz-keyframes myfirst /* Firefox */{
+	from {background:#0FF;}
+	to {background:#60F;}
+	}
+@-webkit-keyframes myfirst /* Safari and Chrome */{
+	from {background:#0FF;}
+	to {background:#60F;}
+	}
+	
+	
+@-webkit-keyframes fadeInOut {
+    0% {
+        opacity:1;
+     }
+    25% {
+        opacity:0;
+    }
+    50% {
+        opacity: 0;    
+    }
+    75% {
+        opacity:1;
+    }
+}
+</style>
+<script>
+	var cutdown = null;
+	var rightSound = null;
+
+soundManager.setup({
+  preferFlash: true,
+  flashVersion: 9,
+  url: 'swf/',
+  useHighPerformance: true,
+  debugMode: false, // disable debug mode
+  onready: function() {
+    // soundManager is ready to use (create sounds and so on)
+    cutdown = soundManager.createSound({
+  id: 'cutdown',
+  url: 'D:\xampp\htdocs\local_html\audio\1.mp3',
+  volume: 50,
+  multiShot: true,
+  autoLoad: true
+ });
+  
+ rightSound = soundManager.createSound({
+  id: 'rightSound',
+  url: 'D:\xampp\htdocs\local_html\audio\1.mp3',
+  volume: 50,
+  multiShot: true,
+  autoLoad: true
+ });
+    for(i = 1; i <= 3; i++){
+    setTimeout("tocutdown()", i * 900);
+    }
+    setTimeout("finish()", 3000);
+    // rightSound.play();
+    // cutdown.play();
+  }
+});
+function tocutdown(){
+cutdown.play();
+}
+function finish(){
+rightSound.play();
+}
+</script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+</head>
+
+<body>
+	<div class="cc">
+    </div>
+    <img  class="gg" src="images/font1.png"/>
+    <img src="font2.png"/>
+    <input type="button" value="Cut Down" onclick="tocutdown()" />
+<input type="button" value="Finish" onclick="finish()" />
+</body>
+</html>

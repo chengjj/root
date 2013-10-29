@@ -1,0 +1,67 @@
+@charset "utf-8";
+/* CSS Document */
+
+html,body,header,footer,nav,span,object,iframe,h1,h2,h3,h4,h5,h6,p,b,i,strong,blockquote,pre,a,abbr,acronym,address,code,dfn,em,img,q,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,u,sub{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: none;
+	font-family:Tahoma, Microsoft Yahei, 微软雅黑, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight:normal;
+	text-decoration:none;
+	font-style:normal;
+}
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section,label{  
+   display:block; 
+} 
+
+
+body{
+	background:url(../images_1/reg_bg.png) repeat-x transparent;
+	}
+	
+
+#content{
+	margin-top:30px;
+	margin-left:auto;
+	margin-right:auto;
+	width:600px;
+	height:auto;
+	}
+
+#reg_box{
+	width:500px;
+	text-align:center;
+	}
+
+#reg_box li{
+	padding:0;
+	height:30px;
+	line-height:30px;
+	list-style:none;
+	}
+
+#reg_box li span{
+	margin-right:20px;
+	font-family:"微软雅黑";
+	font-size:15px;
+	font-weight:bold;
+	color:#000;
+	}
+
+.input_box{
+	float:right;
+	width:200px;
+	height:15px;
+	border:solid;
+	border-color:#000;
+	outline:none;
+	}
+
+
+
+
+
+
+

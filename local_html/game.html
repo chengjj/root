@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link media="all" href="./style/game_style.css" type="text/css" rel="stylesheet">
+<script src="./jslib/jquery-1.6.2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	var ori;
+	var now;
+	var isact = false;
+	$(".words").bind({mousedown:function(){
+		ori = $(this).attr('id');
+		isact = true;
+		if(isact){
+		$(".words").mouseenter(function(){
+				
+				
+				now = $(this).attr('id');
+				if( (now - ori) == 10 || (now - ori) == -10 ){
+						$("p").text("verticle good");
+						ori = now;
+					}
+				else if( (now - ori) == 1 || (now - ori) == -1 ){
+						$("p").text("horizontal good");
+						ori = now;
+					}
+				else if( (now - ori) == 9 || (now - ori) == -9){
+						$("p").text("45 good");
+						ori = now;
+					}
+				else if( (now - ori) == 11 || (now - ori) == -11){
+						$("p").text("-45 good");
+						ori = now;
+					}
+				else {
+						$("p").text("bad");
+					}
+			});
+
+		}
+	}
+	});
+	$(".words").bind({mouseup:function(){
+			ori = 0;
+			now = 0;
+			isact = false;
+			}
+		});
+ });
+</script>
+<title>game</title>
+</head>
+
+<body>
+	<div id="game_panel">
+    	<ul><input type="submit" class="words" value = "W" id="11" /><input type="submit" class="words" value = "A" id="12"/><input type="submit" class="words" value = "C" id="13"/><input type="submit" class="words" value = "T" id="14"/></ul>
+        <ul><input type="submit" class="words" value = "H" id="21"/><input type="submit" class="words" value = "L" id="22"/><input type="submit" class="words" value = "B" id="23"/><input type="submit" class="words" value = "J" id="24"/></ul>
+        <ul><input type="submit" class="words" value = "K" id="31"/><input type="submit" class="words" value = "A" id="32"/><input type="submit" class="words" value = "I" id="33"/><input type="submit" class="words" value = "O" id="34"/></ul>
+        <ul><input type="submit" class="words" value = "B" id="41"/><input type="submit" class="words" value = "G" id="42"/><input type="submit" class="words" value = "D" id="43"/><input type="submit" class="words" value = "N" id="44"/></ul>
+    </div>
+    <span></span>
+    <p></p>
+</body>
+</html>

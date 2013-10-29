@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script src="./jslib/jquery-1.6.2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+google.load("language", "1");
+$(document).ready(function ()
+{ 
+	$('#btnSayIt').click(SayIt);
+	});
+function SayIt() {
+ var lng = "en";
+
+ 
+
+        var Rlt = $('#trn').val();
+
+ 
+
+        var strURL = 'http://translate.google.com.tw/translate_tts?q=' + Rlt + '&tl=' + lng;
+
+ 
+
+        var embed = '<embed src="' + strURL + '"/>';
+
+ 
+
+        $('#divSayIt').html(embed);
+
+ 
+
+}
+
+</script>
+</head>
+
+<body>
+<TEXTAREA id="trn" cols="40" rows="10"></TEXTAREA><BR>
+<INPUT id="btnSayIt" value="發音" type="button"><BR>
+<DIV id="divSayIt"></DIV>
+
+
+</body>
+</html>

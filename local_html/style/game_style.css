@@ -1,0 +1,50 @@
+@charset "utf-8";
+/* CSS Document */
+
+html,body,header,footer,nav,span,object,iframe,h1,h2,h3,h4,h5,h6,p,b,i,strong,blockquote,pre,a,abbr,acronym,address,code,dfn,em,img,q,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,u,sub{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: none;
+	font-family:Tahoma, Microsoft Yahei, 微软雅黑, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight:normal;
+	text-decoration:none;
+	font-style:normal;
+}
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section,label{  
+   display:block; 
+} 
+
+body{
+	background:url(../images_1/green.png) repeat transparent;
+}
+
+#game_panel{
+	margin:200px auto;
+	width:500px;
+	height:auto;
+	}
+
+#game_panel ul{
+	padding:0;
+	height:100px;
+	line-height:100px;
+	float:left;
+	}
+
+.words{
+	margin-left:20px;
+	width:93px;
+	height:100px;
+	background:url(../images_1/word_bac.png) no-repeat transparent;
+	text-align:center;
+	font-family:Arial;
+	font-weight:bold;
+	font-size:36px;
+	border:none;
+	opacity:0.8;
+	}
+
+
+
