@@ -1,0 +1,6 @@
+name: city 
+type: module
+description: "贵客城市"
+core: 8.x
+package : '贵客'
+version: VERSION

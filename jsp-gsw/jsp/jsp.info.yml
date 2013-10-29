@@ -1,0 +1,7 @@
+name: Jsp
+type: module
+description: '金算盘公共模块'
+package : '贵客'
+version: VERSION
+core: 8.x
+configure: admin/config/jsp

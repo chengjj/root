@@ -1,0 +1,101 @@
+<?php
+/**
+ * Implements hook_schema()
+ */
+function statistic_schema() {
+  $schema['statistic'] = array(
+    'description' => '贵客统计',
+    'fields' => array(
+      'statistic_id' => array(
+        'description' => '贵客统计序号',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => '时间',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'device_id' => array(
+        'description' => '设备ID',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'device_name' => array(
+        'description' => '设备名',
+        'type' => 'varchar',        
+        'length' => 255,
+      ),
+      'os_version' => array(
+        'description' => '操作系统',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'app_version' => array(
+        'description' => '贵客版本',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'lunch_count' => array(
+        'description' => '打开应用次数',
+        'type' => 'int',
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('statistic_id', 'date', 'device_id'),
+  );
+  $schema['advert_count'] = array(
+    'description' => '广告统计',
+    'fields' => array(
+      'aid' => array(
+        'description' => '贵客统计序号',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),    
+      'date' => array(
+        'description' => '时间',
+        'type' => 'varchar',
+        'length' => 15,
+        'not null' => TRUE,
+      ),
+     'device_id' => array(
+        'description' => '设备ID',
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255,
+     ),
+     'advert_id' => array(
+        'description' => '广告ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+     ),
+     'count' => array(
+        'description' => '被点击次数',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+     ),     
+    ),
+    'primary key' => array('aid', 'date', 'device_id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install()
+ */
+ /*
+function statistic_install() {
+  $schema = statistic_schema();
+  if (!db_table_exists('statistic'))
+    db_create_table('statistic', $schema['statistic']);
+  if (!db_table_exists('advert_count')) 
+    db_create_table('advert_count', $schema['advert_count']);
+}
+*/

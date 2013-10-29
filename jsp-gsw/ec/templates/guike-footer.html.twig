@@ -1,0 +1,39 @@
+{#
+/**
+ *
+ * @file use in page.html.twig
+ * see template_preprocess_guike_footer().
+ *
+ */
+#}
+<div class="footer_con">
+ <section class="linklist">
+  <h3>关于我们</h3>
+  <ul>
+   {% for title, url in about_links  %}
+   <li><a target="_blank" href="{{ url }}">{{ title }}</a></li>
+   {% endfor%}
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>移动应用</h3>
+  <ul>
+   {% for title, url in phone_links  %}
+   <li><a href="{{ url }}" class="phonedown" target="_blank">{{ title }}</a></li>
+   {% endfor%}
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>关注我们</h3>
+  <ul>
+   <li><a target="_blank" href="http://e.weibo.com/guishangwang">新浪微博</a></li>
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>友情链接</h3>
+  <ul>
+   <li><a target="_blank" href="http://www.72ec.com">亿禧网</a></li>
+  </ul>
+ </section>
+ <div class="footer_logo"><a href="{{ front_page }}"><img width="142" height="50" src="{{ logo }}"></a></div>
+</div>

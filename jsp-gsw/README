@@ -1,0 +1,57 @@
+INSTALL
+===================
+clone this directory into DRUPAL_ROOT/modules/ directory.
+
+SETUP
+===================
+Image Style需要添加styles：213x (share列表)
+到 admin/config/people/accounts/fields 设置用户缺省头像
+
+HACK
+===================
+
+字符串检查：
+use Drupal\Component\Utility\String;
+String::checkPlain($value)
+
+重定向到新页面：
+drupal_set_message('message...', 'error');
+return new RedirectResponse($this->urlGenerator->generateFromPath($uri['path'], array('absolute' => TRUE)));
+
+为模块添加CSS和JS：
+在模块里实现hook_library_info
+
+表单元素比显示标题的方法:
+'#title_display' => 'invisible',
+
+kindeditor
+评论回复编辑框加入表情
+
+将kindeditor 软链接到 sites/all/libraries/kindeditor
+
+hook_library_info().
+
+$libraries['jsp.share_comment_editor'] = array(
+  'title' => 'face_editor',
+  'version' => \Drupal::VERSION,
+  'js' => array(
+   'sites/all/libraries/kindeditor/kindeditor.js' => array(),
+   'sites/all/libraries/kindeditor/lang/zh_CN.js' => array(),
+   'sites/all/libraries/kindeditor/plugins/code/prettify.js' => array(),
+    drupal_get_path('module', 'ec') . '/js/wysiwyg.js' => array(),
+  ),
+  'css' => array(
+   'sites/all/libraries/kindeditor/themes/default/default.css' => array(),
+   'sites/all/libraries/kindeditor/plugins/code/prettify.css' => array(),
+  ),
+);
+表单里加入css js
+ drupal_add_library('xxx', 'jsp.share_comment_editor');
+
+表单加入class => wysiwyg
+ $form['body'] = array(
+   '#type' => 'textarea',
+   '#required' => TRUE,
+   '#attributes' => array('class' => array('wysiwyg')),
+   '#resizable' => FALSE,
+ );

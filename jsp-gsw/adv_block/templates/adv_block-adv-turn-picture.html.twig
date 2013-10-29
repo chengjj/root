@@ -1,0 +1,58 @@
+{#
+/**
+ *  @params:
+ *    $adv_block:
+ *    $adv_block->item_list: advs
+ *    $item_list = array(
+ *      array('title' => '', 'adv_link' => '', 'thumbnail_img_src' => '48x48', 'default_img_src' => '')
+ *      array('title' => '', 'adv_link' => '', 'thumbnail_img_src' => '', 'default_img_src' => '')
+ *      array('title' => '', 'adv_link' => '', 'thumbnail_img_src' => '', 'default_img_src' => '')
+ *      array('title' => '', 'adv_link' => '', 'thumbnail_img_src' => '', 'default_img_src' => '')
+ *    );
+ *
+ *  adv 轮流播放模板
+ *  see template_preprocess_adv_block_adv_turn_picture($vairables). 
+ */
+#}
+{% if has_content  %}
+<div class="rc-title">
+  <ul id="slider">
+  {% for item in item_list %}
+    {% if loop.first %}
+    <li class="active">
+    {% else %}
+    <li>
+    {% endif %}
+      <div class="turn-pic"><a href="{{ item.adv_link }}"><img src="{{ item.thumbnail_img_src }}" ></a></div>
+      <div class="turn-title">{{ item.title }}</div>
+    </li>
+  {% endfor %}
+  </ul>
+</div>
+<div id="rc-list-wrapper">
+  <ul id="rc-list">
+  {% for item in item_list %}
+    <li class="show"><a target="_blank" href="{{ item.adv_link }}"><img src="{{ item.default_img_src }}"/></a></li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<!-- 
+<div class="rc-title">
+  <ul id="slider">
+    <li class="active"><div class="turn-pic"><a href="#"><img src="http://www.cqxfyy.com/template/201306/images/DHD4.jpg" width="48" height="48"></a></div><div class="turn-title">炎炎夏日健康送不停</div></li> 
+    <li><div class="turn-pic"><a href="#"><img src="http://www.cqxfyy.com/template/201306/images/DHD4.jpg" width="48" height="48"></a></div><div class="turn-title">寻找山城最美丽的孕妈咪</div></li>
+    <li><div class="turn-pic"><a href="#"><img src="http://www.cqxfyy.com/template/201306/images/DHD4.jpg" width="48" height="48"></a></div><div class="turn-title">1元秒杀3D电影票</div></li>
+    <li><div class="turn-pic"><a href="#"><img src="http://www.cqxfyy.com/template/201306/images/DHD4.jpg" width="48" height="48"></a></div><div>0元做盆底检测</div> </li>
+  </ul>
+</div>
+<div id="rc-list-wrapper">
+  <ul id="rc-list">
+    <li class="show"><a target="_blank" href="/html/special/2013XBWL/?PDLISTtophd"><img src="http://www.cqxfyy.com/template/201306/images/DHD4.jpg" width="473" height="290"></a></li> 
+    <li class="show"><a target="_blank" href="http://www.cqxfyy.com/2013/062123127.html"><img src="http://www.cqxfyy.com/template/201306/images/DHD1.jpg" width="473" height="290"></a></li>
+    <li class="show"><a target="_blank" href="http://www.lashou.com/deal/7538501.html"><img src="http://www.cqxfyy.com/template/201306/images/DHD2.jpg" width="473" height="290"></a></li>
+    <li class="show"><a target="_blank" href="http://62815999.com/html/2013/youhui_0510/39.html"><img src="http://www.cqxfyy.com/template/201306/images/DHD3.jpg" width="473" height="290"></a></li>
+  </ul>
+</div>
+-->

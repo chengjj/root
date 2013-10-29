@@ -1,0 +1,18 @@
+{#
+/**
+ * @file
+ * Default theme implemention of comments.
+ *
+ * 可用的变量:
+ * - author: 作者
+ * - created: 评论时间
+ * - user_picture: 用户头像
+ * - title: 评论内容
+ */
+#}
+<article{{ attributes }}>
+  {{ user_picture }}
+  {{ author }}
+  <h3{{ title_attributes }}>{{ title }}</h3>
+  {{ created }}
+</article>

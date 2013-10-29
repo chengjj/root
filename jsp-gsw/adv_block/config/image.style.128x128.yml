@@ -1,0 +1,13 @@
+name: 128x128
+label: 128x128
+uuid: fa629cad-9c56-439c-8d06-6ef0b7ccee1d
+status: '1'
+langcode: zh-hans
+effects:
+  f86fcbc8-96f0-41c1-b954-8403b1ff6e78:
+    uuid: f86fcbc8-96f0-41c1-b954-8403b1ff6e78
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '128'
+      height: '128'

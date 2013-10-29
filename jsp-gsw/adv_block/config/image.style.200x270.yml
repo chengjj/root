@@ -1,0 +1,13 @@
+name: 200x270
+label: 200x270
+uuid: af68d959-ce7f-448f-b74e-787fa3becd35
+status: '1'
+langcode: zh-hans
+effects:
+  ba5935d7-08da-495f-8602-2a40ad82adc5:
+    uuid: ba5935d7-08da-495f-8602-2a40ad82adc5
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '200'
+      height: '270'

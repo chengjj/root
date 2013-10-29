@@ -1,0 +1,155 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function city_schema() {
+  $schema['cities'] = array(
+    'description' => '城市',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+      'name' => array('name')
+    ),
+    'primary key' => array('cid'),
+  );
+
+  $schema['cities_seq'] = array(
+    'description' => '城市序列',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
+
+
+  $schema['districts'] = array(
+    'description' => '区域',
+    'fields' => array(
+      'did' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+      'name' => array('name')
+    ),
+    'primary key' => array('did'),
+  );
+
+  $schema['districts_seq'] = array(
+    'description' => '区域序列',
+    'fields' => array(
+      'did' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('did'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Create a UUID column for districts.
+ */
+function city_update_1() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  if (db_field_exists('districts', 'uuid')) {
+    db_change_field('districts', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('districts', 'uuid', $spec, $keys);
+  }
+}
+
+/**
+ * Create a UUID column for cities.
+ */
+function city_update_2() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  if (db_field_exists('cities', 'uuid')) {
+    db_change_field('cities', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('cities', 'uuid', $spec, $keys);
+  }
+}
+

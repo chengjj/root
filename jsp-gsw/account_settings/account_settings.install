@@ -1,0 +1,37 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+function account_settings_schema() {
+  $schema['account_settings'] = array(
+    'description' => '用户设置',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'store_image' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+  
+  return $schema;
+}
+
+/*
+function account_settings_update_1() {
+  $accounts = db_select('users', 'u')
+    ->fields('u', array('uid'))
+    ->execute();
+  foreach ($accounts as $account) {
+    $query = db_insert('account_settings')->fields(array('uid', 'store_image'));
+    $query->values(array('uid' => $account->uid, 'store_image' => 1));
+    $query->execute();
+  }
+}
+*/

@@ -1,0 +1,9 @@
+name: Coupon
+type: module
+description: '优惠券'
+package: Core
+version: VERSION
+core: 8.x
+package : '贵客'
+dependences: 
+        - store

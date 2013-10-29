@@ -1,0 +1,55 @@
+{#
+/**
+ * @file 首页 周边热点排行广告位
+ *  @params:
+ *    $adv_block:
+ *      ->item_list
+ *    $item_list = array(
+ *      array('title' => '', 'description' => , 'coupon_link' => '', 'thumbnail_img_src' => '60x60', 'default_img_src' => '')
+ *    );
+ *
+ *  coupon 左图片-右标题-描述-
+ *  see template_preprocess_adv_block_coupon_image_title_desc(&$variables);
+ *
+ */
+#}
+{#
+<!--
+<ol class="coupon-image-title-desc">
+  <li class="highlight"><span>1</span><b>小肥羊</b>情侣套餐</li>
+  <li class="highlight open">
+    <p><span>2</span><b>小肥羊</b>情侣套餐</p>
+    <div class="openbox">
+    <div class="img"><a target="_blank" href="#"><img src="../images/pic60x60.png"></a></div>
+    <div class="txt"><a target="_blank" href="#">小肥羊情侣套餐</a><p>情侣套餐买一送一情侣套餐买一送一情侣套餐买一送一</p></div>
+    </div>
+  </li>
+  <li><span>4</span><b>小肥羊</b>情侣套餐</li>
+  <li><span>5</span><b>小肥羊</b>情侣套餐</li>
+  <li class="last"><span>6</span><b>小肥羊</b>情侣套餐</li>     
+</ol>
+-->
+#}
+{% if has_content  %}
+<ol class="coupon-image-title-desc">
+{% for item in item_list %}
+ {% if loop.first %}
+ <li class="highlight open">
+ {% elseif loop.index < 4 %}
+ <li class="highlight">
+ {% elseif loop.last %}
+ <li class="last">
+ {% else %}
+ <li>
+ {% endif %}
+   <p><span>{{ loop.index }}</span><b>{{ item.store_name }}</b>{{ item.title }}</p>
+   <div class="openbox">
+    <div class="img"><a href="{{ item.coupon_link }}" target="_blank"><img src="{{ item.thumbnail_img_src }}"></a></div>
+    <div class="txt"><a href="{{ item.coupon_link }}" target="_blank">{{ item.title }}</a><p>{{ item.description }}</p></div>
+   </div>
+ </li>
+{% endfor %}
+</ol>
+{% endif %}
+
+

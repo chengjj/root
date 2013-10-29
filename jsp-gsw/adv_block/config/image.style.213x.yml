@@ -1,0 +1,14 @@
+name: 213x
+label: 213x
+uuid: 6ef7d41d-feef-49b5-8000-fd3a76dbd0cf
+status: '1'
+langcode: zh-hans
+effects:
+  e24d9892-8fb1-4f00-be54-8445e5e16cd5:
+    uuid: e24d9892-8fb1-4f00-be54-8445e5e16cd5
+    id: image_scale
+    weight: '2'
+    data:
+      width: '213'
+      height: ''
+      upscale: '0'

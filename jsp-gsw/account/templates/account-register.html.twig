@@ -1,0 +1,24 @@
+{#
+#}
+<div class="register_box wrap_border">
+  <h1>欢迎注册贵商网</h1>
+  <div class="register_left">
+    <ul>
+      <li class="{% if mode == 'phone' %}seclect{% endif %}"><a href="{{ links.register }}">手机号码注册</a></li>
+      <li class="{% if mode == 'email' %}seclect{% endif %}" ><a href="{{ links.register_email }}">电子邮箱注册</a></li>
+    </ul>
+    <div class="register_form">
+    {{ user_register_form }}
+    </div>
+  </div>
+  <div class="register_right">
+    <div class="rst_login">
+      <span>已经有帐号？请直接登录</span>
+      <a href="{{ links.login }}">登录</a>
+    </div>
+    <div class="other_login">
+      <span>您也可以用以下方式登录：</span>
+      <a class="sina_icon" href="{{ links.sina_login }}">新浪微博</a>
+    </div>
+   </div>
+</div>

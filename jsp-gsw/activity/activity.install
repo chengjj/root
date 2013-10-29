@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ */
+function activity_schema() {
+  $schema['activity'] = array(
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'related_uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'type' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+      ),
+      'param' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'param2' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+	      'default' => 0,
+      ),
+    ),
+    'primary key' => array('aid'),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Create a UUID column for activities.
+ */
+function activity_update_1() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('activity', 'uuid')) {
+    db_change_field('activity', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('activity', 'uuid', $spec, $keys);
+  }
+}
+

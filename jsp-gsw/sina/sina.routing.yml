@@ -1,0 +1,12 @@
+sina_login:
+  path: 'sina/redirect'
+  defaults:
+    _controller: '\Drupal\sina\Controller\SinaController::sinaLogin'
+  requirements:
+    _access: 'TRUE'
+sina_auth_callback:
+  path: 'sina/callback'
+  defaults:
+    _controller: '\Drupal\sina\Controller\SinaController::sinaAuth'
+  requirements:
+    _access: 'TRUE'

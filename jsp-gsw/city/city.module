@@ -1,0 +1,214 @@
+<?php
+
+/**
+ * APIs city_load().
+ */
+function city_load($cid, $reset = FALSE) {
+  return entity_load('city', $cid, $reset);
+}
+
+/**
+ * APIs city_load_multiple().
+ */
+function city_load_multiple(array $cids, $reset = FALSE) {
+  return entity_load_multiple('city', $cids, $reset);
+}
+
+/**
+ * APIs city_load_by_name
+ */
+function city_load_by_name($name) {
+  $cities = entity_load_multiple_by_properties('city', array('name' => $name));
+  return $cities ? reset($cities) : FALSE;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function city_entity_info(&$entity_info) {
+  /*$entity_info['city'] = array(
+    'id' => 'city',
+    'label' => t('City'),
+    'base_table' => 'cities',
+    'module' => 'city',
+    'entity_keys' => array(
+      'id' => 'cid',
+      'label' => 'name',
+    ),
+    'fieldable' => FALSE,
+    'controllers' => array(
+      'storage' => 'Drupal\city\CityStorageController',
+      'list' => 'Drupal\city\CityListController',
+      'add' => 'Drupal\city\CityFormController',
+      'edit' => 'Drupal\city\CityFormtController',
+      'delete' => 'Drupal\city\CityDeleteForm',
+    ),
+    'class' => 'Drupal\city\Plugin\Core\Entity\City',
+  );*/
+}
+
+function city_load_districts($cid) {
+  $children = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($children[$cid])) {
+    $query = db_select('districts', 'd');
+    $query->addField('d', 'did');
+    $query->condition('d.cid', $cid);
+    $query->orderBy('d.weight');
+    $dids = $query->execute()->fetchCol();
+
+    $children[$cid] = district_load_multiple($dids);
+  }
+
+  return isset($children[$cid]) ? $children[$cid] : array();
+}
+
+function district_load($did, $reset = FALSE) {
+  return entity_load('district', $did, $reset);
+}
+ 
+function district_load_multiple(array $dids = NULL, $reset = FALSE) {
+  return entity_load_multiple('district', $dids, $reset);
+}
+
+/**
+ * Retrieve an array of cities name.
+ *
+ * @return
+ *   An associative array with the city id as the key and the city name as
+ *   value.
+ */
+function city_names() {
+  $ids = city_select_cities(FALSE);
+  return array_map(function ($item) {
+    return $item->label();
+  }, entity_load_multiple("city", $ids));
+}
+
+/**
+ * Retrieve an array of districts matching specified city.
+ *
+ * @return
+ *   An associative array with the district id as the key and the district name as
+ *   value.
+ */
+function city_district_names($cid = 0) {
+  if ($cid == 0) {
+    $cid = \Drupal::config('city.settings')->get('default_city_id');
+  }
+  $ids = city_select_districts($cid, FALSE);
+  return array_map(function ($item) {
+    return $item->label();
+  }, entity_load_multiple("district", $ids));
+}
+
+/**
+ * Return cities.
+ *
+ * @param $pager
+ *   Boolean to indicate whether a pager should be used.
+ * @param $limit
+ *   Integer. The maximum number of cities to find.
+ *   Set to FALSE for no limit.
+ * @param $order
+ *   An array of fields and directions.
+ *
+ * @return
+ *   An array of ids matching the query.
+ */
+function city_select_cities($pager = TRUE, $limit = FALSE, $order = array('c.weight' => 'ASC')) {
+  $query = db_select('cities', 'c');
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(c.cid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+  $query->addField('c', 'cid');
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Return districts attached to a city.
+ *
+ * @param $cid
+ *   The city ID.
+ * @param $pager
+ *   Boolean to indicate whether a pager should be used.
+ * @param $limit
+ *   Integer. The maximum number of districts to find.
+ *   Set to FALSE for no limit.
+ * @param $order
+ *   An array of fields and directions.
+ *
+ * @return
+ *   An array of dids matching the query.
+ */
+function city_select_districts($cid, $pager = TRUE, $limit = FALSE, $order = array('d.weight' => 'ASC')) {
+  $query = db_select('districts', 'd');
+  $query->condition('cid', $cid);
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(d.did)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+  $query->addField('d', 'did');
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+  return $query->execute()->fetchCol();
+}
+
+function city_get_current_city_id() {
+  return \Drupal::config('city.settings')->get('default_city_id');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function city_theme() {
+  return array(
+    'district' => array(
+      'render element' => 'elements',
+      'template' => 'district',
+    ),
+  );
+}
+
+function template_preprocess_district(&$variables) {
+  $district = $variables['elements']['#district'];
+  $city = $district->cid->entity;
+  $variables['district'] = $district;
+  $variables['city'] = $city;
+}
+

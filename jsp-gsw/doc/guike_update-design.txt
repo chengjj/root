@@ -1,0 +1,59 @@
+*guike-update-design* guike_update系统设计 
+
+*db*
+===========================
+advert_count 主干合并
+
+以下导出TABLEs数据
+advs
+city_keyword
+coupons
+
+file_managed
+file_usage
+stores
+store_account_follow
+store_revision(update) nid => sid // (导出之前需要更改表结构)ALTER TABLE store_revision CHANGE COLUMN nid sid int
+
+users
+user_roles
+
+
+以下需要代码实现升级
+taxonomy_term_data
+taxonomy_term_hierarchy
+
+将城市、区域重新设计表cities,districts
+线上商品行业分类 share_catalog
+线下商户行业分类 store_catalog
+
+store_consumer_records -> 主键uid,sid 取消nid
+$user->picture
+
+升级步骤~
+====================================
+setup1:
+  sqls :ALTER TABLE store_revision CHANGE COLUMN nid sid INT; => store_revision
+       :ALTER TABLE store_account_follow CHANGE COLUMN nid sid INT; => store_account_follow
+       :ALTER TABLE store_consumer_records CHANGE COLUMN sid rid INT; => store_consumer_record
+       :ALTER TABLE store_consumer_records CHANGE COLUMN nid sid INT; => store_consumer_record
+       :mysqldump -u root -p -t guike account_settings account_tripartite_login autho_token advert_count advs city_keyword coupons file_managed file_usage stores store_account_follow store_revision users users_roles statistic store_consumer_records ">" data.sql
+       :mysql -u root -p newdb < data.sql
+setup2:
+  请求:guike_update
+
+
+  :TRUNCATE TABLE file_managed;
+  :TRUNCATE TABLE file_usage;
+  :TRUNCATE TABLE users;
+  :TRUNCATE TABLE users_roles;
+  alter table `store_revision` CHANGE COLUMN address address varchar(254) after status
+
+mysqldump -u root -p gswguike_dev_0815 account_follows account_settings account_tripartite_login accounts advert_count advs autho_token cities cities_seq city_keyword coupon_bookmarks coupon_comments coupons districts districts_seq file_managed file_usage share_bookmarks share_catalog share_comments share_terms shares  statistic store_account_follow store_bookmarks store_catalog store_consumer_records store_follows store_revision stores users users_data users_roles
+  
+
+mysqldump t -u root -p database account_follows account_settings account_tripartite_login accounts adv_block_items adv_blocks advert_count advs autho_token cities cities_seq city_keyword coupon_bookmarks coupon_comments coupon_history coupons districts districts_seq file_managed file_usage share_bookmarks share_catalog share_comments share_history share_terms shares store_catalog store_comment store_consumer_records store_follow store_history store_revision stores users users_data users_roles
+
+mysqldump t -u root -p gswguike_dev_0815 account_follows account_settings account_tripartite_login accounts adv_block_items adv_blocks advert_count advs autho_token cities cities_seq city_keyword coupon_bookmarks coupon_comments coupons districts districts_seq file_managed file_usage share_bookmarks share_catalog share_comments share_terms shares  statistic store_account_follow store_bookmarks store_catalog store_consumer_records store_follows store_revision stores users users_data users_roles
+
+vim:tw=78:ts=8:ft=help:norl:

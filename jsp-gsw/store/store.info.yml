@@ -1,0 +1,11 @@
+name: Store
+type: module
+description: '商家模块.'
+dependencies:
+  - city 
+  - catalog
+  - dimensioncode 
+version: VERSION
+core: 8.x
+package : '贵客'
+configure: admin/config/store

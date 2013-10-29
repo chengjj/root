@@ -1,0 +1,1160 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Component\Uuid\Uuid;
+
+// data_type 分享类型 SHARE_DATA_TYPE_HTML 1 链接 SHARE_DATA_TYPE_IMAGE  2 图片
+define ('SHARE_DATA_TYPE_HTML', 1);
+define ('SHARE_DATA_TYPE_IMAGE', 2);
+define ('SHARE_DATA_TYPE_TEXT', 3);
+define ('SHARE_DATA_TYPE_WORD', 4);
+define ('SHARE_DATA_TYPE_EXCEL', 5);
+define ('SHARE_DATA_TYPE_POWERPOINT', 6);
+define ('SHARE_DATA_TYPE_PDF', 7);
+define ('SHARE_DATA_TYPE_FILE', 99);
+
+/**
+ * Implements hook_menu()
+ */
+function share_menu() {
+  $items['share/add'] = array(
+    'title' => '分享商品',
+    'route_name' => 'share.add',
+  );
+  $items['share/%share'] = array(
+    'title' => '商品信息',
+  );
+  $items['user/shares/bookmarks'] = array(
+    'title' => '商品收藏',
+    'page callback' => 'share_user_bookmarks_page',
+    'access callback' => 'user_is_logged_in',
+    'file' => 'share.pages.inc',
+  );
+  $items['admin/share'] = array(
+    'title' => '分享商品管理',
+    'route_name' => 'share.manage',
+  );
+  $items['admin/share/edit/%share'] = array(
+    'title' => '编辑/删除商品信息',
+    'file' => 'share.admin.inc',
+  );
+  $items['admin/share/delete/%share'] = array(
+    'title' => '删除商品信息',
+    'file' => 'share.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function share_permission() {
+  return array(
+    'administer share' => array(
+      'title' => t('Administer share'),
+      'description' => t('Perform administration tasks for share module.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme()
+ */
+function share_theme() {
+  return array(
+    'share' => array(
+      'render element' => 'elements',
+      'template' => 'share',
+    ),
+    'share_comment' => array(
+      'render element' => 'elements',
+      'template' => 'share-comment',
+    ),
+    'share_add_link' => array(
+      'template' => 'share-add-link',
+      'description' => '分享链接',
+    ),
+    'share_editor_list' => array(
+      'template' => 'share-editor-list',
+      'description' => '编辑推荐',
+    ),
+    'share_add' => array(
+      'template' => 'share-add',
+      'description' => '分享链接',
+    ),
+    'shares' => array(
+      'variables' => array(),
+      'template' => 'shares',
+    ),
+    'share_search' => array(
+      'variables' => array(),
+      'template' => 'share-search',
+    ),
+  );
+}
+
+/**
+ * Entity URI callback.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $share
+ *   A share entity.
+ *
+ * @return array
+ *   An array with 'path' as the key and the path to the share as its value.
+ */
+function share_uri(EntityInterface $share) {
+  return array(
+    'path' => 'share/' . $share->id(),
+  );
+} 
+
+/**
+ * Loads comment entities from the database.
+ *
+ * @param array $cids
+ *   (optional) An array of entity IDs. If omitted, all entities are loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return array
+ *   An array of comment objects, indexed by comment ID.
+ *
+ * @see entity_load()
+ * @see Drupal\Core\Entity\Query\QueryInterface
+ */
+function share_comment_load_multiple(array $cids = NULL, $reset = FALSE) {
+  return entity_load_multiple('share_comment', $cids, $reset);
+}
+
+/**
+ * APIs share_comment_load().
+ */
+function share_comment_load($cid) {
+  if (!is_numeric($cid)) return;
+
+  $cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cid = $_SERVER['SERVER_NAME'] . ':share_comment:id:' . $cid;
+  if ($cache) {
+    if ($cached = $cache->get($cid)) {
+      $share_comment = $cached->data;
+    } else {
+      $share_comment = _share_comment_load($cid);
+      $cache->set($cid, $share_comment);
+    }
+  } else {
+    $share_comment = _share_comment_load($cid);
+  }
+  return $share_comment;
+}
+
+function _share_comment_load($cid) {
+  return db_select('share_comments', 's')
+    ->fields('s')
+    ->condition('cid', $cid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * Loads share entities from the database.
+ *
+ * This function should be used whenever you need to load more than one share
+ * from the database. Shares are loaded into memory and will not require database
+ * access if loaded again during the same page request.
+ *
+ * @param array $sids
+ *   (optional) An array of entity IDs. If omitted, all entities are loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal share_load() cache.  Defaults to
+ *   FALSE.
+ *
+ * @return array
+ *   An array of share entities indexed by sid.
+ *
+ * @see entity_load_multiple()
+ * @see Drupal\Core\Entity\Query\EntityQueryInterface
+ */
+function share_load_multiple(array $sids = NULL, $reset = FALSE) {
+  return entity_load_multiple('share', $sids, $reset);
+}
+
+/**
+ * Loads a share entity from the database.
+ *
+ * @param int $sid
+ *   The share ID.
+ * @param bool $reset
+ *   (optional) Whether to reset the share_load_multiple() cache. Defaults to
+ *   FALSE.
+ *
+ * @return \Drupal\share\ShareInterface|null
+ *   A fully-populated share entity, or NULL if the share is not found.
+ */
+function share_load($sid = null, $reset = FALSE) {
+  return entity_load('share', $sid, $reset);
+}
+
+/**
+ * share load from db
+ */
+function _share_load($sid) {
+  if (empty($sid)) {
+    return FALSE;
+  }
+  return db_select('shares', 's')
+    ->fields('s')
+    ->condition('sid', $sid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * share delete
+ */
+function share_delete($sid) {
+  share_delete_multiple(array($sid));
+}
+
+function share_delete_multiple(array $sids) {
+  if (!empty($sids)) {
+    $shares = share_load_multiple($sids);
+
+    $transaction = db_transaction();
+    try {
+      foreach ($shares as $share) {
+        module_invoke_all('share_delete', $share);
+      }
+
+      db_delete('shares')
+        ->condition('sid', $sids, 'IN')
+        ->execute();
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
+  }
+}
+
+/**
+ * share module invoke
+ */
+function share_module_invoke($type, &$edit, $share) {
+  foreach (module_implements('share_' . $type) as $module) {
+    $function = $module . '_share_' . $type;
+    $function($edit, $share);
+  }
+}
+
+/**
+ * save terms
+ */
+function term_save($name) {
+  $term = db_query('SELECT tid,name FROM {terms} WHERE name=:name', array(':name' => $name))->fetchObject();
+  if (!$term) {
+    db_insert('terms')
+      ->fields(array('name' => $name))
+      ->execute();
+    $term = term_load_by_name($name);
+  }
+  return $term;
+}
+
+/**
+ * save share_term
+ */
+function share_term_save($sid, $tid) {
+  db_insert('share_terms')
+    ->fields(array('sid' => $sid, 'tid' => $tid))
+    ->execute();
+}
+
+/**
+ * term load by name
+ */
+function term_load_by_name($name) {
+  return db_query('SELECT tid,name FROM {terms} WHERE name=:name', array(':name' => $name))->fetchObject();
+}
+
+/**
+ * APIs share_account_is_followed_share
+ */
+function share_account_is_bookmark_share($uid, $share_sid) {
+  return db_select('share_bookmarks', 's')
+    ->fields('s', array('uid'))
+    ->condition('uid', $uid)
+    ->condition('sid', $share_sid)
+    ->execute()
+    ->fetchObject();
+}
+/**
+ * APIs share_bookmark
+ */
+function share_bookmark($uid, $sid) {
+  $bookmark = db_select('share_bookmarks', 's')
+    ->fields('s', array('uid'))
+    ->condition('uid', $uid)
+    ->condition('sid', $sid)
+    ->execute()
+    ->fetchObject();
+  if (!$bookmark) {
+    db_insert('share_bookmarks')
+      ->fields(array('uid' => $uid, 'sid' => $sid, 'created' => time()))
+      ->execute();
+  }
+}
+
+function share_unbookmark($uid, $sid) {
+  if (is_numeric($sid)) {
+    $sid = array($sid);
+  }
+  db_delete('share_bookmarks')
+    ->condition('uid', $uid)
+    ->condition('sid', $sid, 'IN')
+    ->execute();
+}
+
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_share_add(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'share') . '/js/share-add.js', 'file');
+  $result = db_query('SELECT * FROM {share_catalog} WHERE parent_cid=0 ORDER BY weight');
+  $share_catalog_parents = array();
+  $share_catalogs = array();
+  $default_cid = 0;
+  foreach ($result as $row) {
+    if (!$default_cid) {
+      $default_cid = $row->cid;
+    }
+    $share_catalog_parents[] = array('cid' => $row->cid, 'name' => $row->name);
+  }
+
+  if ($default_cid) {
+    $result = db_query('SELECT * FROM {share_catalog} WHERE parent_cid=:parent_cid ORDER BY weight', array(':parent_cid' => $default_cid));
+    foreach ($result as $row) {
+      $share_catalogs[] = array('cid' => $row->cid, 'name' => $row->name);
+    }
+  }
+  $variables['share_catalog_parents'] = $share_catalog_parents;
+  $variables['share_catalogs'] = $share_catalogs;
+}
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_share_editor_list(&$variables) {
+  // 编辑推荐
+  $variables['current_theme_path'] = url(path_to_theme());
+  $variables['share_list'] = waterfall(adv_block_view_items(10, 12, 'reason', TRUE), 4);
+  $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+}
+
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_share_add_link(&$variables) {
+  $variables['data_url'] = url('share/js/add');
+
+  if (\Drupal::currentUser()->isAuthenticated()) {
+    drupal_add_js(array('share' => array('theme_path' => url(path_to_theme()))), 'setting');
+    drupal_add_js('core/misc/dialog.js', 'file');
+    drupal_add_library('ec', 'drupal.ajax-dialog');
+    drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
+    drupal_add_css(drupal_get_path('module', 'ec') . '/css/ajax-dialog.css');
+    drupal_add_js(drupal_get_path('module', 'share') . '/js/share-add.js', 'file');
+
+    $variables['url'] = '';
+  }
+  else {
+    $variables['url'] = url('login');
+  }
+}
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_adv_block_share_image_title_price_1cols(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'adv_block') . '/js/adv_block-share-image-title-price-1cols.js', 'file');
+  template_preprocess_adv_block_share_image_title_5cols($variables);
+}
+
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_adv_block_share_image_title_price_4cols(&$variables) {
+  template_preprocess_adv_block_share_image_title_5cols($variables);
+}
+
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_adv_block_share_image_title_5cols(&$variables) {
+  $variables['has_content'] = FALSE;
+  $adv_block = $variables['adv_block'];
+  if ($adv_block->item_list) {
+    $variables['has_content'] = TRUE;
+    $item_list = array();
+    foreach ($adv_block->item_list as $item) {
+      $share = share_load($item->entity_id);
+      $title = $item->title ? $item->title : $share->label();
+      $picture = $item->picture ? $item->picture : $share->getPicture();
+      $picture_dimentions = $adv_block->picture_dimentions ? $adv_block->picture_dimentions : '60x60';
+      if ($picture) {
+        $thumbnail_img_src = get_uri_by_image_style(array('style_name' => $picture_dimentions, 'uri' => $picture->getFileUri()));
+      }
+      $item_list[] = array(
+        'title' => $title,
+        'price' => sprintf('%01.2f', $share->price->value), 
+        'share_link' => url('share/' . $share->id()),
+        'thumbnail_img_src' => $thumbnail_img_src,
+      );
+    }
+    $variables['item_list'] = $item_list;
+  }
+}
+
+/**
+ * Constructs a drupal_render() style array from an array of loaded shares.
+ *
+ * @param $shares
+ *   An array of shares as returned by share_load_multiple().
+ * @param $view_mode
+ *   (optional) View mode, e.g., 'full', 'teaser'... Defaults to 'teaser.'
+ * @param $langcode
+ *   (optional) A language code to use for rendering. Defaults to the global
+ *   content language of the current request.
+ *
+ * @return
+ *   An array in the format expected by drupal_render().
+ */
+function share_view_multiple($shares, $view_mode = 'teaser', $langcode = NULL) {
+  $shares = entity_view_multiple($shares, $view_mode, $langcode);
+  if ($view_mode != 'full') {
+    $sids = array_keys($shares);
+    $shares[array_pop($sids)]['#attributes']['class'][] = 'last';
+  }
+  return $shares;
+}
+
+function waterfall($elements, $cols) {
+  $build = array();
+
+  $col = 1;
+  $children = element_children($elements);
+  foreach ($children as $key) {
+    $build[$col][$key] = $elements[$key];
+
+    $col ++;
+    if ($col > $cols)
+      $col = 1;
+  }
+
+  $col = 1;
+  while ($col <= $cols) {
+    $build[$col]['#prefix'] = '<div class="col col' . $col . '">';
+    $build[$col]['#suffix'] = '</div>';
+
+    $col ++;
+  }
+
+  $build['#prefix'] = '<div class="waterfall waterfall' . $cols . '">';
+  $build['#suffix'] = '</div>';
+  return $build;
+}
+
+/**
+ * Prepares variables for share templates.
+ *
+ * Default template: share.html.twig.
+ *
+ * Most themes utilize their own copy of share.html.twig. The default is located
+ * inside "/core/modules/share/templates/share.html.twig". Look in there for the full
+ * list of variables.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - share: The share object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser'...
+ */
+function template_preprocess_share(&$variables) {
+  $user = \Drupal::currentUser();
+
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['teaser'] = $variables['view_mode'] == 'teaser';
+  $variables['share'] = $variables['elements']['#share'];
+  $share = $variables['share'];
+
+  if ($variables['view_mode'] == 'full') {
+    drupal_add_js('window.addEventListener("load", function(){Drupal.share_history.markAsRead(' . $share->id() . ');},false);', 'inline');
+    drupal_add_library('share', 'jsp.share_history');
+    drupal_add_library('share', 'jsp.share_comment_editor');
+  }
+
+  $uri = $share->uri();
+  $variables['share_url'] = url($uri['path'], $uri['options']);
+  $variables['label'] = check_plain($share->label());
+  $variables['label_short'] = truncate_utf8($share->label(), 18);
+
+  if ($file = file_load($share->picture->value)) {
+    if ($variables['view_mode'] == 'full') {
+      $picture = array('#theme' => 'image');
+    }
+    else {
+      $picture = array('#theme' => 'image_style', '#style_name' => '213x');
+    }
+    $picture['#uri'] = $file->getFileUri();
+    $picture['#alt'] = $share->label();
+    $picture['#title'] = $share->label();
+    $picture['#attributes']['class'][] = 'share-picture';
+    $variables['picture'] = $picture;
+  } else {
+    $variables['picture'] = '';
+  }
+
+  if ($user->isAuthenticated()) {
+    drupal_add_library('share', 'jsp.share_bookmark');
+    $variables['bookmark_url'] = url('');
+  }
+  else {
+    $variables['bookmark_url'] = url('login', array('query' => drupal_get_destination()));
+  }
+
+  $account = $share->getAuthor();
+  $variables['author'] = l($account->nickname, 'user/' . $account->id());
+
+  $variables['price'] = number_format($share->price->value, 2);
+  $variables['description'] = $share->description->value;
+  $variables['product_url'] = $share->url->value;
+
+  if ($variables['view_mode'] == 'full') {
+    // guess_like
+    if ($ids = share_select_guess($share, FALSE, 6)) {
+      $shares = entity_load_multiple('share', $ids);
+      $variables['guess_like'] = entity_view_multiple($shares, 'image');
+    }
+    $variables['share_bookmarks'] = get_share_user_favorites($share->id());
+    if (!$variables['share_bookmarks'])
+        $variables['share_bookmarks'] = 0;//by mashh@72ec.com
+    // comments
+    $variables['comment_form'] = share_comment_add($share);
+    if ($cids = share_comment_get_thread($share, variable_get('share_comment_default_per_page', 7))) {
+      $comments = share_comment_load_multiple($cids);
+      $variables['comments'] = share_comment_view_multiple($comments, 'teaser');
+      $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+    }
+  }
+
+  $variables['number'] = $variables['elements']['#weight'] + 1;
+
+  // Add article ARIA role.
+  $variables['attributes']['role'] = 'article';
+
+  // Gather share classes.
+  $variables['attributes']['class'][] = 'share';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('share-' . $variables['view_mode']);
+  }
+  
+   // search
+  $variables['search'] = drupal_get_form('store_search_form');
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function share_theme_suggestions_share(array $variables) {
+  return array('share__' . $variables['elements']['#view_mode']);
+}
+
+/**
+ * Returns a rendered form to comment the given share.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $share
+ *   The share entity to be commented.
+ *
+ * @return array
+ *   The renderable array for the comment addition form.
+ */
+function share_comment_add(EntityInterface $share) {
+  $values = array('sid' => $share->id());
+  $comment = entity_create('share_comment', $values);
+  return Drupal::entityManager()->getForm($comment);
+}
+
+/**
+ * Retrieves comments for a thread.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $share
+ *   The share whose comment(s) needs rendering.
+ * @param $comments_per_page
+ *   The amount of comments to display per page.
+ *
+ * @return
+ *   An array of the IDs of the comment to be displayed.
+ */
+function share_comment_get_thread(EntityInterface $share, $comments_per_page) {
+  $query = db_select('share_comments', 'c')
+    ->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+  $query->addField('c', 'cid');
+  $query
+    ->condition('c.sid', $share->id())
+    ->limit($comments_per_page);
+
+  $count_query = db_select('share_comments', 'c');
+  $count_query->addExpression('COUNT(*)');
+  $count_query
+    ->condition('c.sid', $share->id());
+
+  $query->orderBy('c.cid', 'DESC');
+
+  $query->setCountQuery($count_query);
+  $cids = $query->execute()->fetchCol();
+
+  return $cids;
+}
+
+/**
+ * Constructs render array from an array of loaded comments.
+ *
+ * @param $comments
+ *   An array of comments as returned by comment_load_multiple().
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
+ * @param $langcode
+ *   A string indicating the language field values are to be shown in. If no
+ *   language is provided the current content language is used.
+ *
+ * @return
+ *   An array in the format expected by drupal_render().
+ *
+ * @see drupal_render()
+ */
+function share_comment_view_multiple($comments, $view_mode = 'full', $langcode = NULL) {
+  return entity_view_multiple($comments, $view_mode, $langcode);
+}
+
+/**
+ * Prepare variables for share comment template.
+ *
+ * Default template: share-comment.html.twig.
+ */
+function template_preprocess_share_comment(&$variables) {
+  $user = \Drupal::currentUser();
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  $variables['comment'] = $variables['elements']['#share_comment'];
+  $comment = $variables['comment'];
+  $share = $comment->sid->entity;
+
+  $account = $comment->getAuthor();
+  //print_r($account);exit;
+  $username = array(
+    '#theme' => 'username',
+    '#account' => $account,
+  );
+  $variables['current_uid']    = $user->id();
+  //print_r($variables['current_user']);exit;
+  $variables['author'] = drupal_render($username);
+  $variables['comment_uid'] = $account->id();
+  $variables['comment_username'] = $account->getUsername();
+  date_default_timezone_set('Asia/Shanghai');//解决日期格式不正确的问题，by：mashh@72e.com
+  $variables['created'] = format_date($comment->created->value, 'custom', 'y-m-d H:i');
+  $picture = array('#theme' => 'account_picture', '#account' => $account);
+  $variables['user_picture'] = drupal_render($picture);
+  $variables['title'] = $comment->subject->value;
+
+  if ($variables['view_mode'] != 'full') {
+    $variables['share'] = share_view_multiple(array($share->id() => $share), 'comment');
+  }
+
+  // Gather comment classes.
+  $variables['attributes']['class'][] = 'share-comment';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('share-comment-' . $variables['view_mode']);
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function share_theme_suggestions_share_comment(array $variables) {
+  return array('share_comment__' . $variables['elements']['#view_mode']);
+}
+
+/**
+ * APIs get user_favorites
+ */
+function get_share_user_favorites($sid) {
+  return db_query('SELECT COUNT(uid) FROM {share_bookmarks} WHERE sid=:sid', array(':sid' => $sid))->fetchField();
+}
+
+function template_preprocess_shares(&$variables) {
+  if (isset($_GET['cid'])) {
+    $current_catalog = share_catalog_load($_GET['cid']);
+  }
+
+  $variables['shares_url'] = url('share');
+
+  // share catalogs
+  //drupal_add_library('ec', 'drupal.hover_ajax');
+  $catalogs = share_catalog_load_children(0);
+  $links = array();
+  foreach ($catalogs as $catalog) {
+    $link = array(
+      'title' => $catalog->label(),
+      'href' => 'share',
+      'query' => array('cid' => $catalog->id()),
+    );
+    if (isset($current_catalog)) {
+      if ($catalog->id() == $current_catalog->id()||$catalog->id() == $current_catalog->parent_cid->value) {
+        $link['attributes']['class'][] = 'active';
+      }
+      if ($catalog->id() == $current_catalog->id() || $catalog->id() == $current_catalog->parent_cid->value) {
+        $parent_catalog = $catalog;
+      }
+    }
+    $links[] = $link;
+  }
+  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+
+  // sub catalogs
+  if (isset($current_catalog)) {
+    $catalogs = share_catalog_load_children($parent_catalog->id());
+    $links = array();
+    foreach ($catalogs as $catalog) {
+      $link = array('title' => $catalog->name->value, 'href'=> 'share', 'query' => array('cid' => $catalog->id()));
+      $links[] = $link;
+    }
+    $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
+  }
+
+  // shares
+  $conditions = array();
+  if (isset($current_catalog)) {
+    $conditions['cid'] = $current_catalog->id();
+  }
+  if ($sids = share_select_shares($conditions, TRUE, 120)) {
+    $shares = share_load_multiple($sids);
+    $variables['shares'] = waterfall(share_view_multiple($shares), 4);
+    $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+  }
+  else {
+    $variables['shares'] = '暂无会员分享商品';
+  }
+}
+
+function template_preprocess_share_search(&$variables) {
+  $conditions = array();
+  $all_catalog_query = array();
+  if (isset($_GET['cid'])) {
+    $cid = $_GET['cid'];
+    $current_catalog = share_catalog_load($cid);
+    $conditions['cid'] = $cid;
+  }
+  if (isset($_GET['keywords'])) {
+    $keywords = $_GET['keywords'];
+    $all_catalog_query['keywords'] = $keywords;
+    $conditions['keywords'] = $keywords;
+  }
+
+  $variables['all_catalog_url'] = url('share/search', array('query' => $all_catalog_query));
+
+  // share catalogs
+  $catalogs = share_catalog_load_children(0);
+  $links = array();
+  foreach ($catalogs as $catalog) {
+    $q = $all_catalog_query;
+    $q['cid'] = $catalog->id();
+    $link = array('title' => $catalog->label(), 'href' => 'share/search', 'query' => $q);
+    if (isset($current_catalog)) {
+      if ($catalog->id() == $current_catalog->parent_cid->value) {
+        $link['attributes']['class'][] = 'active';
+      }
+      if ($catalog->id() == $current_catalog->id() || $catalog->id() == $current_catalog->parent_cid->value) {
+        $parent_catalog = $catalog;
+      }
+    }
+    $links[] = $link;
+  }
+  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+
+  // sub catalogs
+  if (isset($current_catalog)) {
+    $catalogs = share_catalog_load_children($parent_catalog->id());
+    $links = array();
+    foreach ($catalogs as $catalog) {
+      $q = $all_catalog_query;
+      $q['cid'] = $catalog->id();
+      $link = array('title' => $catalog->name->value, 'href'=> 'share/search', 'query' => $q);
+      $links[] = $link;
+    }
+    $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
+  }
+
+  // shares
+  if ($sids = share_select_shares($conditions, TRUE, 12)) {
+    $shares = share_load_multiple($sids);
+    $variables['shares'] = waterfall(share_view_multiple($shares), 3);
+    $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+  }
+
+  // new shares
+  $conditions = array();
+  if (isset($cid)) {
+    $conditions['cid'] = $cid;
+  }
+  if ($sids = share_select_shares($conditions, FALSE, 6)) {
+    $shares = share_load_multiple($sids);
+    $variables['new_shares'] = share_view_multiple($shares, 'new');
+  }
+  else {
+    $variables['new_shares'] = '暂无会员分享商品';
+  }
+
+  // popular shares
+  if ($sids = share_select_shares(array(), FALSE, 7, array('s.view_count' => 'DESC'))) {
+    $shares = share_load_multiple($sids);
+    $variables['popular_shares'] = share_view_multiple($shares, 'adv');
+  }
+  else {
+    $variables['popular_shares'] = '暂无会员分享商品';
+  }
+
+  // right_advs
+  $variables['right_advs'] = adv_block_view_items(14, 1);
+  $variables['search'] = drupal_get_form('store_search_form');
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function share_library_info() {
+  $libraries['jsp.share_history'] = array(
+    'title' => 'History',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      drupal_get_path('module', 'share') . '/js/share-history.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  $libraries['jsp.share_bookmark'] = array(
+    'title' => 'History',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      drupal_get_path('module', 'share') . '/js/bookmark.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+      array('ec', 'jsp.popup_message'),
+    ),
+  );
+  $libraries['jsp.share_comment_editor'] = array(
+    'title' => 'face_editor',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+     'sites/all/libraries/kindeditor/kindeditor.js' => array(),
+     'sites/all/libraries/kindeditor/lang/zh_CN.js' => array(),
+     'sites/all/libraries/kindeditor/plugins/code/prettify.js' => array(),
+      drupal_get_path('module', 'ec') . '/js/wysiwyg.js' => array(),
+    ),
+    'css' => array(
+     'sites/all/libraries/kindeditor/themes/default/default.css' => array(),
+     'sites/all/libraries/kindeditor/plugins/code/prettify.css' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Updates 'last viewed' timestamp of the specified entity for the current user.
+ *
+ * @param $sid
+ *   The share ID that has been read.
+ * @param $account
+ *   (optional) The user account to update the history for. Defaults to the
+ *   current user.
+ */
+function share_history_write($sid, $account = NULL) {
+  $user = \Drupal::currentUser();
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  if ($account->isAuthenticated()) {
+    db_merge('share_history')
+      ->key(array(
+        'uid' => $account->id(),
+        'sid' => $sid,
+      ))
+      ->fields(array('timestamp' => REQUEST_TIME))
+      ->execute();
+   }
+}
+
+/**
+ * Retrieves the timestamp for the current user's last view of a specified share.
+ *
+ * @param int $sid
+ *   A share ID.
+ *
+ * @return int
+ *   If a share has been previously viewed by the user, the timestamp in seconds
+ *   of when the last view occurred; otherwise, zero.
+ */
+function share_history_read($sid) {
+  $user = \Drupal::currentUser();
+  $history = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($history[$sid])) {
+    $history[$sid] = db_query("SELECT timestamp FROM {share_history} WHERE uid = :uid AND sid = :sid", array(':uid' => $user->id(), ':sid' => $sid))->fetchObject();
+  }
+
+  return (isset($history[$sid]->timestamp) ? $history[$sid]->timestamp : 0);
+}
+
+/**
+ * Return shares attached to history.
+ *
+ * @param $limit
+ *   Integer. The maximum number of nodes to find.
+ *
+ * @return
+ *   An array of sids matching the query.
+ */
+function share_history_select_shares($limit) {
+  $user = \Drupal::currentUser();
+
+  $query = db_select('share_history', 'h');
+  $query->condition('uid', $user->id());
+  $query->range(0, $limit);
+  $query->addField('h', 'sid');
+  $query->addField('h', 'uid');
+  $query->orderBy('timestamp', 'DESC');
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Finds all children of a share catalog ID.
+ *
+ * @param $cid
+ *   A share catalog ID.
+ *
+ * @return
+ *   An array of catalog objects that are the children of the catalog $cid, or an
+ *   empty array when no children exist.
+ */
+function share_catalog_load_children($cid) {
+  $children = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($children[$cid])) {
+    $query = db_select('share_catalog', 'c');
+    $query->addField('c', 'cid');
+    $query->condition('c.parent_cid', $cid);
+    $query->orderBy('c.weight');
+    $cids = $query->execute()->fetchCol();
+    $children[$cid] = entity_load_multiple('share_catalog', $cids);
+  }
+
+  return isset($children[$cid]) ? $children[$cid] : array();
+}
+
+/**
+ * Loads share_catalog entities from the database.
+ *
+ * @param array $cids
+ *   (optional) An array of entity IDs. If omitted, all entities are loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return array
+ *   An array of share_catalog objects, indexed by share_catalog ID.
+ *
+ * @see entity_load()
+ * @see Drupal\Core\Entity\Query\QueryInterface
+ */
+function share_catalog_load_multiple(array $cids = NULL, $reset = FALSE) {
+  return entity_load_multiple('share_catalog', $cids, $reset);
+}
+
+/**
+ * Loads the entire share_catalog by share_catalog ID.
+ *
+ * @param int $cid
+ *   The ID of the share_catalog to be loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return
+ *   The share_catalog object.
+ */
+function share_catalog_load($cid, $reset = FALSE) {
+  return entity_load('share_catalog', $cid, $reset);
+}
+
+/**
+ * Return shares attached to a catalog across all field instances.
+ *
+ * @param $conditions
+ *   The conditions array('cid' => , 'keywords' => ).
+ * @param $pager
+ *   Boolean to indicate whether a pager should be used.
+ * @param $limit
+ *   Integer. The maximum number of shares to find.
+ *   Set to FALSE for no limit.
+ * @param $order
+ *   An array of fields and directions.
+ *
+ * @return
+ *   An array of nids matching the query.
+ */
+function share_select_shares($conditions, $pager = TRUE, $limit = FALSE, $order = array('s.created' => 'DESC')) {
+  $query = db_select('shares', 's');
+  if (isset($conditions['cid'])) {
+    if ($children = share_catalog_load_children($conditions['cid'])) {
+      $or = db_or();
+      $or->condition('cid', array_keys($children));
+      $or->condition('cid', $conditions['cid']);
+      $query->condition($or);
+    }
+    else {
+      $query->condition('cid', $conditions['cid']);
+    }
+  }
+  if (isset($conditions['keywords'])) {
+    $or = db_or();
+    $or->condition('title', '%' . db_like($conditions['keywords']) . '%', 'LIKE');
+    $or->condition('description', '%' . db_like($conditions['keywords']) . '%', 'LIKE');
+    $query->condition($or);
+  }
+
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(s.sid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+
+  $query->addField('s', 'sid');
+  $query->addField('s', 'cid');
+
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+
+  return $query->execute()->fetchCol();
+}
+
+function share_select_guess($share, $pager = TRUE, $limit = FALSE) {
+ /*
+  $subquery = db_select('share_terms', 't');
+  $subquery->addField('t', 'tid');
+  $subquery->condition('sid', $share->id());
+
+  $query = db_select('share_terms', 's');
+  $query->condition('sid', $share->id(), '<>');
+  $query->condition('tid', $subquery, 'IN');
+  $query->distinct();
+*/
+  $catalog = $share->cid->value;
+  $query = db_select('shares','s');
+  $query->condition('cid', $catalog);
+
+
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(s.sid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+
+  $query->addField('s', 'sid');
+
+  return $query->execute()->fetchCol();
+}
+/**
+ * 
+ * @param type $share
+ * @param type $pager
+ * @param type $limit
+ * @return 
+ * @author mashh <mashh@72ec.com>
+ * 
+ */
+function share_select_editor($share, $pager = TRUE, $limit = FALSE) {
+  $subquery = db_select('share_terms', 't');
+  $subquery->addField('t', 'tid');
+  $subquery->condition('sid', $share->id());
+
+  $query = db_select('share_terms', 's');
+  $query->condition('sid', $share->id(), '<>');
+  $query->condition('tid', $subquery, 'IN');
+  $query->distinct();
+
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(s.sid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+
+  $query->addField('s', 'sid');
+
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Fetches a share_catalog object by name.
+ *
+ * @param string $name
+ *   String with the share_catalog's  name.
+ * @return object|bool
+ *   A fully-loaded $share_catalog object upon successful share_catalog load or FALSE if share_catalog
+ *   cannot be loaded.
+ *
+ * @see share_catalog_load_multiple()
+ */
+function share_catalog_load_by_name($name) {
+  $share_catalogs = entity_load_multiple_by_properties('share_catalog', array('name' => $name));
+  return $share_catalogs ? reset($share_catalogs) : FALSE;
+}

@@ -1,0 +1,130 @@
+create_coupon:
+  path: '/api/coupon'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::couponCreatePage'
+  requirements:
+    _access: 'TRUE'
+load_new_coupon:
+  path: '/api/store/{store_id}/late'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::loadNewCoupon'
+  requirements:
+    _access: 'TRUE'
+coupon_view:
+  path: '/api/store/{store_id}/coupon/{coupon_id}'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::couponView'
+  requirements:
+    _access: 'TRUE'
+coupon_edit:
+  path: '/api/store/{store_id}/coupon/{coupon_id}/edit'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::couponEdit'
+  requirements:
+    _access: 'TRUE'
+load_coupons_by_user_id:
+  path: '/api/user/{user_id}/coupons'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::loadUserCoupons'
+  requirements:
+    _access: 'TRUE'
+coupon_utils:
+  path: '/api/coupon/{coupon_id}'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::couponUtils'
+  requirements:
+    _access: 'TRUE'
+delete_coupons:
+  path: '/api/coupons/{coupon_ids}'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::deleteCoupons'
+  requirements:
+    _access: 'TRUE'
+revoke_coupons:
+  path: '/api/coupon/{coupon_id}/revoke'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::revokeCoupon'
+  requirements:
+    _access: 'TRUE'
+store_coupons:
+  path: '/api/store/{store_id}/coupons'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::storeCoupons'
+  requirements:
+    _access: 'TRUE'
+load_store_coupons_by_status:
+  path: '/api/store/{store_id}/coupons/{status}'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::loadStoreCouponsByStatus'
+  requirements:
+    _access: 'TRUE'
+bookmark_coupons:
+  path: '/api/bookmark/coupons'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::userBookmarkCoupons'
+  requirements:
+    _access: 'TRUE'
+coupon_bookmark:
+  path: '/api/user/bookmark/coupon/{coupon_id}'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::couponBookmark'
+  requirements:
+    _access: 'TRUE'
+
+coupon.history_read_coupon:
+  path: '/coupon/history/{coupon}/read'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\HistoryController::readCoupon'
+  requirements:
+    _access: 'TRUE'
+
+js_coupon_bookmarked:
+  path: '/js/coupon/{coupon}/bookmarked'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::bookmarked'
+  requirements:
+    _access: 'TRUE'
+js_coupon_bookmark:
+  path: '/js/coupon/{coupon}/bookmark'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::bookmark'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+js_coupon_unbookmark:
+  path: '/js/coupon/{coupon}/unbookmark'
+  defaults:
+    _controller: '\Drupal\coupon\Controller\CouponController::unbookmark'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+
+coupon.front:
+  path: 'coupons'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::front'
+  requirements:
+    _access: 'TRUE'
+coupon.manage:
+  path: 'admin/coupon'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponManage'
+  requirements:
+    _permission: 'admin coupon'
+coupon.add:
+  path: 'coupon/edit'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponAdd'
+  requirements:
+    _permission: 'admin coupon'
+coupon.edit:
+  path: '/coupon/{coupon}/edit'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponEditForm'
+  requirements:
+    _permission: 'admin coupon'
+coupon.admin_pending:
+  path: 'admin/coupons/pending'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponAdminPending'
+  requirements:
+    _permission: 'admin coupon'

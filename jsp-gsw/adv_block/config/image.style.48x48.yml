@@ -1,0 +1,13 @@
+name: 48x48
+label: 48x48
+uuid: b0e89334-bca0-43bc-9800-e985d426c1e4
+status: '1'
+langcode: zh-hans
+effects:
+  2bbf22d8-64f5-48e5-8509-0998b08b6d25:
+    uuid: 2bbf22d8-64f5-48e5-8509-0998b08b6d25
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '48'
+      height: '48'

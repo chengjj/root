@@ -1,0 +1,13 @@
+name: 200x300
+label: 200x300
+uuid: a2551a6f-a3fe-4270-b927-3961f67c9461
+status: '1'
+langcode: zh-hans
+effects:
+  4e4d86c8-5e46-4ac2-8c34-528a545ece2f:
+    uuid: 4e4d86c8-5e46-4ac2-8c34-528a545ece2f
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '200'
+      height: '300'

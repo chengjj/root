@@ -1,0 +1,13 @@
+name: 125x54
+label: 125x54
+uuid: ba7f31e9-c929-4579-af4f-79dae0dd6df0
+status: '1'
+langcode: zh-hans
+effects:
+  d3cf0e96-f270-4dab-af16-2253d1b402fa:
+    uuid: d3cf0e96-f270-4dab-af16-2253d1b402fa
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '125'
+      height: '54'

@@ -1,0 +1,1301 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+
+
+define('COUPON_STATUS_PUBLISH', 1);//促销信息已发布
+define('COUPON_STATUS_PENDING', 0);//促销信息待审核
+define('COUPON_STATUS_EXPIRED', -1);//促销信息已过期
+define('COUPON_STATUS_CANCEL', -2);//促销信息已撤销
+define('COUPON_STATUS_DELETE', -3);//促销信息已撤销
+/**
+ * Implements hook_cron()
+ */
+function coupon_cron() {
+  $expires = variable_get('coupon_cron_expires', 0);
+  if ($expires + 3600 <  REQUEST_TIME) {
+    //auto change coupon status
+    $cids = db_select('coupons', 'c')
+      ->fields('c', array('cid'))
+      ->condition('status', 1)
+      ->execute()
+      ->fetchCol();
+    if (count($cids)) {
+      foreach ($cids as $cid) {
+        $coupon = coupon_load($cid);
+        if (date('Y-m-d', $coupon->expire->value) < date('Y-m-d')) {
+          $coupon->status = COUPON_STATUS_EXPIRED;
+          $coupon->save();
+          /*$status = array(
+            'status' => -1
+          );
+          //TODO
+          coupon_save($coupon, $status);
+          */
+        }
+      }
+    }
+    //auto public coupon
+    $cids = db_select('coupons', 'c')
+      ->fields('c', array('cid'))
+      ->condition('status', 0)
+      ->execute()
+      ->fetchCol();
+    $blocked_keywords = coupon_get_blocked_keywords();
+    if (count($cids)) {
+      foreach ($cids as $cid) {
+        $coupon = coupon_load($cid);
+        
+        $is_blocked = FALSE;
+        foreach ($blocked_keywords as $keyword) {
+          if (strpos($coupon->label(), $keyword) !== FALSE || 
+              strpos($coupon->body->value, $keyword) !== FALSE ||
+              strpos($coupon->note->value, $keyword) !== FALSE) {
+            $is_blocked = TRUE;
+            break;
+          }
+        }
+        //TODO 审核关键字 可采用文本匹配
+        if ($coupon->start->value > strtotime('-1 day') && !$is_blocked) {
+          $coupon->status = COUPON_STATUS_PUBLISH;
+          $coupon->save();
+          /*$status = array(
+            'status' => 1
+          );
+          //TODO
+          coupon_save($coupon, $status);
+          */
+        }
+      }
+    }
+    variable_set('coupon_cron_expires', REQUEST_TIME);
+  }
+}
+/**
+ * Implements hook_menu()
+ */
+function coupon_menu() {
+  //TODO remove
+  $items['coupons'] = array(
+    'title' => '搜周边',
+    'route_name' => 'coupon.front',
+  );
+  $items['coupon/edit'] = array(
+    'title' => '添加促销信息',
+    'route_name' => 'coupon.add',
+  );
+  //TODO 检查是否在使用
+  $items['coupon/js/%'] = array(
+    'page callback' => 'coupon_js',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'file' => 'coupon.pages.inc',
+  );
+  $items['admin/coupon'] = array(
+    'title' => '促销管理列表',
+    'route_name' => 'coupon.manage',
+  );
+  $items['admin/coupons/pending'] = array(
+    'title' => '促销审核',
+    'route_name' => 'coupon.admin_pending',
+    'file' => 'coupon.pages.inc',
+  );
+  $items['coupons/search'] = array(
+    'title' => '促销信息列表',
+    'page callback' => 'coupon_search_list_page',
+    'access callback' => TRUE,
+    'file' => 'coupon.pages.inc',
+  );
+  $items['coupon/%coupon'] = array(
+    'title' => '特定促销信息',
+    'page callback' => 'coupon_page_view',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+  );
+  $items['user/coupons'] = array(
+    'title' => '我的促销信息',
+    'page callback' => 'coupon_user_coupon_page',
+    'access callback' => TRUE,
+    'file' => 'coupon.pages.inc',
+  );
+  $items['user/coupons/bookmarks'] = array(
+    'title' => '我收藏的促销信息',
+    'page callback' => 'coupon_user_coupons_bookmark_page',
+    'access callback' => TRUE,
+    'file' => 'coupon.pages.inc',
+  );
+  return $items;
+}
+
+/**
+ * API get coupon number by store id 
+ */
+function coupon_numbers_by_store_id($store_id, $status = NULL) {
+  if (!is_numeric($store_id)) {
+    return FALSE;
+  }
+  $nids = coupon_load_by_store($store_id, $status);
+  return count($nids);
+}
+/**
+ * API get coupon by user id
+ * get user favoriate coupon
+ */
+function coupon_load_by_user($user_id, $page = NULL, $per_page = NULL) {
+  if (!is_numeric($user_id)) {
+    return FALSE;
+  }
+  $query = db_select('coupons', 'c')
+          ->fields('c', array('cid'))
+          ->condition('status', 1)
+          ->condition('uid', $user_id);
+  if (!empty($per_page)) {
+    $startIndex = 0;
+    if ($page == 0) {
+      $startIndex = $page;
+    } else {
+      $startIndex = $page * $per_page;
+    }
+    $query->range($startIndex, $per_page);
+  }
+  $results = $query->execute();
+
+  $cids = array();
+  foreach ($results as $row) {
+    $cids[] = $row->cid;
+  }
+  return $cids;
+}
+/**
+ *  API send latest coupon  
+ */
+function coupon_latest_coupon($sid) {
+  if (empty($sid)) {
+    return ;
+  }
+  $cid = db_query('SELECT cid FROM {coupons} WHERE sid=:sid AND status = 1 ORDER BY changed DESC', array(':sid' => $sid))->fetchField();
+  $cid && $coupon = coupon_load($cid);
+  return isset($coupon) ? $coupon : NULL;
+}
+
+/**
+ * API get coupon by store id
+ */
+function coupon_load_by_store($store_id, $status = NULL, $page = NULL, $per_page = NULL ) {
+  if (!is_numeric($store_id)) {
+    return FALSE;
+  }
+  $query = db_select('coupons', 'c')
+          ->fields('c')
+          ->condition('c.sid', $store_id);
+  if (isset($status)) { 
+    if (is_array($status)) {
+      $query->condition('c.status', $status, 'IN');
+    }else {
+      $query->condition('c.status', $status);
+    }
+  }
+  $query->orderBy('c.created', 'DESC');
+  
+  if (isset($per_page)) {
+    $startIndex = 0;
+    if ($page == 0 || $page == 1) {
+      $startIndex = 0;
+    } else {
+      $startIndex = ($page-1) * $per_page;
+    }
+    $query->range($startIndex, $per_page);
+  }
+  $results = $query->execute();
+  $cids = array();
+  foreach ($results as $row) {
+    $cids[] = $row->cid;
+  }
+  return $cids;
+}
+
+/**
+ * APIs get_blocked_keywords
+ */
+function coupon_get_blocked_keywords() {
+  $key = $_SERVER['SERVER_NAME'] . ':blocked:keywords';
+  $keywords = @apc_fetch($key);
+
+  if (empty($keywords)) {
+    $filepath = drupal_get_path('module', 'coupon') . '/blocked-words.inc';
+    $data = file_get_contents($filepath);
+    $keywords = explode(',', $data);
+
+    @apc_store($key, $keywords);
+  }
+
+  return $keywords;
+}
+
+/**
+ * Implements hook_permission()
+ */
+function coupon_permission() {
+  return array(
+    'admin coupon' => array(
+      'title' => '管理\审核促销信息',
+      'description' => '管理促销列表、审核促销信息',
+    ),
+    'access coupon' => array(
+      'title' => '编辑/删除促销信息',
+      'restrict access' => TRUE,
+    ),
+  );
+}
+/*
+
+<<<<<<< HEAD
+  *APIs coupon_load 
+=======
+ /**
+ * APIs coupon_load 
+>>>>>>> b6898082c7cedb646e8773d40b52208d6cf4037d
+ */
+function coupon_load($cid, $reset = FALSE) {
+  return entity_load('coupon', $cid, $reset);
+}
+
+function _coupon_load($cid) {
+  if (empty($cid)) {
+    return FALSE;
+  }
+  return db_select('coupons', 'c')
+    ->fields('c', array('cid', 'fid', 'sid', 'note', 'start', 'expire',
+    'status', 'created', 'changed', 'title', 'body', 'uid'))
+    ->condition('cid', $cid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * APIs coupon_delete
+ */
+function coupon_delete($cid) {
+  return coupon_delete_multiple(array($cid));
+}
+
+/**
+ * APIs coupon_delete_multiple
+ */
+function coupon_delete_multiple($cids) {
+  if (!empty($cids)) {
+    $coupons = coupon_load_multiple($cids);
+    foreach ($coupons as $coupon)
+      module_invoke_all('coupon_coupon_delete', $coupon);
+  }
+  db_delete('coupons')
+    ->condition('cid', $cids, 'IN')
+    ->execute();
+}
+/**
+ * Implements hook_coupon_delete()
+ */
+function coupon_coupon_delete($coupon) {
+  /*if ($cache = cache('Backend.Memcache')->get('Memcache')) { 
+    $cid = $_SERVER['SERVER_NAME'] . ':coupon:cid:' . $coupon->cid;
+    $cache->delete($cid);
+  }*/
+}
+
+/**
+ * APIs coupon_load_multiple 
+ */
+function coupon_load_multiple(array $cids = NULL, $reset = FALSE) {
+  return entity_load_multiple('coupon', $cids, $reset);
+}
+
+/**
+ * APIs coupon_save
+ */
+function coupon_save($coupon, $edit = array()) {
+  if (!empty($coupon->cid) && !isset($coupon->original)) {
+    $coupon->original = _coupon_load($coupon->cid);
+    if ($coupon->original->fid) {
+      $coupon->original->picture = file_load($coupon->original->fid);
+    }
+  }
+  if (empty($coupon)) {
+    $coupon = new stdClass();
+  }
+  if (!isset($coupon->is_new)) {
+    $coupon->is_new = empty($coupon->cid);
+  }
+
+  foreach ($edit as $key => $value) {
+    $coupon->$key = $value;
+    if ($key == 'picture_upload') {
+      $coupon->picture = $value; // picture
+    }
+  }
+  if (is_object($coupon) && !$coupon->is_new) {
+    if ($coupon->picture && (!$coupon->original->picture || $coupon->picture->id() != $coupon->original->picture->id())) {
+      $picture = $coupon->picture;
+      if (!$picture->isPermanent()) {
+        $image_factory = Drupal::service('image.factory');
+        $image = $image_factory->get($picture->getFileUri());
+        $image_extension = $image->getExtension();
+        $picture_directory = file_default_scheme() . '://' . variable_get('coupon_picture_path', 'coupons');
+
+        // Prepare the pictures directory.
+        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+        $destination = file_stream_wrapper_uri_normalize($picture_directory . '/coupon-' . $coupon->cid . '.' .$image_extension);
+        // Move the temporary file info the final location.
+        if ($picture = file_move($picture, $destination, FILE_EXISTS_RENAME)) {
+          $picture->setPermanent();
+          $picture->save();
+          $coupon->picture = $picture;
+          file_usage()->add($picture, 'coupon','coupon', $coupon->cid);
+        }
+      }
+
+      // Delete the previous picture if it was deleted or replaced.
+      if ($coupon->original->picture) {
+        file_usage()->delete($coupon->original->picture, 'coupon', 'coupon', $coupon->cid);
+        file_delete($coupon->original->picture);
+      }
+    }
+    if ($coupon->picture && $coupon->picture->id()) {
+      $coupon->fid = $coupon->picture->id();
+    }
+    else {
+      $coupon->fid = is_object($coupon->original->picture) ? $coupon->original->picture->id() : $coupon->original->picture;
+    }
+
+    $success = drupal_write_record('coupons', $coupon, 'cid');
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    // Update $edit with any interim changes to $coupon
+    foreach ($coupon as $key => $value) {
+      if (!property_exists($coupon->original, $key) || $value !== $coupon->original->$key) {
+        $edit[$key] = $value;
+      }
+    }
+    coupon_module_invoke('update', $edit, $coupon);
+  }
+  else {
+    // Allow 'created' to be set by the caller.
+    if (!isset($coupon->created)) {
+      $coupon->created = REQUEST_TIME;
+    }
+
+    if (@is_object($coupon->picture)) {
+      $new_picture = $coupon->picture;
+      unset($coupon->picture);
+    }
+    $success = drupal_write_record('coupons', $coupon);
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    if (isset($new_picture)) {
+      $coupon->fid = $new_picture;
+      $coupon->is_new = FALSE;
+      coupon_save($coupon, array('picture' => $new_picture));
+    }
+    $edit = (array) $coupon;
+        //提供 hook_coupon_insert 钩子:
+    coupon_module_invoke('insert', $edit, $coupon);
+  }
+
+  // Clear internal properties.
+  unset($coupon->is_new);
+  unset($coupon->original);
+
+  return $coupon;
+}
+
+function coupon_module_invoke($type, &$edit, $coupon) {
+  foreach (module_implements('coupon_' . $type) as $module) {
+    $function = $module . '_coupon_' . $type;
+    $function($edit, $coupon);
+  }
+}
+
+/**
+ * Implement hook_theme()
+ */
+function coupon_theme() {
+  return array(
+    'coupon' => array(
+      'render element' => 'elements',
+      'template' => 'coupon',
+    ),
+    'coupon_front_page' => array(
+      'template' => 'coupon-front-page',
+      'description' => '搜周边模板',
+    ),
+    'coupon_picture' => array(
+      'variables' => array('coupon' => NULL, 'options' => NULL),
+      'template' => 'coupon-picture',
+      'description' => '广告图片显示模板',
+    ),
+    'coupon_bookmark_list' => array(
+      'template' => 'coupon-bookmark-list',
+      'description' => '促销信息列表',
+    ),
+    'coupon_bookmark_item' => array(
+      'variables' => array('coupon' => NULL),
+      'template' => 'coupon-bookmark-item',
+      'description' => '单个促销信息模板',
+    ),
+    'coupon_comment_list' => array(
+      'template' => 'coupon-bookmark-list',
+      'description' => '促销信息列表',
+    ),
+    'coupon_comment_item' => array(
+      'variables' => array('coupon' => NULL),
+      'template' => 'coupon-bookmark-item',
+      'description' => '单个促销信息模板',
+    ),
+  );
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_picture(&$variables) {
+  $coupon = $variables['coupon'];
+  $picture = $coupon->getPicture();
+   
+  if ($picture) {
+    if ($picture->getFileUri()) {
+      $filepath = $picture->getFileUri();
+    }
+  }
+  
+  if (isset($filepath)) {
+    $alt = $coupon->label();
+    
+    if (variable_get('coupon_picture_url')) {
+      $filepath = str_replace('public://', variable_get('coupon_picture_url', 'coupons'), $filepath); 
+    }
+    
+    $coupon_picture = theme('image', array('uri' => $filepath, 'alt' => $alt, 'title' => $alt));
+
+    $options = isset($variables['options']) ? $variables['options'] : array(); 
+    $options['coupon'] = $coupon;
+    $options['html'] = TRUE;
+
+    $variables['coupon_picture'] = $coupon_picture;
+  }
+  else {
+  	$variables['coupon_picture'] 	= '<img src="'. variable_get('coupon_default_picture', 'sites/default/files/no_img.png') .'" alt="暂无图片" />';
+  }
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_bookmark_list(&$variables) {
+  //此处不能用global $user 原型中有ta收藏 和 我的收藏
+  $account = $variables['account']; 
+  $cids = db_select('coupon_bookmarks', 'c')
+      ->fields('c', array('cid'))
+      ->condition('uid', $account->id())
+      ->execute()
+      ->fetchCol();
+  $coupons = coupon_load_multiple($cids);
+  $variables['coupons'] = $coupons;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_bookmark_item(&$variables) {
+  //TODO 需要检查是否使用
+  $coupon = $variables['coupon'];
+  $store = db_select('stores', 's')
+      ->fields('s')
+      ->condition('sid', $coupon->cid)
+      ->execute()
+      ->fetchObject();
+  $coupon->store_title = $store->name;
+  $coupon->address = $store->address;
+
+  if ($coupon->picture) {
+    if (is_numeric($coupon->picture)) {
+      $coupon->picture = file_load($coupon->picture);
+    }
+    if ($coupon->picture->getFileUri()) {
+      $filepath = $coupon->picture->getFileUri();
+    }
+  }
+  
+  if (isset($filepath)) {
+    $alt = $coupon->title;
+    
+    if (variable_get('coupon_picture_url')) {
+      $filepath = str_replace('public://', variable_get('coupon_picture_url', 'coupons'), $filepath); 
+    }
+    
+    $coupon_picture = theme('image', array('uri' => $filepath, 'alt' => $alt, 'title' => $alt));
+
+    $options = isset($variables['options']) ? $variables['options'] : array(); 
+    $options['coupon'] = $coupon;
+    $options['html'] = TRUE;
+
+    $variables['coupon_picture'] = $coupon_picture;
+  }
+  else {
+  	$variables['coupon_picture'] 	= '<img src="'. variable_get('coupon_default_picture', 'sites/default/files/no_img.png') .'" alt="暂无图片" />';
+  }
+
+  $variables['coupon'] = $coupon;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_comment_list(&$variables) {
+  //TODO 需要检查是否使用
+  $query = db_select('coupon_comments', 'c')
+      ->fields('c', 'mid')
+      ->condition('uid', $account->uid)
+      ->orderBy('created', 'desc')
+      ->execute();
+  $mids = array();
+  foreach ($query as $mid) {
+    $mids[] = $mid->mid;
+  }
+  $comments = coupon_comment_load_multiple($mids);
+  $variables['comments'] = $comments;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_comment_item(&$variables) {
+  //TODO 需要检查是否使用
+  $comment = $variables['comment'];
+  $coupon = coupon_load($comment->cid);
+  $store = db_select('stores', 's')
+      ->fields('s')
+      ->condition('sid', $coupon->sid)
+      ->execute()
+      ->fetchObject();
+  $comment->coupon_title = $coupon->title;
+  $comment->store_title = $store->name;
+  $comment->user_num = $store->user_num;
+  $comment->follow_count = $store->follow_count;
+
+  if ($coupon->picture) {
+    if (is_numeric($coupon->picture)) {
+      $coupon->picture = file_load($coupon->picture);
+    }
+    if ($coupon->picture->getFileUri()) {
+      $filepath = $coupon->picture->getFileUri();
+    }
+  }
+  
+  if (isset($filepath)) {
+    $alt = $coupon->title;
+    
+    if (variable_get('coupon_picture_url')) {
+      $filepath = str_replace('public://', variable_get('coupon_picture_url', 'coupons'), $filepath); 
+    }
+    
+    $coupon_picture = theme('image', array('uri' => $filepath, 'alt' => $alt, 'title' => $alt));
+
+    $options = isset($variables['options']) ? $variables['options'] : array(); 
+    $options['coupon'] = $coupon;
+    $options['html'] = TRUE;
+
+    $variables['coupon_picture'] = $coupon_picture;
+  }
+  else {
+  	$variables['coupon_picture'] 	= '<img src="'. variable_get('coupon_default_picture', 'sites/default/files/no_img.png') .'" alt="暂无图片" />';
+  }
+
+  $variables['comments'] = $comments;
+}
+
+/**
+ * APIs coupon_account_is_followed_coupon
+ */
+function coupon_account_is_bookmark_coupon($uid, $coupon_id) {
+  return db_select('coupon_bookmarks', 'c')
+    ->fields('c', array('uid'))
+    ->condition('uid', $uid)
+    ->condition('cid', $coupon_id)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * APIs coupon_bookmark
+*/
+function coupon_bookmark($uid, $cid) {
+  if($user->isAuthenticated()){
+     db_insert('coupon_bookmarks')->fields(array('uid' => $uid, 'cid' => $cid, 'created' => time()))->execute();
+  }
+  else $variable['follow_url'] = url('login');
+  }
+
+/**
+ * APIs coupon_unbookmark
+ */
+function coupon_unbookmark($uid, $cid) {
+  if($user-isAuthenticated)db_delete('coupon_bookmarks')->condition('uid', $uid)->condition('cid', $cid)->execute();
+  else $variable['follow_url'] = url('login');
+}
+
+/**
+ * APIs coupon_comment_load_multiple()
+ */
+function coupon_comment_load_multiple($mids) {
+  $coupon_comments = array();
+  foreach ($mids as $mid) {
+    $coupon_comments[] = coupon_comment_load($mid);
+  }
+  return $coupon_comments;
+}
+
+/**
+ * APIs coupon_comment_load().
+ */
+function coupon_comment_load($mid) {
+  if (!is_numeric($mid)) return;
+
+  //$cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cache = FALSE;
+  $mid = $_SERVER['SERVER_NAME'] . ':coupon_comment:id:' . $mid;
+  if ($cache) {
+    if ($cached = $cache->get($mid)) {
+      $coupon_comment = $cached->data;
+    } else {
+      $coupon_comment = _coupon_comment_load($mid);
+      $cache->set($mid, $coupon_comment);
+    }
+  } else {
+    $coupon_comment = _coupon_comment_load($mid);
+  }
+  return $coupon_comment;
+}
+
+function _coupon_comment_load($mid) {
+  return db_select('coupon_comments', 'c')
+    ->fields('c')
+    ->condition('mid', $mid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * APIs coupon_comment_save().
+ */
+function coupon_comment_save($coupon_comment = NULL, $edit = array()) {
+  if ($coupon_comment->cid && !isset($coupon_comment->original)) {
+    $coupon_comment->original = coupon_comment_load($coupon_comment->cid);
+  }
+  if (empty($coupon_comment)) {
+    $coupon_comment = new stdClass();
+  }
+  if (!isset($coupon_comment->is_new)) {
+    $coupon_comment->is_new = empty($coupon_comment->cid);
+  }
+
+  foreach ($edit as $key => $value) {
+    $coupon_comment->$key = $value;
+  }
+
+  if (is_object($coupon_comment) && !$coupon_comment->is_new) {
+ 
+    $success = drupal_write_record('coupon_comments', $coupon_comment, 'cid');
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    foreach ($coupon_comment as $key => $value) {
+      if (!property_exists($coupon_comment->original, $key) || $value !== $coupon_comment->original->$key) {
+        $edit[$key] = $value;
+      }
+    }
+  }
+  else {
+    // Allow 'created' to be set by the caller.
+    if (!isset($coupon_comment->created)) {
+      $coupon_comment->created = REQUEST_TIME;
+    }
+
+    $success = drupal_write_record('coupon_comments', $coupon_comment);
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    $edit = (array) $coupon_comment;
+  }
+  // Clear internal properties.
+  unset($coupon_comment->is_new);
+  unset($coupon_comment->original);
+  
+  return $coupon_comment;
+}
+
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_coupon_image_title_desc(&$variables) {
+  drupal_add_css(drupal_get_path('module', 'adv_block') . '/css/adv_block-coupon-image-title-desc.css');
+  drupal_add_js(drupal_get_path('module', 'adv_block') . '/js/adv_block-coupon-image-title-desc.js', 'file');
+  $variables['has_content'] = FALSE;
+  $adv_block = $variables['adv_block'];
+  if ($adv_block->item_list) {
+    $variables['has_content'] = TRUE;
+    $item_list = array();
+    foreach ($adv_block->item_list as $item) {
+      if ($coupon = coupon_load($item->entity_id)) {
+        $store = $coupon->getStore();
+        $title = $item->title ? $item->title : $coupon->label();
+        $coupon_link = url('store/' . $coupon->sid->value); 
+
+        $picture = $item->picture ? $item->picture : $coupon->getPicture();
+        
+        $default_img_src = $thumbnail_img_src = '';
+        if ($picture) {
+          $thumbnail_img_src = get_uri_by_image_style(array('style_name' => '60x60', 'uri' => $picture->getFileUri()));
+          $default_img_src = file_create_url($picture->getFileUri()); 
+        }
+
+        $item_list[] = array(
+          'title' => $title,
+          'store_name' => isset($store) ? $store->label() : '',
+          'coupon_link' => $coupon_link,
+          'thumbnail_img_src' => $thumbnail_img_src,
+          'default_img_src' => $default_img_src,
+        );
+      }
+    }
+    $variables['item_list'] = $item_list;
+  }
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_coupon_image_store_title(&$variables) {
+  template_preprocess_adv_block_coupon_image_title_desc($variables);
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_coupon_front_page(&$variables) {
+  /* 
+   *  @catalog: 搜索区块
+   *  @ad_foods: 餐饮美食(促销推荐) bid=14
+   *  @ad_banner_1: banner(adv) bid=11
+   *  @ad_banner_2: banner(adv) bid=12
+   *  @ad_banner_3: banner(adv) bid=13
+   *  @ad_live: 生活服务(促销推荐) bid=15
+   *  @ad_coupon_remote_top:首页周边热点排行(促销推荐) bid=7
+   *  @ad_shop: 品牌商家(adv) bid=8
+   *  @ad_play: 休闲娱乐(促销推荐) bid=16
+   */
+  $variables['catalog'] = theme('store_search_catalog');
+
+  // 餐饮美食
+  $variables['ad_foods'] = adv_block_view_items(15, 4, 'teaser');
+
+  $variables['ad_banner_1'] = adv_block_view_items(12, 1); //'template' => 'adv_block_adv_banner_732x92'
+  $variables['ad_banner_2'] = adv_block_view_items(13, 1); //'template' => 'adv_block_adv_banner_732x92'
+  $variables['ad_banner_3'] = adv_block_view_items(14, 1); //'template' => 'adv_block_adv_banner_732x92'
+
+  // 生活服务
+  $variables['ad_live'] = adv_block_view_items(16, 4, 'teaser');
+
+  // 周边热点排行
+  drupal_add_library('jsp', 'drupal.hover-class');
+  if ($ids = adv_block_select_entities(7, FALSE, 6)) {
+    $items = store_load_multiple($ids);
+    $variables['ad_coupon_remote_top'] = store_view_multiple($items, 'hot');
+    $variables['ad_coupon_remote_top'][$ids[0]]['#attributes']['class'][] = 'open';
+  }
+  else {
+    $variables['ad_coupon_remote_top'] = '';
+  }
+
+  // 品牌商家
+  $variables['ad_shop'] = adv_block_view_items(8, 10);
+
+  // 休息娱乐
+  $variables['ad_play'] = adv_block_view_items(17, 4, 'teaser');
+
+}
+
+/**
+ * Page callback: Displays a single coupon.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $coupon
+ *   The coupon entity.
+ *
+ * @return
+ *   A page array suitable for use by drupal_render().
+ *
+ * @see coupon_menu()
+ */
+function coupon_page_view(EntityInterface $coupon) {
+  // If there is a menu link to this coupon, the link becomes the last part
+  // of the active trail, and the link name becomes the page title.
+  // Thus, we must explicitly set the page title to be the coupon title.
+  drupal_set_title($coupon->label());
+
+  $page = array('coupons' => coupon_view_multiple(array($coupon->id() => $coupon), 'full'));
+
+  $page['#attached'] = array(
+    'js' => array(
+      array(
+        'data' => 'window.addEventListener("load", function(){Drupal.coupon_history.markAsRead(' . $coupon->id() . ');},false);',
+        'type' => 'inline',
+      ),
+    ),
+    'library' => array(
+      array('coupon', 'drupal.coupon_history'),
+    )
+  );
+
+  return $page;
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function coupon_library_info() {
+  $libraries['drupal.coupon_history'] = array(
+    'title' => 'History',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      drupal_get_path('module', 'coupon') . '/js/coupon-history.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  $libraries['jsp.coupon_bookmark'] = array(
+    'title' => 'Coupon bookmark',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      drupal_get_path('module', 'coupon') . '/js/bookmark.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+      array('ec', 'jsp.popup_message'),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Updates 'last viewed' timestamp of the specified entity for the current user.
+ *
+ * @param $cid
+ *   The coupon ID that has been read.
+ * @param $account
+ *   (optional) The user account to update the history for. Defaults to the
+ *   current user.
+ */
+function coupon_history_write($cid, $account = NULL) {
+  $user = \Drupal::currentUser();
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  if ($account->isAuthenticated()) {
+    db_merge('coupon_history')
+      ->key(array(
+        'uid' => $account->id(),
+        'cid' => $cid,
+      ))
+      ->fields(array('timestamp' => REQUEST_TIME))
+      ->execute();
+   }
+}
+
+/**
+ * Retrieves the timestamp for the current user's last view of a specified coupon.
+ *
+ * @param int $cid
+ *   A coupon ID.
+ *
+ * @return int
+ *   If a coupon has been previously viewed by the user, the timestamp in seconds
+ *   of when the last view occurred; otherwise, zero.
+ */
+function coupon_history_read($cid) {
+  $user = \Drupal::currentUser();
+  $history = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($history[$cid])) {
+    $history[$cid] = db_query("SELECT timestamp FROM {coupon_history} WHERE uid = :uid AND cid = :cid", array(':uid' => $user->id(), ':cid' => $cid))->fetchObject();
+  }
+
+  return (isset($history[$cid]->timestamp) ? $history[$cid]->timestamp : 0);
+}
+
+/**
+ * Return coupons attached to history.
+ *
+ * @param $limit
+ *   Integer. The maximum number of nodes to find.
+ *
+ * @return
+ *   An array of cids matching the query.
+ */
+function coupon_history_select_coupons($limit) {
+  $user = \Drupal::currentUser();
+
+  $query = db_select('coupon_history', 'h');
+  $query->condition('uid', $user->id());
+  $query->range(0, $limit);
+  $query->addField('h', 'cid');
+  $query->addField('h', 'uid');
+  $query->orderBy('timestamp', 'DESC');
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Constructs a drupal_render() style array from an array of loaded coupons.
+ */
+function coupon_view_multiple($coupons, $view_mode = 'teaser', $langcode = NULL) {
+  return entity_view_multiple($coupons, $view_mode, $langcode);
+}
+
+/**
+ * Prepares variables for coupon templates.
+ *
+ * Default template: coupon.html.twig.
+ *
+ * Most themes utilize their own copy of coupon.html.twig. The default is located
+ * inside "/core/modules/coupon/templates/coupon.html.twig". Look in there for the full
+ * list of variables.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - coupon: The coupon object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser'...
+ */
+function template_preprocess_coupon(&$variables) {
+  $user = \Drupal::currentUser();
+
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['teaser'] = $variables['view_mode'] == 'teaser';
+  $variables['coupon'] = $variables['elements']['#coupon'];
+  $coupon = $variables['coupon'];
+  $store = $coupon->getStore();
+  $variables['store'] = $store;
+
+  $uri = $store->uri();
+  $variables['coupon_url'] = url($uri['path'], $uri['options']);
+  $variables['label'] = check_plain($coupon->label());
+  if ($variables['view_mode'] != 'full') {
+    $variables['number'] = $variables['elements']['#weight'] + 1;
+    $variables['label_short'] = truncate_utf8($coupon->label(), 12);
+    $variables['store_label_short'] = truncate_utf8($store->label(), 5);
+  }
+
+  if ($file = file_load($coupon->fid->value)) {
+    if ($variables['teaser']) {
+      $picture = array('#theme' => 'image_style', '#style_name' => '213x');
+    }
+    else {
+      $picture = array('#theme' => 'image');
+    }
+    $picture['#uri'] = $file->getFileUri();
+    $picture['#alt'] = $coupon->label();
+    $picture['#attributes']['class'][] = 'coupon-picture';
+    $variables['picture'] = $picture;
+  }
+
+  $expire = format_date($coupon->start->value, 'custom', 'Y年n月j日');
+  $expire .= '-';
+  $expire .= format_date($coupon->expire->value, 'custom', 'Y年n月j日');
+  $variables['expire'] = $expire;
+
+  if ($user->isAuthenticated()) {
+    drupal_add_library('coupon', 'jsp.coupon_bookmark');
+    $variables['bookmark_url'] = url('');
+  }
+  else {
+    $variables['bookmark_url'] = url('login');
+  }
+
+  // Add article ARIA role.
+  $variables['attributes']['role'] = 'article';
+
+  // Gather coupon classes.
+  $variables['attributes']['class'][] = 'coupon';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('coupon-' . $variables['view_mode']);
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function coupon_theme_suggestions_coupon(array $variables) {
+  return array('coupon__' . $variables['elements']['#view_mode']);
+}
+
+/**
+ * Access admin/coupons
+ *        admin/coupons/list
+ */
+function admin_coupon_list_form($form, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
+  drupal_add_css(drupal_get_path('module', 'ec') . '/css/jquery-ui.css', 'file');
+  drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery.ui.datepicker-zh-CN.js', 'file');
+
+  drupal_add_js(drupal_get_path('module', 'coupon') . '/admin_coupon_edit_form.js');
+  //TODO add -3 商户已删除
+  $status = array(
+    '-99' => '所有',
+    '-2' => '已撤消',
+    '-1' => '已过期',
+    '0' => '未审核',
+    '1' => '已发布',
+  );
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => '促销过滤',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,    
+  );
+  $form['filters']['keywords'] = array(
+    '#title' => '关键字',
+    '#type' => 'textfield',
+    '#default_value' => !empty($_GET['keywords']) ? $_GET['keywords'] : '',
+  );
+  $form['filters']['advanced'] = array(
+    '#type' => 'fieldset',
+    '#title' => '高级搜索',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['filters']['advanced']['store_id'] = array(
+    '#title' => '门店',
+    '#type' => 'textfield',
+    '#default_value' => !empty($_GET['store_id']) ? $_GET['store_id'] : '',
+  );
+  $form['filters']['advanced']['start'] = array(
+    '#title' => '有效期开始',
+    '#type' => 'textfield',
+    '#attributes' => array('autocomplete' => 'off'), 
+    '#default_value' => !empty($_GET['start']) ? $_GET['start'] : '',
+  );  
+  $form['filters']['advanced']['expire'] = array(
+    '#title' => '有效期结束',
+    '#type' => 'textfield',
+    '#attributes' => array('autocomplete' => 'off'), 
+    '#default_value' => !empty($_GET['expire']) ? $_GET['expire'] : '',
+  );  
+  $form['filters']['advanced']['coupon_status'] = array(
+    '#title' => '状态',
+    '#type' => 'select',
+    '#options' => $status,
+    '#default_value' => isset($_GET['coupon_status']) ? $_GET['coupon_status'] : 0,
+  );  
+  $form['filters']['advanced']['city'] = array(
+    '#title' => '城市',
+    '#type' => 'select',
+    '#options' => $cities,
+    '#default_value' => $city_id,
+  ); 
+  $form['filters']['advanced']['coupon_editor'] = array(
+    '#title' => '发布者',
+    '#type' => 'textfield',
+    '#default_value' => !empty($_GET['coupon_editor']) ? $_GET['coupon_editor'] : '',
+  );  
+  $form['filters']['search'] = array(
+    '#type' => 'submit',
+    '#value' => '搜索',
+  );
+  $keyword = isset($_GET['keywords']) ? check_plain($_GET['keywords']) : '';
+  $store_id = isset($_GET['store_id']) ? check_plain($_GET['store_id']) : '';
+  $start = isset($_GET['start']) ? check_plain($_GET['start']) : '';
+  $expire = isset($_GET['expire']) ? check_plain($_GET['expire']) : '';
+  $coupon_status = isset($_GET['coupon_status']) ? check_plain($_GET['coupon_status']) : '';
+  $coupon_editor = isset($_GET['coupon_editor']) ? check_plain($_GET['coupon_editor']) : '';
+  $query = db_select('coupons', 'c')
+     ->fields('c', array('cid'))
+     ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
+     ->limit(30)
+     ->orderBy('c.changed', 'DESC');
+  if (!empty($keyword)) {
+    $query->condition('c.title', '%' . db_like($keyword) . '%', 'LIKE');
+  }
+  if (!empty($store_id)) {
+    $query->condition('c.sid', (int) $store_id);
+  }  
+  if (!empty($start)) {
+    $query->condition('c.start', strtotime($start), '>');
+  }  
+  if (!empty($expire)) {
+    $query->condition('c.expire', strtotime($expire), '<');
+  }  
+  if ($coupon_status != '-99') {
+    $query->condition('c.status', $coupon_status);
+  }  
+  if (!empty($coupon_editor)) {
+    if ($account = user_load_by_name($coupon_editor)) {
+      $query->condition('c.uid', $account->id());
+    }
+  }  
+  $result = $query->execute();
+  $cids = array();
+  foreach ($result as $row) {
+    $cids[] =$row->cid;
+  }
+  $header = array(
+    'title' => array('data' => '标题'),
+    'store' => array('data' => '门店'),
+    'start' => array('data' => '有效开始'),
+    'expire' => array('data' => '有效截止'),
+    'changed' => array('data' => '修改时间'),
+    'status' => array('data' => '促销状态'),
+    'editor' => array('data' => '作者'),
+    'action' => array('data' => '操作'),
+  );
+  $coupons = coupon_load_multiple($cids); 
+  $options = array();
+  foreach ($coupons as $coupon){
+    if ($coupon) {
+      $editor = $coupon->getAuthor();
+    }
+    if ($coupon->id()) 
+      $store = $coupon->getStore();
+    $options[$coupon->id()] = array(
+      'title' => $coupon->label(),
+      'store' => isset($store) ? $store->label() : '未定义',
+      'start' => date('Y-m-d', $coupon->start->value),
+      'expire' => date('Y-m-d', $coupon->expire->value),
+      'changed' => date('Y-m-d', $coupon->changed->value),
+      'status' => $status[$coupon->status->value],
+      'editor' => isset($editor) ? $editor->getUsername() : '',
+      'action' =>l('编辑', 'coupon/edit/' . $coupon->id()),
+    );
+  }
+  $form['coupon'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => '没有找到促销',
+  );
+  $form['pager'] = array(
+    '#theme' => 'pager',
+  );
+  $form['actions'] = array('#type' => 'actions');  
+  $form['actions']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('删除'),
+    '#submit' => array('admin_coupon_list_form_submit'),
+  );
+
+  $bids = db_select('adv_blocks', 'a')
+    ->fields('a', array('bid'))
+    ->condition('type', 'coupon')
+    ->execute()
+    ->fetchCol();
+  if ($bids) {
+    $form['actions']['recommend'] = array(
+      '#type' => 'submit',
+      '#value' => '推荐到',
+    );
+    $options = array();
+    foreach ($bids as $bid) {
+      $adv_block = adv_block_load($bid);
+      $options[$adv_block->bid] = $adv_block->title;
+    }
+    
+    $form['actions']['recommend_coupons'] = array(
+      '#type' => 'select',
+      '#options' => $options,
+    );
+  }
+  return $form;
+}
+
+function admin_coupon_list_form_validate($form, &$form_state) {
+  $coupons = isset($form_state['input']['coupon']) ? $form_state['input']['coupon'] : array();
+	$cids = array();
+	foreach ($coupons as $cid => $coupon) {
+		if(!empty($coupon)){
+			$cids[] = $cid;
+		}
+	}
+	$op = $form_state['values']['op'];
+  if (in_array($op, array('删除', '推荐到')) && !count($cids)) {
+    form_set_error('coupon', '请选择促销信息');
+  } else {
+    $form_state['cids'] = $cids;
+  }
+}
+
+
+function admin_coupon_list_form_submit($form, &$form_state) {
+	$cids = $form_state['cids'];
+	$op = $form_state['values']['op'];
+  switch ($op) {
+    case '删除':
+      coupon_delete_multiple($cids);
+      drupal_set_message('促销删除成功');
+      break;
+    case '搜索':
+      $keywords = isset($form_state['values']['keywords']) ? check_plain($form_state['values']['keywords']) : '';
+      $store_id = isset($form_state['values']['store_id']) ? check_plain($form_state['values']['store_id']) : '';
+      $start = isset($form_state['values']['start']) ? check_plain($form_state['values']['start']) : '';
+      $expire = isset($form_state['values']['expire']) ? check_plain($form_state['values']['expire']) : '';
+      $coupon_status = isset($form_state['values']['coupon_status']) ? check_plain($form_state['values']['coupon_status']) : '';
+      $coupon_editor = isset($form_state['values']['coupon_editor']) ? check_plain($form_state['values']['coupon_editor']) : ''; 
+			$form_state['redirect'] = array('admin/coupon', array(
+				'query' => array(
+            'keywords' => $keywords,
+            'store_id' => $store_id,
+            'start' => $start,
+            'expire' => $expire,
+            'coupon_status' => $coupon_status,
+            'coupon_editor' => $coupon_editor,
+			  	),
+			  ),
+      );
+      break;
+    case '推荐到':
+      $bid = $form_state['values']['recommend_coupons'];
+      foreach ($cids as $cid) {
+        $iid = db_select('adv_block_items', 'i')
+    			->fields('i', array('iid'))
+    			->condition('bid', $bid)
+    			->condition('type', 'coupon')
+    			->condition('entity_id', $cid)
+    			->execute()
+    			->fetchObject();
+        if (!$iid) {
+          adv_block_item_save(NULL, array(
+            'bid' => $bid,
+            'entity_id' => $cid,
+            'type' => 'coupon',
+            'status' => 1,
+            )
+          );
+        }
+      }
+      drupal_set_message('促销信息推荐成功');
+      break;
+  }
+}

@@ -1,0 +1,102 @@
+*admin-design* admin 系统设计 
+说明: 
+1.贵客改版将形成独立平台中的一个子平台，独立平台为www.72ec.com，各子平台独立域名，通过选择城市进入，每个独立平台为特定城市平台，独立平台后端有运营管理平台，运营管理平台根据权限分配的城市而进行管理，即一个运营平台可管理多个城市的平台.
+2.任意一个平台注册的用户可登录所有平台，个人用户数据如 关注、粉丝、评论、收藏数据在各个平台都是数据共享的
+3.平台商家用户支持子账户功能，子账户赋予部分权限，支持扫码、发布促销、维护店铺数据等权限。(是否只在手机客户端登录待确定)
+
+问题:
+
+一、系统变量 ~
+
+industries_picture_path:       广告图片保存路径, 缺省值为 catalogs
+industries_picture_file_size:  广告图片文件大小限制, 缺省值为 64k ?
+
+$domain_cities: 平台城市列表
+$domain_roles: 平台角色列表
+$domain_themes: 平台主题列表
+二、请求设计 ~
+
+三 权限设计 ~
+
+运营平台关联城市 (暂不实现)
+======================
+$domain
+$cities
+
+settings.php
+$conf['domain_cities'] = array('domain1' => array('city1', 'city2'));
+如:
+$conf['domain_cities'] = array('www.vipguike.com' => array('贵阳市'),
+'www.32ec.com' => array('太原市', '晋中市'));
+
+运营管理权限 (暂不实现)
+======================
+$domain
+$account->roles
+
+domian关联 roles
+settings.php
+
+$conf['domain_roles'] = array('roles_name1' => 'domain1');
+如:
+$conf['domain_roles'] = array('贵商网内容管理员' => ‘www.vipguike.com’,
+'渝商网内容管理员' => 'ysw.72ec.com');
+
+
+主题
+========================
+$domain
+$themes
+
+settings.php
+$conf['domain_themes'] = array('domain1' => 'theme1');
+如:
+$conf['domain_themes'] = array('www.vipguike.com' => 'vipguike',
+'user.vipguike.com' => 'vipguike_admin');
+
+五、数据库设计 ~
+
+*cities* (城市信息)
+cid: 主键
+name: 名称(唯一索引)
+weight: 排序
+	
+*districts* (区域信息)
+did: 主键
+cid: 城市ID
+name: 名称
+weight: 排序
+
+*share_catalog* (商品行业分类)
+cid: ID (主键)
+parent_cid: 上级分类ID
+name: 名称 
+weight: 排列顺序
+
+*store_catalog* (商户行业分类)
+cid: ID (主键)
+parent_cid: 上级分类ID
+name: 名称 
+picture: 图片($file->fid)
+weight: 排列顺序
+city_id:
+同一个city_id: name不能重复
+
+六、APIs设计 ~
+
+city_save($city, $edit = array());
+city_load($city_id);
+
+store_catalog_save($store_catalog, $edit = array())'
+store_catalog_load($cid);
+share_catalog_save($store_catalog, $edit = array())'
+share_catalog_load($cid);
+
+get_current_theme($domain = $FALSE);
+get_current_cities($domain = $FALSE); //暂不实现
+
+get_cities_tree($cid = $FALSE);
+get_store_catalog_tree($cid = FALSE);
+get_share_catalog_tree($cid = FALSE);
+
+vim:tw=78:ts=8:ft=help:norl:

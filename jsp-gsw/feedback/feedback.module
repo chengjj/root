@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * Implements hook_theme().
+ */
+function feedback_theme() {
+  return array(
+    'feedback_form' => array(
+      'template' => 'feedback-form',
+      'render element' => 'form',
+    ),
+  );
+}

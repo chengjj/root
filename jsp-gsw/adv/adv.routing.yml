@@ -1,0 +1,40 @@
+adv_list:
+  path: '/api/adverts'
+  defaults:
+    _controller: '\Drupal\adv\Controller\AdvController::advList'
+  requirements:
+    _access: 'TRUE'
+adv_list_by_city:
+  path: '/api/adverts/{city_id}'
+  defaults:
+    _controller: '\Drupal\adv\Controller\AdvController::advListByCity'
+  requirements:
+    _access: 'TRUE'
+adv_ajax_action:
+  path: '/adv/js/{action}'
+  defaults:
+    _controller: '\Drupal\adv\Controller\AdvController::advAjaxAction'
+  requirements:
+    _access: 'TRUE'
+
+adv.manage:
+  path: 'admin/adv'
+  defaults:
+    _title: '广告管理列表'
+    _content: '\Drupal\adv\Controller\AdvController::advManage'
+  requirements:
+    _permission: 'administer advs'
+adv.add:
+  path: 'admin/adv/edit'
+  defaults:
+    _title: '添加广告'
+    _content: '\Drupal\adv\Controller\AdvController::advAdd'
+  requirements:
+    _permission: 'administer advs'
+adv.edit:
+  path: '/admin/adv/edit/{adv_id}'
+  defaults:
+    _title: '编辑广告'
+    _content: '\Drupal\adv\Controller\AdvController::advEdit'
+  requirements:
+    _permission: 'administer advs'

@@ -1,0 +1,5 @@
+services:
+  jsp.twig_extension:
+    class: Drupal\jsp\JspTwigExtension
+    tags:
+      - { name: twig.extension }

@@ -1,0 +1,304 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function ec_menu() {
+  $items['front'] = array(
+    'route_name' => 'ec.front',
+  );
+  return $items;
+}
+/**
+ * Implement hook_theme()
+ */
+function ec_theme() {
+  return array(
+    'front_page' => array(
+      'variables' => array(),
+      'template' => 'front-page',
+      'description' => '首页模板',
+    ),
+    'guike_header' => array(
+      'variables' => array(),
+      'template' => 'guike-header',
+      'description' => 'header',
+    ),
+    'guike_footer' => array(
+      'variables' => array(),
+      'template' => 'guike-footer',
+      'description' => 'header',
+    ),
+    'user_agreement' => array(
+      'variables' => array(),
+      'template' => 'user-agreement',
+      'description' => 'user agreement',
+    ),
+    'aboutUs_gsw'=>array(
+      'variables' => array(),
+      'template'=>'aboutUs_gsw',
+      'descrption'=>'gsw in about us',
+    ),
+    'aboutUs_contact'=>array(
+      'variables' => array(),
+      'template'=>'aboutUs_contact',
+      'descrption'=>'contact us in about us',
+    ),
+    'aboutUs_store'=>array(
+      'variables' => array(),
+      'template'=>'aboutUs_store',
+      'descrption'=>'store in about us',
+    ),
+    'aboutUs_help'=>array(
+      'variables' => array(),
+      'template'=>'aboutUs_help',
+      'descrption'=>'help in about us',
+    ),
+      
+    'phone'=>array(
+      'variables' => array(),
+      'template'=>'phone',
+      'descrption'=>'phone version',
+    ),
+  );
+}
+
+/**
+ * Implements hook_page_build().
+ */
+function ec_page_build(&$page) {
+  $page['#attached']['js'][] = array(
+    'type' => 'setting',
+    'data' => array('ec' => array(
+      'user_login' => url('user/login'),
+      'user_register' => url('user/register'),
+      'user_login_return' => url('user/login', array('query' => drupal_get_destination())),
+    )),
+  );
+}
+/**
+ * APIs get image uri by image_style
+ * @params variables 
+ *  $image_style
+ *  $uir
+ *  $with
+ *  $height
+ */
+function get_uri_by_image_style($variables) {
+  // @todo Image style loading will be moved outside theme in
+  //   https://drupal.org/node/2029649
+  $style = entity_load('image_style', $variables['style_name']);
+
+  // Determine the dimensions of the styled image.
+  $dimensions = array(
+    'width' => isset($variables['width']) ? $variables['width'] : NULL,
+    'height' => isset($variables['height']) ? $variables['height'] : NULL,
+  );
+  $style->transformDimensions($dimensions);
+  return $style->buildUrl($variables['uri']);
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_guike_header(&$variables) {
+  $user = \Drupal::currentUser();
+  $site_config = Drupal::config('system.site');
+  $variables['front_page']        = url();
+  $variables['logo']              = theme_get_setting('logo.url');
+  $variables['site_slogan']       = (theme_get_setting('features.slogan') ? filter_xss_admin($site_config->get('slogan')) : '');
+  $variables['phone_download']    = url('phone');
+  $variables['share_add_link']    = theme('share_add_link');
+  $variables['current_user']    = $user;
+  if ($user->id()) {
+    $variables['user_profile_url'] = url('user/' . $user->id());
+    $variables['user_logout_url'] = url('user/logout');
+  } else {
+    $variables['user_login_url'] = url('login', array('query' => drupal_get_destination()));
+    $variables['sina_login_url'] = url('sina/redirect');
+    $variables['user_register_url'] = url('register', array('query' => drupal_get_destination()));
+  }
+  $variables['shares_page']    = url('share');
+  $variables['coupons_page']    = url('coupons');
+
+  $link_class = array(
+    'front' => '',
+    'share' => '',
+    'coupon' => '',
+  );
+
+  if (arg(0) == 'front' || arg(0) == '') {
+    $link_class['front'] = 'seclect';
+  } elseif(in_array(arg(0), array('coupon', 'coupons'))) {
+    $link_class['coupon'] = 'seclect';
+  } elseif (in_array(arg(0), array('share', 'shares'))) {
+    $link_class['share'] = 'seclect';
+  }
+
+  $variables['link_class'] = $link_class;
+
+  $variables['search'] = drupal_get_form('store_search_form');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_guike_footer(&$variables) {
+  $variables['front_page']             = url();
+  $variables['logo']                   = theme_get_setting('logo.url');
+  $variables['iphone_download_url']    = url('share');
+  $variables['android_download_url']   = url('coupons');
+  $variables['about_links'] = array(
+    '贵商网' => url('aboutus_gsw'),
+    '联系我们' => url('aboutus_contact'),
+    '商家入驻' => url('aboutus_store'),
+    '帮助中心' => url('aboutus_help'),
+  );
+  $variables['phone_links'] = array(
+    'Android版' => url('phone'),
+    'iphone版' => url('phone'),
+  );
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_front_page(&$variables) {
+  //adv_block_view($bid, $count);
+  //see adv_blocks_initialize();
+  //TODO get bid by template
+  /*  @ad_banner_top: 首页banner广告
+  *  @ad_turn_pic: 首页轮播广告
+  *  @ad_coupon_remote_top:首页周边热点排行
+  *  @ad_coupon_new: 首页最新商家优惠
+  *  @ad_shop: 品牌商家 
+  *  @ad_share: 网购流行榜
+  *  @ad_share_sigle_list: 最新淘宝单体
+  *  @ad_coupon_relist:精选优惠推荐
+  *  @ad_share_group_buy: 热门团购*/
+  $variables['ad_banner_top'] = adv_block_view(6, 1);// 'template' => 'adv_block_adv_default'
+  $variables['ad_turn_pic'] = adv_block_view(1, 4); //'template' => 'adv_block_adv_turn_picture',
+
+  // 周边热点排行
+  drupal_add_library('jsp', 'drupal.hover-class');
+  if ($ids = adv_block_select_entities(7, FALSE, 6)) {
+    $items = store_load_multiple($ids);
+    $variables['ad_coupon_remote_top'] = store_view_multiple($items, 'hot');
+    $variables['ad_coupon_remote_top'][$ids[0]]['#attributes']['class'][] = 'open';
+  }
+  else {
+    $variables['ad_coupon_remote_top'] = '';
+  }
+
+  // 最新商家优惠
+  $variables['ad_coupon_new'] = adv_block_view_items(4, 4, 'new');
+
+  $variables['ad_shop'] = adv_block_view(8, 10); //'template' => 'adv_block_adv_picture_2cols'
+
+  // 网购流行榜
+  if ($ids = adv_block_select_entities(3, FALSE, 7)) {
+    $shares = share_load_multiple($ids);
+    $variables['ad_share'] = share_view_multiple($shares, 'adv');
+    $variables['ad_share'][$ids[0]]['#attributes']['class'][] = 'open';
+  } else {
+    $variables['ad_share'] = '';
+  }
+
+  $variables['ad_share_sigle_list'] = adv_block_view(9, 10);//'template' => 'adv_block_share_image_title_5cols'
+
+  // 精选优惠推荐
+  if ($ids = adv_block_select_entities(5, FALSE, 8)) {
+    $coupons = coupon_load_multiple($ids);
+    $variables['ad_coupon_relist'] = coupon_view_multiple($coupons, 'choice');
+    $variables['ad_coupon_relist'][$ids[0]]['#attributes']['class'][] = 'open';
+  } else {
+    $variables['ad_coupon_relist'] = '';
+  }
+
+  // 编辑推荐
+  $variables['ad_share_group_buy'] = adv_block_view_items(10, 4, 'editor');
+
+  $variables['links'] = array(
+    'coupon_link' => url('coupons'),
+    'share_link' => url('share'),
+    'eidtor_share'=>url('share/editorshare'),
+  );
+  $variables['current_theme_path'] = url(path_to_theme());
+  if ($share_catalog = share_catalog_load_by_name('女装')) {
+    $remote_share_catalogs[] = array('title' => '服装', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+  }
+  if ($share_catalog = share_catalog_load_by_name('女包')) {
+    $remote_share_catalogs[] = array('title' => '包包', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+  }
+  if ($share_catalog = share_catalog_load_by_name('配饰')) {
+    $remote_share_catalogs[] = array('title' => '配饰', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+  }
+  if ($share_catalog = share_catalog_load_by_name('女鞋')) {
+    $remote_share_catalogs[] = array('title' => '鞋子', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+  }
+
+  $variables['remote_share_catalogs'] = $remote_share_catalogs;
+}
+
+function ec_library_info() {
+  $path = drupal_get_path('module', 'ec');
+  $libraries['drupal.hover_ajax'] = array(
+    'title' => 'Hover ajax',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/hover-ajax.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  $libraries['jsp.popup_message'] = array(
+    'title' => 'popup message',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/popup-message.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  $libraries['drupal.ajax-dialog'] = array(
+    'title' => 'popup message',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/ajax-dialog.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupal'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_phone(&$variables) {
+  //TODO get iphone download address from settings
+  global $theme_path;
+  $variables['theme_path'] = $theme_path;
+  $variables['links'] = array(
+    'consumer' => array(
+      'android' => url('download/consumer'),
+      'iphone' => 'https://itunes.apple.com/cn/app/gui-ke/id680993772?ls=1&mt=8',
+    ),
+    'store' => array(
+      'android' => url('download/store/android'),
+      'iphone' => 'https://itunes.apple.com/cn/app/gui-ke-shang-hu-ban/id668880513?ls=1&mt=8',
+    ),
+  );
+}

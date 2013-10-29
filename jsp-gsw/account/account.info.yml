@@ -1,0 +1,7 @@
+name: Account
+type: module
+description: '管理用户注册和登录特定需求更改模块.'
+version: VERSION
+core: 8.x
+package : '贵客'
+configure: admin/config/account

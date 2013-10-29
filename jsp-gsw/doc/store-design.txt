@@ -1,0 +1,127 @@
+*store-design* store 系统设计 
+说明: 
+
+问题:
+
+一、系统变量 ~
+
+store_picture_path:           商家图片保存路径, 缺省值为 stores 
+store_picture_url:            商家图片URL地址，可以设置到不同的图片服务器
+store_picture_file_size:      商家图片文件大小限制, 缺省值为 64k ?
+store_picture_dimensions:     商家图片尺寸限制，根据需求设置缺省值
+
+store_adv_templates: 门店推荐模板 (模板文件名 => 样式名称)
+store-adv-map => 地图推荐
+
+
+二、请求设计 ~
+
+store/%store: (cache)特定商家
+
+user/stores/bookmarks: (nocache)商户收藏
+
+js/stores: 门店AJAX请求
+list: 获得门店对象数组。参数: bid(广告位ID), iid(行业ID)
+autocomplete/%: (cache)根据键入选择门店
+action:store_list: （nocache）手机客户端获得门店对象数组
+参数: 
+  longiture(经度)、latitude(维度)、range(范围)、
+  keywords(关键字), iid(行业ID), lid(商圈ID)
+  page_size(页面列表尺度，每页显示多少条记录)、page(页码)、
+
+ajax/store/%store/%: 特定门店AJAX请求
+action 可以为:
+card: (cache)弹出门店卡片, 例如在地图需要这个卡片 (该请求不需要?)
+bookmark: (nocache) 收藏门店
+unbookmark: (nocache) 取消收藏
+
+admin/store: (nocache)商家管理
+admin/store/list: (nocache)商家列表, 参数: keywords(关键字), tid(商家类型ID)
+admin/store/edit: (nocache)新增门店
+admin/store/edit/%store: (nocache)编辑/删除商家信息
+admin/store/import: (nocache)导入CSV商家信息
+admin/store/export: (nocache)导出CSV商家信息文件
+
+*store_permission* 权限设计
+
+administer stores: 商家管理
+
+*store_theme* 模板设计
+
+
+*store_entity* 对象设计
+
+store (商户, cache):
+rate: 得分
+new_coupon: 最新一条$coupon->title
+
+五、数据库设计 ~
+
+*stores* (商家):
+sid: 商家ID (主键)
+district_id: 区域ID district->did 原为 district_id  升级完以后再替换为 did
+cid: 行业ID store_catalog->cid 原为cid  升级完后再替换为cid
+name: 商家名称 (唯一索引)
+image_url: 图片文件ID 升级以后替换为picture
+photo1:图片文件ID(贵客使用)
+photo2:图片文件ID(贵客使用)
+photo3:图片文件ID(贵客使用)
+photo4:图片文件ID(贵客使用)
+address: 地址
+longitude: 经度
+latitude: 纬度
+phone: 电话
+hours: 营业时间
+discount: 折扣
+user_num: 会员总数
+user_count: 关注总数
+deal_count:消费总数
+coupon_count: 优惠信息数量
+created: 创建时间
+update_at: 更新时间
+city_id: 城市id
+
+*store_follow* (商家关注)
+uid: 会员ID
+sid: 商家ID
+主键: uid, sid
+
+
+*store_reviews* (门店评价) (暂不实现)
+rid: ID (主键)
+sid: 门店ID
+uid: 会员ID
+rate: 得分(0-5分)
+body: 内容
+created: 发布时间
+
+*store_consumer_records* 用户消费记录
+rid: ID（主键）
+uid: 会员ID
+sid: 门店ID
+created: 消费时间
+
+*city_keyword* 城市搜索关键词
+kid: ID(主键)
+cid: city_id
+word: 关键词
+count: 搜索次数
+weight: 排序权重
+
+六、APIs设计 ~
+
+store_add, store_save, store_delete:
+根据情况清除 store 缓存
+
+store_statistic_save:
+清除 store 缓存
+
+store_store_update:
+如果 iid 发生变化，需要维护其门店的 iid
+
+get_industries_tree()
+返回行业对象树
+
+clear_store_cache($sid): 清除门店缓存
+
+vim:tw=78:ts=8:ft=help:norl:

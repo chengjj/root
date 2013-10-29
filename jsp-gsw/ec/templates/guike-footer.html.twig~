@@ -1,0 +1,39 @@
+{#
+/**
+ *
+ * @file use in page.html.twig
+ * see template_preprocess_guike_footer().
+ *
+ */
+#}
+<div class="footer_con">
+ <section class="linklist">
+  <h3>关于我们</h3>
+  <ul>
+   <li><a target="_blank" href="./aboutus_gsw">贵商网</a></li>
+   <li><a target="_blank" href="./aboutus_contact">联系我们</a></li>
+   <li><a target="_blank" href="./aboutus_store">商家入驻</a></li>
+   <li><a target="_blank" href="./aboutus_help">帮助中心</a></li>
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>移动应用</h3>
+  <ul>
+   <li><a href="./phone" class="phonedown" target="_blank">安卓版</a></li>
+   <li><a href="./phone" class="phonedown" target="_blank">iphone版</a></li>
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>关注我们</h3>
+  <ul>
+   <li><a target="_blank" href="http://e.weibo.com/guishangwang">新浪微博</a></li>
+  </ul>
+ </section>
+ <section class="linklist">
+  <h3>友情链接</h3>
+  <ul>
+   <li><a target="_blank" href="">亿禧网</a></li>
+  </ul>
+ </section>
+ <div class="footer_logo"><a href="#"><img width="142" height="50" src="{{ current_theme_path }}/logo_gsw.png"></a></div>
+</div>

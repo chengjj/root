@@ -1,0 +1,13 @@
+name: 450x450
+label: 450x450
+uuid: c657a3f1-91c4-4dbb-be00-feaacde3d7df
+status: '1'
+langcode: zh-hans
+effects:
+  c963b925-d32f-4cdc-ac2f-47cdc4ad51a7:
+    uuid: c963b925-d32f-4cdc-ac2f-47cdc4ad51a7
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '450'
+      height: '450'

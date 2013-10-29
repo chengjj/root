@@ -1,0 +1,604 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function store_schema() {
+  $schema['store_follow'] = array(
+    'description' => '用户关注的商家',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'Primary key: {users}.uid for user.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'Primary key: {stores}.sid for store.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+  );
+
+  $schema['store_consumer_records'] = array(
+    'description' => '消费记录',
+    'fields' => array(
+      'rid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('rid'),
+  );
+
+  $schema['store_revision'] = array(
+    'description' => '审核门店',
+    'fields' => array(
+      'sid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),     
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'discount' => array(
+        'type' => 'varchar',
+        'length' => '8',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'address' => array(
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('sid'),
+  );
+
+  $schema['stores'] = array(
+    'description' => '门店',
+    'fields' => array(
+      'sid' => array(
+        'description' => '门店ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'uid' => array(
+        'description' => '用户ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => '门店名称',
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'image_url' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'photo1' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'photo2' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'photo3' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'photo4' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'city_id' => array(
+        'description' => '城市ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'district_id' => array(
+        'description' => '地区ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'latitude' => array(
+        'description' => '纬度',
+        'type' => 'numeric', 
+        'size' => 'normal', 
+        'not null' => TRUE, 
+        'default' => 0, 
+        'precision' => 20, 
+        'scale' => 16,
+      ),
+      'longitude' => array(
+        'description' => '经度',
+        'type' => 'numeric', 
+        'size' => 'normal', 
+        'not null' => TRUE, 
+        'default' => 0, 
+        'precision' => 20, 
+        'scale' => 16,
+      ),
+      'address' => array(
+        'description' => '门店地址',
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'phone' => array(
+        'description' => '联系电话',
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'hours' => array(
+        'description' => '营业时间',
+        'type' => 'varchar',
+        'length' => '16',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'discount' => array(
+        'description' => '折扣',
+        'type' => 'varchar',
+        'length' => '16',
+        'not null' => TRUE,
+        'default' => '9.0',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'update_at' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'coupon_count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'deal_count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'follow_count' => array(
+        'description' => 'The total number of follows on this store.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'user_num' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'comment_count' => array(
+        'description' => 'The total number of comments on this store.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+    'primary key' => array('sid'),
+  );
+
+  $schema['store_bookmarks'] = array(
+    'description' => '商家收藏',
+    'fields' => array(
+      'sid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),     
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+  );
+
+
+  $schema['city_keyword'] = array(
+    'description' => '城市搜索关键词',
+    'fields' => array(
+      'kid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'word' => array(
+        'type' => 'varchar',
+        'length' => '254',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('kid'),
+  );
+
+  $schema['store_history'] = array(
+    'description' => 'A record of which {users} have read which {store}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {store} sid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'The {store}.sid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+    'indexes' => array(
+      'sid' => array('sid'),
+    ),
+  );
+
+  $schema['store_comment'] = array(
+    'fields' => array(
+      'cid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique comment ID.',
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'sid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {store}.sid to which this comment is a reply.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid who authored the comment. If set to 0, this comment was created by an anonymous user.',
+      ),
+      'rank' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+      'subject' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The comment title.',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+        'description' => 'The published status of a comment. (0 = Not Published, 1 = Published)',
+      ),
+    ),
+    'primary key' => array('cid'),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+
+  return $schema;
+}
+
+function store_update_1() {
+  $schema = store_schema();
+  db_add_field('stores', 'photo1', $schema['stores']['fields']['photo1']);
+  db_add_field('stores', 'photo2', $schema['stores']['fields']['photo2']);
+  db_add_field('stores', 'photo3', $schema['stores']['fields']['photo3']);
+  db_add_field('stores', 'photo4', $schema['stores']['fields']['photo4']);
+}
+
+/**
+ * create store_history table
+ */
+function store_update_2() {
+  db_create_table('store_history', array(
+    'description' => 'A record of which {users} have read which {store}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {store} sid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'The {store}.sid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+    'indexes' => array(
+      'sid' => array('sid'),
+    ),
+  ));
+}
+
+/**
+ * Create a UUID column for stores.
+ */
+function store_update_3() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('stores', 'uuid')) {
+    db_change_field('stores', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('stores', 'uuid', $spec, $keys);
+  }
+}
+
+/**
+ * create store_comment table
+ */
+function store_update_4() {
+  db_create_table('store_comment', array(
+    'fields' => array(
+      'cid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique comment ID.',
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'sid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {store}.sid to which this comment is a reply.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid who authored the comment. If set to 0, this comment was created by an anonymous user.',
+      ),
+      'subject' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The comment title.',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time that the comment was created, as a Unix timestamp.',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+        'description' => 'The published status of a comment. (0 = Not Published, 1 = Published)',
+      ),
+    ),
+    'primary key' => array('cid'),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  ));
+}
+
+/**
+ * remove unused store_bookmarks and rename store_account_follow to store_follow table.
+ */
+function store_update_5() {
+  db_drop_table('store_bookmarks');
+  db_rename_table('store_account_follow', 'store_follow');
+}
+
+/**
+ * rename user_count to follow_count column for store.
+ */
+function store_update_7() {
+  db_query('UPDATE {stores} SET user_count = 0 WHERE user_count < 0');
+  
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The total number of follows on this user.',
+  );
+  db_change_field('stores', 'user_count', 'follow_count', $spec);
+}
+
+/**
+ * rename taxoid to cid column for store.
+ */
+function store_update_8() {
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_change_field('stores', 'taxo_id', 'cid', $spec);
+}
+
+/**
+ * add comment_count column for store.
+ */
+function store_update_9() {
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The total number of comments on this store.',
+  );
+
+  db_add_field('stores', 'comment_count', $spec);
+}
+
+/**
+ * add rand column for store_comment
+ */
+function store_update_10() {
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 1,
+    'size' => 'tiny',
+  );
+
+  db_add_field('store_comment', 'rank', $spec);
+}
+
+/**
+ * 删除餐饮美食分类下的茶馆分类
+ */
+function store_update_12() {
+  db_delete('store_catalog')
+    ->condition('cid',57 , '=')
+    ->execute();
+}

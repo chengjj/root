@@ -1,0 +1,31 @@
+<?php
+/**
+ * 二维码 -- QRCode二维码
+ * @param  $data   生成二维码的数据
+ * @param  $level  二维码错误纠正级别
+              　0123 -> QR_ECLEVEL_L
+                l,L  -> QR_ECLEVEL_L
+                m,M  -> QR_ECLEVEL_M
+                q,Q  -> QR_ECLEVEL_Q
+                h,H  -> QR_ECLEVEL_H
+ * @param  $widthheight   二维码大小  
+ */
+
+/**
+ * create qrcode return filepath
+ */
+function dimensioncode_generate_qrcode($data, $level = QR_ECLEVEL_L, $size = 3, $widthheight = array('w' => '100px', 'h' => '100px')) {
+  require_once drupal_get_path('module', 'dimensioncode') . "/lib/qrlib.php";
+  $PNG_TEMP_DIR = 'sites' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'qrcode' . DIRECTORY_SEPARATOR;
+  if (!file_exists($PNG_TEMP_DIR))
+    mkdir($PNG_TEMP_DIR);
+  $errorCorrectionLevel = 'L';
+  if (isset($level) && in_array($level, array('L', 'M', 'Q', 'H')))
+    $errorCorrectionLevel = $level; 
+  $matrixPointSize = 4;
+  if (isset($size))
+    $matrixPointSize = min(max((int)$size, 1), 10);
+  $filename = $PNG_TEMP_DIR . '-' . md5($data . '|' . $errorCorrectionLevel . '|' . $matrixPointSize) . '.png';
+  QRcode::png($data, $filename, $errorCorrectionLevel, $matrixPointSize, 2, false, $widthheight);
+  return $filename;
+}

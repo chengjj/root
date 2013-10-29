@@ -1,0 +1,4 @@
+services:
+  store.manager:
+    class: Drupal\store\StoreManager
+    arguments: ['@database', '@plugin.manager.entity', '@request']

@@ -1,0 +1,4 @@
+services:
+  coupon.manager:
+    class: Drupal\coupon\CouponManager
+    arguments: ['@database', '@plugin.manager.entity']

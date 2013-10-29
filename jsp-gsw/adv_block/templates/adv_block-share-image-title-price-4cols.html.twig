@@ -1,0 +1,32 @@
+{#
+/**
+ *
+ * 首页 网购流行榜
+ *
+ *  @params:
+ *    $adv_block:
+ *      ->item_list
+ *    $item_list = array(
+ *      array('title' => '', 'price' => , 'share_link' => '', 'thumbnail_img_src' => '151x151', )
+ *    );
+ *
+ *
+ *  see template_preprocess_adv_block_share_image_title_price_4cols(&$variables).
+ */
+#}
+
+{% if has_content %}
+<ul>
+{% for item in item_list %}
+<li><a target="_blank" href="{{ item.share_link }}"><img src="{{ item.thumbnail_img_src }}"></a><a class="pictitle" href="{{ item.share_link }}">{{ item.title }}</a><p class="price"><span>￥{{ item.price }}</span></p></li>
+{% endfor %}
+</ul>
+{% endif %}
+<!--
+<ul>
+     <li><a target="_blank" href=""><img src="../images/pic151x151.png"></a><a class="pictitle" href="">今夏必备！两件起即19元</a><p class="price"><span>￥19</span><del>原价：49</del></p></li>
+     <li><a target="_blank" href=""><img src="../images/pic151x151.png"></a><a class="pictitle" href="">今夏必备！两件起即19元</a><p class="price"><span>￥19</span><del>原价：49</del></p></li>
+     <li><a target="_blank" href=""><img src="../images/pic151x151.png"></a><a class="pictitle" href="">今夏必备！两件起即19元</a><p class="price"><span>￥19</span><del>原价：49</del></p></li>
+     <li><a target="_blank" href=""><img src="../images/pic151x151.png"></a><a class="pictitle" href="">今夏必备！两件起即19元</a><p class="price"><span>￥19</span><del>原价：49</del></p></li>
+    </ul>
+-->

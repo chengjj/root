@@ -1,0 +1,155 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+function catalog_schema() {
+  $schema['store_catalog'] = array(
+    'description' => '商户行业分类',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'parent_cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'city_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+      'name' => array('name')
+    ),
+    'primary key' => array('cid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function catalog_install() {
+  // 数据初始化 share_catalog
+  catalog_initialize();
+}
+
+function catalog_initialize() {
+  $catalog = array(
+    'store' => array(
+        '生活服务' => array('旅行社/培训/宠物/齿科/快照、冲印/家政/医院/学校/银行/婚纱摄影/婚庆服务/儿童摄影/汽车服务/停车场/加油站/更多生活服务/丽人'),
+        '购物' => array('综合商场/食品茶酒/服饰鞋包/珠宝饰品/化妆品/运动户外/母婴儿童/数码家电/家具家居/书店/眼镜店/药店/超市、便利店/其他'),
+        '运动健身' => array('健身中心/游泳馆/羽毛球馆/瑜伽/舞蹈/篮球场/网球场/足球场/高尔夫场/保龄球馆/乒乓球馆/体育场馆/更多运动场馆'),
+        '餐饮美食' => array('川菜/粤菜/茶馆/火锅/烧烤/海鲜/特色小吃/日韩料理/西餐/自助餐/东南亚菜/面包甜点/其他'),
+        '休闲娱乐' => array('咖啡厅/酒吧/茶馆/KTV/电影院/文化艺术/景点、郊游/公园/足疗按摩/洗浴/游乐游艺/台球馆/桌面游戏/更多休闲娱乐
+  '),
+      ),
+   );
+  catalog_recursive($catalog);
+}
+
+function catalog_recursive($catalog) {
+  foreach ($catalog as $type => $value) {
+    switch ($type) {
+      case 'store': 
+        foreach ($value as $key_1 => $row_1) {
+          $parent_cid  = db_query('SELECT cid FROM {store_catalog} WHERE name=:name', array(':name' => $key_1))->fetchField();
+          if (!$parent_cid) {
+            db_insert('store_catalog')
+              ->fields(array(
+                'name' => $key_1,
+                'weight' => 0,
+              ))->execute();
+            $parent_cid = db_query("SELECT LAST_INSERT_ID();")->fetchField();
+          }
+          $store_rows = explode('/', $row_1[0]);
+          foreach ($store_rows as $k => $v) {
+            db_insert('store_catalog')
+              ->fields(array(
+                'name' => $v,
+                'weight' => 0,
+                'parent_cid' => $parent_cid,
+              ))->execute();
+          }
+        }
+        break;
+    }
+  }
+}
+
+function catalog_update_1() {
+  catalog_initialize();
+}
+
+function catalog_update_2() {
+  //TODO move share.module
+  db_query('UPDATE {share_catalog} SET `name`=:name WHERE `name`=:old_name', array(':name' => '鞋子箱包', ':old_name' => '鞋帽箱包'));
+}
+
+/**
+ * Create a UUID column for store_catalogs.
+ */
+function catalog_update_3() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('store_catalog', 'uuid')) {
+    db_change_field('store_catalog', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('store_catalog', 'uuid', $spec, $keys);
+  }
+}
+
+function catalog_update_5() {
+  $catalogs = '综合商场/食品茶酒/服饰鞋包/珠宝饰品/化妆品/运动户外/母婴儿童/数码家电/家具家居/书店/眼镜店/药店/超市、便利店/其他';
+  if ($cid = db_query('SELECT cid FROM {store_catalog} WHERE name=:name', array(':name' => '时尚购物'))->fetchField()) {
+    foreach (explode('/', $catalogs) as $catalog) {
+      if (!db_query('SELECT cid FROM {store_catalog} WHERE name=:name AND parent_cid=:parent_cid', array(':name' => $catalog, ':parent_cid' => $cid))->fetchField()) {
+        db_insert('store_catalog')
+          ->fields(array(
+            'parent_cid' => $cid,
+            'name' => $catalog,
+          ))
+          ->execute();
+      }
+    }
+  }
+}

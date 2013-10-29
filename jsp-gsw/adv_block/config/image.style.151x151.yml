@@ -1,0 +1,13 @@
+name: 151x151
+label: 151x151
+uuid: 312411d3-01b6-497b-ac00-eaf1b127f7ca
+status: '1'
+langcode: zh-hans
+effects:
+  188d0e5f-83cb-4014-8308-8cbcc6225aa5:
+    uuid: 188d0e5f-83cb-4014-8308-8cbcc6225aa5
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '151'
+      height: '151'

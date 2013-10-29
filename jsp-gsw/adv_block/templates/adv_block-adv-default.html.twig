@@ -1,0 +1,13 @@
+{#
+/**
+ *  @params:
+ *    $adv_block:
+ *    $adv_block->item_list: advs
+ *
+ *  adv 
+ * see template_preprocess_adv_block_adv_default()
+ */
+#}
+{% if has_content  %}
+<div id="ad_banner_top"><a href="{{ adv_link }}" target="_blank"><img src="{{ adv_picture_src }}" width="980" height="90"/></a></div>
+{% endif %}

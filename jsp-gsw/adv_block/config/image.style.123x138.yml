@@ -1,0 +1,13 @@
+name: 123x138
+label: 123x138
+uuid: aa62e845-a6f8-4efd-9d62-983ff4736b10
+status: '1'
+langcode: zh-hans
+effects:
+  62dbf9b3-9e85-451a-ad00-aeecea162b61:
+    uuid: 62dbf9b3-9e85-451a-ad00-aeecea162b61
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '123'
+      height: '138'

@@ -1,0 +1,37 @@
+{#
+/**
+ *
+ * 首页 最新淘宝单体
+ *
+ *  @params:
+ *    $adv_block:
+ *      ->item_list
+ *    $item_list = array(
+ *      array('title' => '', 'price' => , 'share_link' => '', 'thumbnail_img_src' => '123x138', )
+ *    );
+ *
+ *  see see template_preprocess_adv_block_share_image_title_5cols(&$variables);
+ */
+#}
+{% if has_content %}
+<ul>
+{% for item in item_list %}
+ <li><a target="_blank" href="{{ item.share_link }}"><img src="{{ item.thumbnail_img_src }}"></a><p><a href="{{ item.share_link }}">{{ item.title }}</a></p></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<!--
+<ul>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+    <li><a target="_blank" href=""><img src="../images/pic123x138.png"></a><p><a href="">韩版平跟单鞋</a></p></li>
+   </ul>
+-->

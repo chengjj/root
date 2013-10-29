@@ -1,0 +1,12 @@
+jsp.overview_entities:
+  path: '/admin/entity/{entity_type}'
+  defaults:
+    _form: 'Drupal\jsp\Form\OverviewEntities'
+  requirements:
+    _permission: 'access administration pages'
+jsp.admin_entity_create:
+  path: '/admin/entity/{entity_type}/create'
+  defaults:
+    _controller: 'Drupal\jsp\Controller\EntityAdmin::entityCreate'
+  requirements:
+    _permission: 'access administration pages'

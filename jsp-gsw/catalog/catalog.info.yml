@@ -1,0 +1,6 @@
+name: catalog 
+type: module
+description: "行业、商户分类"
+core: 8.x
+package : '贵客'
+version: VERSION

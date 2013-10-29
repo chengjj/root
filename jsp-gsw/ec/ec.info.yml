@@ -1,0 +1,6 @@
+name: EC 
+type: module
+description: "custom module"
+core: 8.x
+package : '贵客'
+version: VERSION

@@ -1,0 +1,5 @@
+name: sina
+type: module
+description: 'Allows users to connect with Sina Weibo account'
+package : '贵客'
+core: 8.x

@@ -1,0 +1,4 @@
+services:
+  statistic.manager:
+    class: Drupal\statistic\StatisticManager
+    arguments: ['@database', '@plugin.manager.entity']

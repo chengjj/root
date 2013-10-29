@@ -1,0 +1,237 @@
+<?php
+/**
+ * Implements hook_schema()
+ */
+function coupon_schema() {
+  $schema['coupons'] = array(
+    'fields' => array(
+      'cid' => array(
+        'description' => '优惠ID',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'title' => array(
+        'description' => '标题',
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+      ),
+      'body' => array(
+        'description' => '内容',
+        'type' => 'text',
+      ),
+      'uid' => array(
+        'description' => '用户ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'fid' => array(
+        'description' => '图片文件ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => '商家ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'note' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'default' => '',
+      ),
+      'start' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'expire' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+    'primary key' => array('cid'),
+  );
+
+  $schema['coupon_bookmarks'] = array(
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'cid'),
+  );
+
+  $schema['coupon_comments'] = array(
+    'fields' => array(
+      'mid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'comments' => array(
+        'type' => 'varchar',
+        'length' => 512,
+        'default' => '',
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('mid'),
+  );
+
+  $schema['coupon_history'] = array(
+    'description' => 'A record of which {users} have read which {coupon}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {coupon} cid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'description' => 'The {coupon}.cid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'cid'),
+    'indexes' => array(
+      'cid' => array('cid'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * create coupon_history table
+ */
+function coupon_update_1() {
+  db_create_table('coupon_history', array(
+    'description' => 'A record of which {users} have read which {coupon}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {coupon} cid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'description' => 'The {coupon}.cid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'cid'),
+    'indexes' => array(
+      'cid' => array('cid'),
+    ),
+  ));
+}
+
+/**
+ * Create a UUID column for coupons.
+ */
+function coupon_update_2() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('coupons', 'uuid')) {
+    db_change_field('coupons', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('coupons', 'uuid', $spec, $keys);
+  }
+}
+
+/**
+ * maintains: remove coupons which has no store
+ */
+function coupon_update_3() {
+  db_query("DELETE FROM {coupons} WHERE sid NOT IN (SELECT sid FROM {stores})");
+}
+

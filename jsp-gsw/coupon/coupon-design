@@ -1,0 +1,60 @@
+coupon-design 商家促销系统设计
+
+一、请求设计
+admin/coupons/list: 促销列表
+
+coupon/edit: 添加促销信息
+
+coupon/edit/%: 编辑促销信息
+
+admin/coupons/pending: 促销审核
+
+api/store/%node/late: 最新促销信息
+
+api/store/%node/coupon/%node: 浏览促销信息
+
+api/store/%node/coupon/%node/edit: 编辑促销信息
+
+api/user/%user/coupons: 促销信息列表
+
+api/coupon: 新增促销信息
+
+api/coupon/%node: 删除/编辑促销信息
+
+api/coupons/%: 删除多条促销信息
+
+api/coupon/%node/revoke: 撤消促销信息
+
+api/store/%node/coupons: 促销信息列表
+
+api/store/%node/coupons/%: 促销信息列表
+
+二、数据库设计
+Coupon: 促销
+cid: 促销ID(主键)
+fid: 促销图片ID
+sid: 商家ID
+note: 促销使用限制
+start: 促销开始时间
+expire: 促销结束时间
+status: 促销状态
+created: 创建时间
+changed: 更新时间
+title: 标题
+uid: 用户ID
+body: 促销内容
+
+
+三、权限管理
+administer coupons: 促销管理
+
+四, API设计
+coupon_numbers_by_store_id($store_id, $status = NULL) 获取商家促销总数
+coupon_load_by_store($store_id, $status = NULL, $page = NULL, $per_page = NULL ) 获取商家促销列表
+coupon_load_by_user($user_id, $page = NULL, $per_page = NULL) 获取用户的促销
+coupon_latest_coupon($sid) 获取商家最新促销
+coupon_load($cid)
+coupon_load_multiple($cids = array())
+coupon_save($coupon, $edit = array())
+
+

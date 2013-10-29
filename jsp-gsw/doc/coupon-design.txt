@@ -1,0 +1,127 @@
+*coupon-design* coupon(优惠信息)系统设计 
+
+一、系统变量 ~
+
+coupon_picture_path: 优惠信息图片保存路径
+coupon_picture_url: 优惠信息图片URL地址，可以设置到不同的图片服务器
+coupon_picture_file_size: 优惠信息图片大小限制, 缺省 256K
+coupon_picture_dimensions: 优惠信息图片尺寸限制, 缺省(待定) 
+
+adv_block_coupon_templates: 优惠券推荐位样式数组：(标题 => 模板名称)
+'默认模板' => 'adv_block_coupon_default',
+'左图片-右标题-描述-商户' => 'adv_block_coupon_image_title_store',
+'小图片-商户名-优惠信息标题' => 'adv_block_coupon_image_store_title',
+ '左图片-右标题-描述首页' => 'adv_block_coupon_image_title_desc',
+
+define('COUPON_STATUS_PUBLISH', 1);//促销信息已发布
+define('COUPON_STATUS_PENDING', 0);//促销信息待审核
+define('COUPON_STATUS_EXPIRED', -1);//促销信息已过期
+define('COUPON_STATUS_CANCEL', -2);//促销信息已撤销
+define('COUPON_STATUS_DELETE', -3);//促销信息已撤销
+
+二、请求设计 ~
+
+手机客户端使用
+api/bookmark/coupons 收藏优惠信息列表
+api/user/bookmark/coupon/{coupon_id} 获取收藏状态\收藏优惠信息\取消优惠信息收藏
+
+
+coupons: (cache) 搜周边
+
+coupons/search: (cache)优惠券列表, 参数: keywords(关键字), tid(商家分类), lid(商圈分类)
+coupon/%coupon: (cache)特定优惠券
+
+user/coupons: (nocache)我的优惠券, 参数: keywords(关键字), filter(状态: current, expired), group(显示方式:coupon,store,location,industry)
+user/coupons/bookmarks: (nocache)我收藏的优惠券, 参数: keywords(关键字), group(显示方式:coupon,store,location,industry)
+
+coupon/js/%: 促销信息AJAX请求
+action可以为:
+store: 匹配商户名称
+bookmark:收藏
+unbookmark: (nocache)取消收藏
+visit: (nocache) 被访问，需要把 coupon_statistics 的 visit_count +1
+download: (nocache) 被下载，需要把 coupon_statistics 的 download_count +1, 并设置优惠券的 status。
+
+admin/coupon: (nocache)管理优惠券
+admin/coupon/list: (nocache)优惠券列表, 参数: keywords(关键字), filter(current,waiting,expired,all), cid(商家ID), iid(行业ID), start(开始日期), expire(结束日期)
+admin/coupon/edit: (nocache)添加优惠券，添加特定商家的优惠券见 company/%company/admin/coupon/edit
+admin/coupon/edit/%coupon: (nocache)编辑/删除优惠券
+
+admin/coupon/adv: (nocache)推荐位管理
+admin/coupon/adv/list: (nocache)推荐位列表
+admin/coupon/adv/edit: (nocache)添加推荐位
+admin/coupon/adv/edit/%coupon_adv: (nocache)编辑/删除特定推荐位
+admin/coupon/adv/coupons: (nocache)推荐的优惠券, 参数: keywords(关键字), aid(推荐位ID)
+
+admin/config/coupon: (nocache)优惠券设置, 设置优惠券相关系统变量。
+
+三、区块设计 ~
+
+featured_[aid]_coupons: 推荐的优惠券，参数: count(显示数量), template(模板)
+coupon_visit_history: 优惠券访问历史，参数: count(显示数量)
+coupon_filter: 按照分类和商圈进行过滤
+
+四、权限设计 ~
+
+administer coupons: 优惠券管理
+edit coupons:       编辑优惠券
+
+*coupon-entity* 对象设计
+
+coupon (优惠券, cache):
+picture: file 对象
+store: 商户对象
+
+六、数据库设计
+===================
+
+*coupons* (优惠信息)
+cid: ID (主键)
+sid: 商家ID
+iid: 商家的行业ID, 避免 join
+title: 标题
+fid: 图片文件ID
+body: 描述
+note: 使用限制
+start: 有效开始时间
+expire: 有效结束时间
+status: 优惠信息状态 -3 已删除(假删除，不显示在商户已过期列表) -2
+已撤销(发布待审核内容，商户撤销审核的状态) -1 已过期(正常审核通过点促销过期) 0
+待审核 1 已发布
+created: 创建时间
+changed: 修改时间
+store_name: 商家名称(冗余字段,搜索使用,今后可废弃)
+location_name: 商圈名称(冗余字段,搜索使用,今后可废弃)
+city_id: 优惠属于哪个城市
+
+
+*coupon_bookmarks* (优惠信息收藏)
+uid: 会员ID
+cid: 优惠信息ID
+created: 收藏时间
+主键: uid, cid
+
+*coupon_comments* (优惠信息评论)
+mid: 评论ID
+cid: 优惠信息ID
+uid: 用户UID
+comments: 内容
+created: 发布时间
+status: 状态
+
+主键: mid
+
+七、APIs设计
+===================
+
+coupon_save:
+coupon_cron:
+每日0点根据start和expire设置status。
+
+clear_coupon_cache($cid): 清除优惠券缓存
+
+模板设计 ~
+=============================
+
+
+vim:tw=78:ts=8:ft=help:norl:

@@ -1,0 +1,13 @@
+name: 400x540
+label: 400x540
+uuid: 5fa77170-fa37-4354-9b00-f9b3655e1b68
+status: '1'
+langcode: zh-hans
+effects:
+  fdbc5d2f-d318-433f-8606-6b6b751b72c4:
+    uuid: fdbc5d2f-d318-433f-8606-6b6b751b72c4
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '400'
+      height: '540'

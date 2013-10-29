@@ -1,0 +1,468 @@
+<?php
+use Drupal\Core\Entity\DatabaseStorageController;
+
+/**
+ * Implements hook_cron()
+ */
+function adv_cron() {
+  $expires = variable_get('adv_cron_expires', 0);
+  if ($expires + 3600 < REQUEST_TIME) {
+    $aids = db_select('advs', 'a')
+      ->fields('a', array('aid'))
+      ->condition('status', 1)
+      ->execute()
+      ->fetchCol();
+    if (count($aids)) {
+      foreach ($aids as $aid) {
+        $adv = adv_load($aid);
+        if ($adv->expire  < strtotime('-1 day')) {
+          $status = array(
+            'status' => -1,
+          );
+          adv_save($adv, $status);
+        }
+      }
+    }
+    variable_set('adv_cron_expires', REQUEST_TIME);
+  }
+}
+
+/**
+ * Implements hook_menu()
+ */
+function adv_menu() {
+  $items['admin/adv'] = array(
+    'title' => '广告管理列表',
+    'route_name' => 'adv.manage',
+  );
+  $items['admin/adv/edit'] = array(
+    'title' => '添加广告',
+    'route_name' => 'adv.add',
+  );
+  return $items;
+}
+
+function adv_load_multiple_by_city_id($city_id, $page = NULL, $per_page = NULL) {
+  $query = db_select('advs', 'a')
+    ->fields('a', array('aid'))
+    ->condition('status', 1);
+  if ($city_id) {
+    $query->condition('a.cid', $city_id);
+  }
+  if (!empty($per_page)) {
+    $startIndex = 0;
+    if ($page == 0) {
+      $startIndex = $page;
+    } else {
+      $startIndex = $page * $per_page;
+    }
+    $query->range($startIndex, $per_page);
+  }
+  $query->orderBy('a.changed', 'DESC'); 
+  $aids = $query->execute()->fetchCol();
+  return entity_load_multiple('adv', $aids); 
+}
+
+
+/**
+ * Implements hook_permission()
+ */
+function adv_permission() {
+  return array(
+    'administer advs' => array(
+      'title' => '广告管理', 
+      'restrict access' => TRUE,
+    ),
+  );
+}
+/**
+ * APIs 
+ */
+function adv_load($aid) {
+  //$cache = cache('Backend.Memcache')->get('Memcache');
+  $cache = FALSE;
+  $cid = $_SERVER['SERVER_NAME'] . ':adv:aid:' . $aid;
+  if ($cache) {
+    if ($cached = $cache->get($cid)) {
+      $adv = $cached->data;
+    } else {
+      $adv = _adv_load($aid);
+      if ($adv->fid) {
+        $adv->picture = file_load($adv->fid);
+      } else {
+        $adv->picture = FALSE;
+      }
+      $cache->set($cid, $adv);
+    }
+  } else { 
+    $adv = _adv_load($aid);
+    if ($adv->fid) {
+      $adv->picture = file_load($adv->fid);
+    } else {
+      $adv->picture = FALSE;
+    }
+  }
+  return $adv;
+}
+/**
+ * APIs 
+ */
+function adv_load_multiple($aids = array()) {
+  $advs = array();
+  foreach ($aids as $aid) {
+    $advs[] = adv_load($aid);
+  }
+  return $advs;
+}
+
+/**
+ * Description other adv_load()
+ */
+function _adv_load($aid) {
+  return db_select('advs', 'a')
+    ->fields('a')
+    ->condition('aid', $aid)
+    ->execute()
+    ->fetchObject();
+}
+/**
+ * Implements hook_adv_delete()
+ */
+function adv_adv_delete($adv) {
+  /*if ($cache = cache('Backend.Memcache')->get('Memcache')) { 
+    $cid = $_SERVER['SERVER_NAME'] . ':adv:aid:' . $adv->aid;
+    $cache->delete($cid);
+  }*/
+}
+/**
+ * Implements hook_adv_update()
+ */
+function adv_adv_update(&$edit, &$adv) {
+  /*if ($cache = cache('Backend.Memcache')->get('Memcache')) { 
+    $cid = $_SERVER['SERVER_NAME'] . ':adv:aid:' . $adv->aid;
+    $cache->delete($cid);
+  }*/
+}
+/**
+ * Description other adv_save() 
+ */
+function adv_save($adv, $edit = array()) {
+  if (!empty($adv->aid) && !isset($adv->original)) {
+    $adv->original = _adv_load($adv->aid);
+    if ($adv->original->fid) {
+      $adv->original->picture = file_load($adv->original->fid);
+    }
+  }
+  if (empty($adv)) {
+    $adv = new stdClass();
+  }
+  if (!isset($adv->is_new)) {
+    $adv->is_new = empty($adv->aid);
+  }
+  foreach ($edit as $key => $value) {
+    $adv->$key = $value;
+    if ($key == 'picture_upload') {
+      $adv->picture = $value; // picture
+    }
+  }
+  if (is_object($adv) && !$adv->is_new) {
+    if ($adv->picture && (!$adv->original->picture || $adv->picture->id() != $adv->original->picture->id())) {
+      $picture = $adv->picture;
+      if (!$picture->isPermanent()) {
+        $image_factory = Drupal::service('image.factory');
+        $image = $image_factory->get($picture->getFileUri());
+        $image_extension = $image->getExtension();
+        $picture_directory = file_default_scheme() . '://' . variable_get('adv_picture_path', 'advs');
+
+
+        // Prepare the pictures directory.
+        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+        $destination = file_stream_wrapper_uri_normalize($picture_directory . '/adv-' . $adv->aid. '.' . $image_extension);
+
+        // Move the temporary file info the final location.
+        if ($picture = file_move($picture, $destination, FILE_EXISTS_RENAME)) {
+          $picture->setPermanent();
+          $picture->save();
+          $adv->picture = $picture;
+          file_usage()->add($picture, 'adv','adv', $adv->aid);
+        }
+      }
+
+      // Delete the previous picture if it was deleted or replaced.
+      if ($adv->original->picture) {
+        file_usage()->delete($adv->original->picture, 'adv', 'adv', $adv->aid);
+        file_delete($adv->original->picture);
+      }
+    }
+    if ($adv->picture && $adv->picture->id()) {
+      $adv->fid = $adv->picture->id();
+    }
+    else {
+      $adv->fid = is_object($adv->original->picture) ? $adv->original->picture->id() : $adv->original->fid;
+    }
+
+    $success = drupal_write_record('advs', $adv, 'aid');
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    // Update $edit with any interim changes to $adv
+    foreach ($adv as $key => $value) {
+      if (!property_exists($adv->original, $key) || $value !== $adv->original->$key) {
+        $edit[$key] = $value;
+      }
+    }
+    adv_module_invoke('update', $edit, $adv);
+  }
+  else {
+    // Allow 'created' to be set by the caller.
+    if (!isset($adv->created)) {
+      $adv->created = REQUEST_TIME;
+    }
+
+    if (@is_object($adv->picture)) {
+      $new_picture = $adv->picture;
+      unset($adv->picture);
+    }
+    $success = drupal_write_record('advs', $adv);
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    if (isset($new_picture)) {
+      $adv->fid = $new_picture;
+      $adv->is_new = FALSE;
+      adv_save($adv, array('picture' => $new_picture));
+    }
+    $edit = (array) $adv;
+    //提供 hook_coupon_insert 钩子:
+    adv_module_invoke('insert', $edit, $adv);
+  }
+
+  // Clear internal properties.
+  unset($adv->is_new);
+  unset($adv->original);
+
+  return $adv;
+}
+
+function adv_module_invoke($type, &$edit, $adv) {
+  foreach (module_implements('adv_' . $type) as $module) {
+    $function = $module . '_adv_' . $type;
+    $function($edit, $adv);
+  }
+}
+/**
+ * Implement hook_theme()
+ */
+function adv_theme() {
+  return array(
+    'adv' => array(
+      'render element' => 'elements',
+      'template' => 'adv',
+    ),
+    'adv_picture' => array(
+      'variables' => array('adv' => NULL, 'options' => NULL),
+      'template' => 'adv-picture',
+      'description' => '广告图片显示模板',
+    ),
+  );
+}
+/**
+ * APIs 
+ */
+function _adv_type() {
+  return array(
+    '0' => '手机客户端',
+    '1' => '网站通用',
+  );
+}
+
+function template_preprocess_adv_picture(&$variables) {
+  $adv = $variables['adv'];
+  if (!empty($adv->picture)) {
+    if (is_numeric($adv->picture)) {
+      $adv->picture = file_load($adv->picture);
+    }
+    if ($adv->picture->getFileUri()) {
+      $filepath = $adv->picture->getFileUri();
+    }
+  }
+  
+  if (isset($filepath)) {
+    $alt = $adv->title;
+    
+    if (variable_get('adv_picture_url')) {
+      $filepath = str_replace('public://', variable_get('adv_picture_url', 'advs'), $filepath); 
+    }
+    
+    $adv_picture = theme('image', array('uri' => $filepath, 'alt' => $alt, 'title' => $alt));
+
+    $options = isset($variables['options']) ? $variables['options'] : array(); 
+    $options['adv'] = $adv;
+    $options['html'] = TRUE;
+
+    $variables['adv_picture'] = $adv_picture;
+  }
+  else {
+  	$variables['adv_picture'] 	= '<img src="'. variable_get('adv_default_picture', 'sites/default/files/no_img.png') .'" alt="暂无图片" />';
+  }
+}
+/**
+ * APIs 
+ */
+function adv_delete($aid) {
+  adv_delete_multiple(array($aid));
+}
+/**
+ * APIs 
+ */
+function adv_delete_multiple($aids = array()) {
+  if (!empty($aids)) {
+    $advs = adv_load_multiple($aids);
+    foreach ($advs as $adv)
+      module_invoke_all('adv_adv_delete', $adv);
+  }
+  db_delete('advs')
+    ->condition('aid', $aids, 'IN')
+    ->execute();
+}
+
+function adv_load_by_title($title) {
+  return db_select('advs', 'a')
+    ->fields('a', array('aid'))
+    ->condition('title', $title)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_adv_default(&$variables) {
+  $variables['has_content'] = FALSE;
+  $adv_block = $variables['adv_block'];
+  if ($adv_block->item_list) {
+    $item = $adv_block->item_list[0];
+    $adv = adv_load($item->entity_id);
+    
+    $variables['adv_link'] = $adv->redirect; 
+    if ($item->picture) {
+      $variables['has_content'] = TRUE;
+      $variables['adv_picture_src'] = file_create_url($item->picture->getFileUri()); 
+    } else if ($adv->picture) {
+      $variables['has_content'] = TRUE;
+      $variables['adv_picture_src'] = file_create_url($adv->picture->getFileUri()); 
+    }
+  }
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_adv_banner_732x92(&$variables) {
+  template_preprocess_adv_block_adv_default($variables);
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_adv_banner_236x372(&$variables) {
+  template_preprocess_adv_block_adv_default($variables);
+}
+
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_adv_turn_picture(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'adv_block') . '/js/adv_block-adv-turn-picture.js', 'file');
+  drupal_add_js(drupal_get_path('module', 'ec') . '/js/marquee.js', 'file');
+  $variables['has_content'] = FALSE;
+  $adv_block = $variables['adv_block'];
+  if ($adv_block->item_list) {
+    $variables['has_content'] = TRUE;
+    $item_list = array();
+    foreach ($adv_block->item_list as $item) {
+      $adv = adv_load($item->entity_id);
+      $title = $item->title ? $item->title : $adv->title;
+      $adv_link = $adv->redirect; 
+      
+      if ($item->picture) {
+        $thumbnail_img_src = get_uri_by_image_style(array('style_name' => '48x48', 'uri' => $item->picture->getFileUri()));
+        $default_img_src = file_create_url($item->picture->getFileUri()); 
+      } else if ($adv->picture) {
+        $thumbnail_img_src = get_uri_by_image_style(array('style_name' => '48x48', 'uri' => $adv->picture->getFileUri()));
+        $default_img_src = file_create_url($adv->picture->getFileUri()); 
+      }
+
+      $item_list[] = array(
+        'title' => $title,
+        'adv_link' => $adv_link,
+        'thumbnail_img_src' => $thumbnail_img_src,
+        'default_img_src' => $default_img_src,
+      );
+    }
+    $variables['item_list'] = $item_list;
+  }
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_adv_block_adv_picture_2cols(&$variables) {
+  $variables['has_content'] = FALSE;
+  $adv_block = $variables['adv_block'];
+  if ($adv_block->item_list) {
+    $variables['has_content'] = TRUE;
+    $item_list = array();
+    foreach ($adv_block->item_list as $item) {
+      $adv = adv_load($item->entity_id);
+      $title = $item->title ? $item->title : $adv->title;
+      $adv_link = $adv->redirect; 
+      
+      if ($item->picture) {
+        $thumbnail_img_src = get_uri_by_image_style(array('style_name' => '125x54', 'uri' => $item->picture->getFileUri()));
+        //$default_img_src = file_create_url($item->picture->getFileUri()); 
+      } else if ($adv->picture) {
+        $thumbnail_img_src = get_uri_by_image_style(array('style_name' => '125x54', 'uri' => $adv->picture->getFileUri()));
+        //$default_img_src = file_create_url($adv->picture->getFileUri()); 
+      }
+
+      $item_list[] = array(
+        'title' => $title,
+        'adv_link' => $adv_link,
+        'thumbnail_img_src' => $thumbnail_img_src,
+      );
+    }
+    $variables['item_list'] = $item_list;
+  }
+}
+
+function template_preprocess_adv(&$variables) {
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  $variables['adv'] = $variables['elements']['#adv'];
+  $adv = $variables['adv'];
+
+  if ($file = $adv->fid->entity) {
+    $variables['picture'] = array(
+      '#theme' => 'image',
+      '#uri' => $file->getFileUri(),
+    );
+  }
+
+  $variables['adv_url'] = $adv->redirect->value;
+
+  // Gather node classes.
+  $variables['attributes']['class'][] = 'adv';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('adv-' . $variables['view_mode']);
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function adv_theme_suggestions_adv(array $variables) {
+  return array('adv__' . $variables['elements']['#view_mode']);
+}

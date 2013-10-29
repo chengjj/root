@@ -1,0 +1,1339 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_cron()
+ */
+function store_cron() {
+  $expires = variable_get('store_cron_expires', 0);
+  if ($expires + 3600 <  REQUEST_TIME) {
+    //auto publish store
+    $result = db_select('store_revision', 's')
+      ->fields('s', array('sid' , 'name', 'discount', 'address'))
+      ->condition('status', 0)
+      ->execute();
+    
+    $sids = array();
+    $blocked_keywords = coupon_get_blocked_keywords();
+    foreach ($result as $row) {
+      if ($row->sid && $store = store_load($row->sid)) {
+        //TODO 审核关键字
+        $is_blocked = FALSE;
+        foreach ($blocked_keywords as $keyword) {
+          if (strpos($row->name, $keyword) !== FALSE || strpos($row->address, $keyword) !== FALSE) {
+            $is_blocked = TRUE;
+            break;
+          }
+        }
+
+        if (!$is_blocked) {
+          $values = array(
+            'name' => $row->name,
+            'discount' => $row->discount,
+            'address' => $row->address,
+            'update_at' => time(),
+          );
+          foreach ($values as $key => $value) {
+            $store->{$key} = $value;
+          }
+          $store->save();
+
+          $sids[] = $row->sid;
+        }
+      }
+    }
+
+    if (count($sids)) {
+      db_update('store_revision')
+        ->fields(array('status' => 1))
+        ->condition('sid', $sids, 'IN')
+        ->execute();
+    }
+
+    //count user follow store
+    /*$result = db_query('SELECT nid FROM {store_follow} GROUP BY nid');
+    foreach ($result as $row) {
+      $store = store_load($row->nid);
+      $follow_count = db_query('SELECT COUNT(uid) FROM {store_follow} WHERE nid= :nid', array(':nid' => $row->nid))->fetchField();
+      if ($store->follow_count != $follow_count) {
+        store_save($store, array('follow_count' => $follow_count));
+      }
+    }*/
+
+    //count coupon_count for store
+    /*$result = db_query('SELECT sid FROM {stores} WHERE GROUP BY sid');
+    foreach ($result as $row) {
+      $store = store_load($row->sid);
+      $coupon_count = db_query('SELECT COUNT(cid) FROM {coupons} WHERE sid= :sid AND status = 1', array(':sid' => $row->sid))->fetchField();
+      if ($store->coupon_count != $coupon_count) {
+        store_save($store, array('coupon_count' => $coupon_count));
+      }
+    }*/
+
+    variable_set('store_cron_expires', REQUEST_TIME);
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function store_menu() {
+  $items['download'] = array(
+    'title' => '贵客下载',
+    'route_name' => 'store.download',
+  );
+  $items['download/store/android'] = array(
+  	'page callback' => 'download_store_page', 
+  );  
+  $items['admin/store'] = array(
+    'title' => '管理商户',
+    'route_name' => 'store.admin',
+  );
+  $items['admin/store/list'] = array(
+    'title' => '商户列表',
+    'route_name' => 'store.admin_audit',
+  );
+  $items['admin/store/audit/list'] = array(
+    'title' => '商户列表',
+    'route_name' => 'store.admin_list',
+  );
+  $items['store/add'] = array(
+    'title' => '添加商户',
+    'route_name' => 'store.add',
+  );
+  $items['store/%store/edit'] = array(
+    'title' => '编辑商户',
+  );
+  $items['store/%store/register'] = array(
+    'title' => '商户认领',
+  );
+  $items['store/%store/delete'] = array(
+    'title' => '删除商户',
+  );
+  $items['store/js/%'] = array(
+    'page callback' => 'store_js',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function store_permission() {
+  return array(
+    'administer store' => array(
+      'title' => t('Administer store'),
+      'description' => t('Perform administration tasks for store module.'),
+    ),
+  );
+}
+
+/**
+ * API create store qrcode return url
+ */
+function store_get_store_qrcode($store_id) {
+  $file_path = 'sites/default/files/' . variable_get('store_qrcode_path', 'store_qrcode') . '/store-' . $store_id . '.' . variable_get('store_qrcode_extension', 'png');
+  if (!file_exists($_SERVER['DOCUMENT_ROOT'] . '/' . $file_path)) {
+    $qcode_data = variable_get('host_url', 'http://api.gsw100.com') . '/download/consumer?store-id=' . $store_id; 
+    $source_file_path = dimensioncode_generate_qrcode($qcode_data, 0, 3, array('w' => '280px', 'h' => '280px'));
+
+    $source_file_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $source_file_path;
+    // Prepare the pictures directory.
+    $picture_directory = file_default_scheme() . '://' . variable_get('store_qrcode_path', 'store_qrcode');
+    file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+    
+    $new_file_path = $_SERVER['DOCUMENT_ROOT'] . '/' . $file_path;
+    @copy($source_file_path, $new_file_path);
+    //TODO rm source_file_path
+  }
+  return url($file_path);
+}
+
+/*
+ *API return user's all stores
+ */
+function store_get_store($uid) {
+  $sid = db_select('stores', 's')
+    ->fields('s', array('sid'))
+    ->condition('uid', $uid)
+    ->execute()->fetchField();
+  if (!$sid) return FALSE;
+
+  $store = store_load($sid);
+  $current_account = account_user_authenticate_by_http();
+  if ($current_account->id() == $uid) {
+    $store_revision = store_revision_load($store->id());
+    if ($store_revision && $store_revision->status == 0) {
+      $store->name = $store_revision->name;
+      $store->discount = $store_revision->discount;
+      $store->address = $store_revision->address;
+    }
+  }
+
+  return $store;
+}
+
+/*
+ *API create store return store
+ */
+function store_create_store($account) {
+  $array = array(
+    'name' => '', /*创建名字为空的门店*/
+    'discount' => '9.0', /*默认折扣9.0折扣*/
+    'uid' => $account->id(),
+    'latitude' => 0,
+    'longitude' => 0,
+    'created' => time(),
+  ); 
+  $store = entity_create('store', $array);
+  $store->enforceIsNew();
+  $store->save();
+
+  return $store;
+}
+
+/**
+ * Implements hook_coupon_insert()
+ */
+function store_coupon_insert(Drupal\coupon\Entity\Coupon $coupon) {
+  //维护coupon_count
+  if ($coupon->status->value == 1) {
+    if ($store = store_load($coupon->sid->value)) {
+      ++$store->coupon_count->value;
+      $store->save();
+    }
+  }
+}
+/**
+ * Implements hook_coupon_update()
+ */
+function store_coupon_update(Drupal\coupon\Entity\Coupon $coupon) {
+  //维护coupon_count
+  if ($store = store_load($coupon->sid->value)) {
+    $coupon_count = db_query('SELECT COUNT(cid) FROM {coupons} WHERE sid= :sid AND status = 1', array(':sid' => $store->id()))->fetchField();
+    if ($store->coupon_count->value != $coupon_count) {
+      $store->coupon_count = $coupon_count;
+      $store->save();
+      //store_save($store, array('coupon_count' => $coupon_count));
+    }
+  }
+}
+
+/**
+ *  API user is followed store
+ **/
+function store_account_is_followed_store($uid, $store_id) {
+  $result = db_select('store_follow', 'f')
+    ->fields('f', array('uid'))
+    ->condition('uid', $uid)
+    ->condition('sid', $store_id)
+    ->execute()->fetchObject();
+   return $result;
+}
+
+/*
+ *API user follow store
+ */
+function store_account_follow_save($uid, $sid) {
+  $follow = db_select('store_follow', 's')
+    ->fields('s', array('uid'))
+    ->condition('uid', $uid)
+    ->condition('sid', $sid)
+    ->execute()->fetchObject(); //建议删除 
+  if (!$follow) {
+    $query = db_insert('store_follow')->fields(array('uid', 'sid'));
+    $query->values(array('uid' => $uid, 'sid' => $sid));
+    $query->execute();
+
+    if ($store = store_load($sid)) {
+      ++$store->follow_count->value;
+      $store->save();
+
+      //store_save($store, array('follow_count' => ++$store->follow_count));
+    }
+  }
+}
+
+/*
+ *API user unfollow stores
+ */
+function store_account_follow_delete($uid, $sid = FALSE) {
+  $query = db_delete('store_follow')
+    ->condition('uid', $uid);
+  //account_followed_store_page 如果该请求 api/user/followed 不存在 修改以下代码 by chengp
+  if ($sid) {
+    if (is_numeric($sid)) {
+      $sid = array($sid);
+    }
+    $query->condition('sid', $sid , 'IN');
+  }
+  $query->execute();
+  
+  $stores = store_load_multiple($sid);
+  foreach ($stores as $store) {
+    --$store->follow_count->value;
+    $store->follow_count->value < 0 && $store->follow_count->value = 0;
+    $store->save();
+    //store_save($store, array('follow_count' => --$store->follow_count));
+  }
+}
+
+/*
+ *API return user follow's all stores
+ */
+function store_account_follow_load($uid = NULL, $sid = NULL) {
+  $result = db_select('store_follow', 's')
+    ->fields('s', array('sid', 'uid'));
+  if ($uid) {
+    $result->condition('uid', $uid);
+  }
+  if ($sid) {
+    $result->condition('sid', $sid);
+  }
+  $result = $result->execute();
+  $follows = array();
+  foreach ($result as $row) {
+    $follows[] = $row;
+  }
+  return $follows;
+}
+
+/*
+ *API create one consumer records for user to store.
+ */
+function store_consumer_records_save($uid, $sid) {
+  $query = db_insert('store_consumer_records')->fields(array('uid', 'sid', 'created'));
+  $query->values(array('uid' => $uid, 'sid' => $sid, 'created' => time()));
+  $query->execute();
+}
+
+/*
+ *API the follow count of the store.
+ */
+function store_follow_account($sid) {
+  $query = db_select('store_follow', 'sid')
+    ->fields('sid', array('sid'))
+    ->condition('sid', $sid)
+    ->execute()->fetchAll();
+  $num = count($query);
+  return $num ? $num : 1;
+}
+
+/*
+ *API base on taxonomy get store_ids.
+ */
+function store_taxonomy_get_stores($tid) {
+  $query = db_select('field_data_taxonomy_store', 'f')
+    ->fields('f', array('entity_id'));
+  if ($tid) { 
+    $query->condition('taxonomy_store_tid', $tid);
+  }
+  $query = $query->execute();
+  $store_ids = array();
+  foreach ($query as $sid) {
+    $store_ids[] = $sid->entity_id; 
+  }
+  return $store_ids;
+}
+
+/*
+ *API base on region get store_ids.
+ */
+function store_region_get_stores($tid) {
+  $query = db_select('field_data_taxonomy_store_region', 'f')
+    ->fields('f', array('entity_id'));
+  if ($tid) {
+    $query->condition('taxonomy_store_region_tid', $tid);
+  }
+  $query = $query->execute();
+  $store_ids = array();
+  foreach ($query as $sid) {
+    $store_ids[] = $sid->entity_id; 
+  }
+  return $store_ids;
+}
+
+function store_revision_save($store_revision = NULL, $array) {
+  if ($store_revision->sid) {
+    db_update('store_revision')
+      ->fields($array)
+      ->condition('sid', $store_revision->sid)
+      ->execute();
+  } else {
+    db_insert('store_revision')
+      ->fields($array)
+      ->execute();
+  }
+  return store_revision_load($array['sid']);
+}
+
+function store_revision_load($sid) {
+  return db_select('store_revision', 'sr')
+    ->fields('sr', array('sid', 'uid', 'discount', 'name', 'address', 'status'))
+    ->condition('sid', $sid)
+    ->execute()
+    ->fetchObject();
+}
+
+function store_name_repeat($name, $sid = 0) {
+  $query = db_select('stores','s')
+    ->fields('s', array('sid'))
+    ->condition('name', $name);
+  $sid && $query->condition('sid', $sid, '<>');
+  $store = $query->execute()->fetchObject();
+
+  $query = db_select('store_revision','s')
+    ->fields('s', array('sid'))
+    ->condition('status', 0)
+    ->condition('name', $name);
+  $sid && $query->condition('sid', $sid, '<>');
+  $store_revision = $query->execute()->fetchObject();
+
+  return $store || $store_revision;
+}
+
+/**
+ * Implement hook_theme()
+ */
+function store_theme() {
+  $hooks = array(
+    'store' => array(
+      'render element' => 'elements',
+      'template' => 'store',
+    ),
+    'store_comment' => array(
+      'render element' => 'elements',
+      'template' => 'store-comment',
+    ),
+    // page callback: download
+    'download_page' => array(
+      'template' => 'download-page',
+      'description' => '移动软件下载页面',
+    ),
+    'download_store_android_page' => array(
+      'template' => 'store-download-android-page',
+      'description' => '贵客商户软件下载页面',
+    ),
+    'store_picture' => array(
+      'variables' => array('store' => NULL),
+      'template' => 'store-picture',
+    ),
+    'store_search_catalog' => array(
+      'template' => 'store-search-catalog',
+      'description' => '促销搜索区块',
+    ),
+    'stores' => array(
+      'variables' => array(),
+      'template' => 'stores',
+    ),
+    'store_breadcrumb' => array(
+      'variables' => array('store' => NULL),
+      'template' => 'store-breadcrumb'
+    ),
+  );
+
+  return $hooks;
+}
+/**
+ * Implement template_preprocess_HOOK
+ */
+function template_preprocess_store_picture(&$variables) {
+  $store = $variables['store'];
+  
+  $picture = $store->getPicture();
+  if ($picture) {
+    if ($picture->getFileUri()) {
+      $filepath = $picture->getFileUri();
+    }
+  }
+  
+  if (isset($filepath)) {
+    $alt = $store->label();
+        
+    $store_picture = theme('image', array('uri' => $filepath, 'alt' => $alt, 'title' => $alt));
+
+    $options = isset($variables['options']) ? $variables['options'] : array(); 
+    $options['store'] = $store;
+    $options['html'] = TRUE;
+
+    $variables['store_picture'] = l($store_picture, 'store/' . $store->id() . '/edit', $options);
+  }
+  else {
+  	$variables['store_picture'] 
+    	= '<img src="'. variable_get('store_default_picture', 'sites/all/themes/gsw120302/images/no_img.png') .'" alt="暂无图片" />';
+  }
+}
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_download_page(&$variables) {
+  //TODO move to guike.theme
+  $variables['guike_android_download'] = url("download/consumer");
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_download_store_android_page(&$variables) {
+  $variables['guike_android_download'] = url("download/store/android");
+}
+/**
+ * APIs store_load
+ */
+function store_load_multiple(array $sids = NULL, $reset = FALSE) {
+  return entity_load_multiple('store', $sids, $reset);
+}
+
+function store_load($sid, $reset = FALSE) {
+  return entity_load('store', $sid, $reset);
+}
+
+/**
+ * store load prepare 
+ */
+function store_prepare(&$store) {
+  foreach (array('photo1', 'photo2', 'photo3', 'photo4') as $field_name) {
+    if ($store->{$field_name}) {
+      $store->{$field_name} = file_load($store->{$field_name});
+    } else {
+      $store->{$field_name} = 0;
+    }
+  }
+  if (isset($store->sid->value)) {
+    $last_coupon = coupon_latest_coupon($store->id());
+  } else {
+    $last_coupon = coupon_latest_coupon($store->sid);
+  }
+  $store->coupon_title = isset($last_coupon) ? $last_coupon->label() : '';
+}
+
+function _store_load($sid) {
+  return db_select('stores', 's')
+    ->fields('s', array('sid', 'uid', 'name', 'image_url', 'latitude', 'longitude', 'address', 'phone', 'hours', 'discount', 'created', 'update_at', 'coupon_count', 'cid', 'deal_count', 'district_id', 'follow_count', 'user_num', 'city_id', 'photo1', 'photo2', 'photo3', 'photo4'))
+    ->condition('sid', $sid)
+    ->execute()->fetchObject();
+}
+
+/**
+ * APIs store_delete
+ */
+function store_delete($sid) {
+  store_delete_multiple(array($sid));
+}
+
+/**
+ * APIs store_delete_multiple().
+ */
+function store_delete_multiple(array $sids) {
+  if (!empty($sids)) {
+    $stores = store_load_multiple($sids);
+
+    $transaction = db_transaction();
+    try {
+      foreach ($stores as $sid => $store) {
+        module_invoke_all('store_delete', $store);
+      }
+
+      db_delete('stores')
+        ->condition('sid', $sids, 'IN')
+        ->execute();
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
+  }
+}
+
+function store_module_invoke($type, &$edit, $store) {
+  foreach (module_implements('store_' . $type) as $module) {
+    $function = $module . '_store_' . $type;
+    $function($edit, $store);
+  }
+}
+
+function store_city_keyword_load($key){
+  $query = db_select('city_keyword', 'c')
+    ->fields('c')
+    ->condition('word', $key)
+    ->execute()->fetchObject();
+  return $query;
+}
+
+
+/** 
+ * APIs store_load_by_name 
+ *
+ * return $store->sid, $store->uid
+ */
+function store_load_by_name($name) {
+  //TODO entity_load_multiple_by_properties('store', array('name' => $name));
+  return db_select('stores', 's')
+    ->fields('s', array('sid', 'uid'))
+    ->condition('name', $name)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function store_library_info() {
+  $libraries['drupal.store_history'] = array(
+    'title' => 'History',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      drupal_get_path('module', 'store') . '/js/store-history.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Updates 'last viewed' timestamp of the specified entity for the current user.
+ *
+ * @param $sid
+ *   The store ID that has been read.
+ * @param $account
+ *   (optional) The user account to update the history for. Defaults to the
+ *   current user.
+ */
+function store_history_write($sid, $account = NULL) {
+  $user = \Drupal::currentUser();
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  if ($account->isAuthenticated()) {
+    db_merge('store_history')
+      ->key(array(
+        'uid' => $account->id(),
+        'sid' => $sid,
+      ))
+      ->fields(array('timestamp' => REQUEST_TIME))
+      ->execute();
+   }
+}
+
+/**
+ * Retrieves the timestamp for the current user's last view of a specified store.
+ *
+ * @param int $sid
+ *   A store ID.
+ *
+ * @return int
+ *   If a store has been previously viewed by the user, the timestamp in seconds
+ *   of when the last view occurred; otherwise, zero.
+ */
+function store_history_read($sid) {
+  $user = \Drupal::currentUser();
+  $history = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($history[$cid])) {
+    $history[$cid] = db_query("SELECT timestamp FROM {store_history} WHERE uid = :uid AND sid = :sid", array(':uid' => $user->id(), ':sid' => $sid))->fetchObject();
+  }
+
+  return (isset($history[$sid]->timestamp) ? $history[$sid]->timestamp : 0);
+}
+
+/**
+ * Return stores attached to history.
+ *
+ * @param $limit
+ *   Integer. The maximum number of stores to find.
+ *
+ * @return
+ *   An array of sids matching the query.
+ */
+function store_history_select_stores($limit) {
+  $user = \Drupal::currentUser();
+
+  $query = db_select('store_history', 'h');
+  $query->condition('uid', $user->id());
+  $query->range(0, $limit);
+  $query->addField('h', 'sid');
+  $query->addField('h', 'uid');
+  $query->orderBy('timestamp', 'DESC');
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Constructs a drupal_render() style array from an array of loaded stores.
+ */
+function store_view_multiple($stores, $view_mode = 'teaser', $langcode = NULL) {
+  return entity_view_multiple($stores, $view_mode, $langcode);
+}
+
+/**
+ * Prepares variables for store templates.
+ *
+ * Default template: store.html.twig.
+ *
+ * Most themes utilize their own copy of store.html.twig. The default is located
+ * inside "/core/modules/store/templates/store.html.twig". Look in there for the full
+ * list of variables.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - store: The store object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser'...
+ */
+function template_preprocess_store(&$variables) {
+  $user = \Drupal::currentUser();
+
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['teaser'] = $variables['view_mode'] == 'teaser';
+  $variables['store'] = $variables['elements']['#store'];
+  $store = $variables['store'];
+
+  if ($variables['view_mode'] == 'full') {
+    drupal_add_js('window.addEventListener("load", function(){Drupal.store_history.markAsRead(' . $store->id() . ');},false);', 'inline');
+    drupal_add_library('store', 'drupal.store_history');
+  }
+
+  $uri = $store->uri();
+  $variables['store_url'] = url($uri['path'], $uri['options']);
+  $variables['label'] = check_plain($store->label());
+
+  if ($file = file_load($store->image_url->value)) {
+    if ($variables['view_mode'] == 'full') {
+      $picture = array('#theme' => 'image');
+    }
+    else {
+      $picture = array('#theme' => 'image_style', '#style_name' => '213x');
+    }
+    $picture['#uri'] = $file->getFileUri();
+    $picture['#alt'] = $store->label();
+    $picture['#attributes']['class'][] = 'store-picture';
+    $variables['picture'] = $picture;
+  }
+  else {
+    $variables['picture'] = '';
+  }
+
+  if ($user->isAuthenticated()) {
+    drupal_add_js(drupal_get_path('module', 'store') . '/js/follow.js');
+    $variables['follow_url'] = url('');
+  }
+  else {
+    $variables['follow_url'] = url('login', array('query' => drupal_get_destination()));
+  }
+
+  if ($variables['view_mode'] == 'full') {
+    //store_breadcrumb
+    $variables['store_breadcrumb'] = theme('store_breadcrumb', array('store' => $store));
+
+    //store_catalogs
+    $current_catalog = $store->cid->entity;
+    $catalogs = store_catalog_load_children(0);
+    $links = array();
+    foreach ($catalogs as $catalog) {
+      $link = array('title' => $catalog->label(), 'href' => 'store/search', 'query' => array('cid' => $catalog->id()));
+      if ($catalog->id() == $current_catalog->id() || $catalog->id() == $current_catalog->parent_cid->value) {
+        $link['attributes']['class'][] = 'active';
+      }
+      if ($catalog->id() == $current_catalog->id() || $catalog->id() == $current_catalog->parent_cid->value) {
+        $parent_catalog = $catalog;
+      }
+      $links[] = $link;
+    }
+    $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+
+    // sub catalogs
+    if (isset($current_catalog)) {
+      $catalogs = store_catalog_load_children($parent_catalog->id());
+      $links = array();
+      foreach ($catalogs as $catalog) {
+        $link = array('title' => $catalog->name->value, 'href'=> 'store/search', 'query' => array('cid' => $catalog->id()));
+        $links[] = $link;
+      }
+      $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
+    }
+
+    // districts
+    $districts = city_load_districts(\Drupal::config('city.settings')->get('default_city_id'));
+    $links = array();
+    foreach ($districts as $district) {
+      $link = array('title' => $district->label(), 'href'=> 'store/search', 'query' => array('did' => $district->id()));
+      $links[] = $link;
+    }
+    $variables['districts'] = array('#theme' => 'links', '#links' => $links);
+
+    $variables['links'] = array(
+      'catalog_all' => url('store/search'),
+      'district_all' => url('store/search', array('query' => array('cid' => $store->cid->value))),
+    );
+
+    // pictures
+    $pictures = array();
+    $fields = array('image_url', 'photo1', 'photo2', 'photo3', 'photo4');
+    foreach ($fields as $field) {
+      if ($store->$field->value) {
+        $file = file_load($store->$field->value);
+        $pictures[] = array(
+          '#theme' => 'image',
+          '#uri' => $file->getFileUri(),
+          '#alt' => $store->label(),
+          '#attributes' => array('class' => array('store-picture')),
+        );
+      }
+    }
+    $variables['pictures'] = $pictures;
+
+    // coupons
+    if ($cids = store_select_coupons($store->id(), FALSE)) {
+      $coupons = coupon_load_multiple($cids);
+      $variables['coupons'] = coupon_view_multiple($coupons);
+    }
+
+    // comments
+    if (!$user->isAuthenticated()) {
+      $variables['login_url'] = url('login', array('query' => drupal_get_destination()));
+    }
+    else {
+      $variables['login_url'] = '';
+    }
+    if ($cids = store_comment_get_thread($store, variable_get('store_comment_default_per_page', 5))) {
+      $comments = store_comment_load_multiple($cids);
+      $build = store_comment_view_multiple($comments, 'teaser');
+      $variables['comments'] = $build;
+      $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+    }
+    else {
+      $variables['comments'] = "暂时还无用户评价";
+    }
+    $variables['comment_form'] = store_comment_add($store);
+
+    // hot stores
+    $conditions = array('cid' => $store->cid->value);
+    if ($sids = store_select_stores($conditions, FALSE, 6, array('s.coupon_count' => 'DESC', 's.follow_count' => 'DESC'))) {
+      $stores = store_load_multiple($sids);
+      $variables['hot_stores'] = store_view_multiple($stores, 'hot');
+    } else {
+      $variables['hot_stores'] = '该分类暂无优惠信息';
+    }
+  }
+  else {
+    $variables['number'] = $variables['elements']['#weight'] + 1;
+
+    // recent coupon
+    if ($cids = store_select_coupons($store->id(), FALSE, 1)) {
+      $coupon = coupon_load($cids[0]);
+      $variables['coupon'] = $coupon;
+      $variables['coupon_label'] = check_plain($coupon->label());
+    }
+    else {
+      $variables['coupon_label'] = '';
+    }
+    $variables['label_short'] = truncate_utf8($store->label(), 5);
+  }
+
+  // Add article ARIA role.
+  $variables['attributes']['role'] = 'article';
+
+  // Gather store classes.
+  $variables['attributes']['class'][] = 'store';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('store-' . $variables['view_mode']);
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function store_theme_suggestions_store(array $variables) {
+  return array('store__' . $variables['elements']['#view_mode']);
+}
+
+/**
+ * Return coupons attached to a store across all field instances.
+ *
+ * @param $sid
+ *   The store ID.
+ * @param $pager
+ *   Boolean to indicate whether a pager should be used.
+ * @param $limit
+ *   Integer. The maximum number of coupons to find.
+ *   Set to FALSE for no limit.
+ * @param $order
+ *   An array of fields and directions.
+ *
+ * @return
+ *   An array of sids matching the query.
+ */
+function store_select_coupons($sid, $pager = TRUE, $limit = FALSE, $order = array('c.created' => 'DESC')) {
+  $query = db_select('coupons', 'c');
+  $query->condition('sid', $sid);
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(c.cid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+  $query->addField('c', 'cid');
+  $query->addField('c', 'sid');
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Retrieves comments for a thread.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $store
+ *   The store whose comment(s) needs rendering.
+ * @param $comments_per_page
+ *   The amount of comments to display per page.
+ *
+ * @return
+ *   An array of the IDs of the comment to be displayed.
+ */
+function store_comment_get_thread(EntityInterface $store, $comments_per_page) {
+  $query = db_select('store_comment', 'c')
+    ->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+  $query->addField('c', 'cid');
+  $query
+    ->condition('c.sid', $store->id())
+    ->limit($comments_per_page);
+
+  $count_query = db_select('store_comment', 'c');
+  $count_query->addExpression('COUNT(*)');
+  $count_query
+    ->condition('c.sid', $store->id());
+
+  $query->condition('c.status', COMMENT_PUBLISHED);
+  $count_query->condition('c.status', COMMENT_PUBLISHED);
+  $query->orderBy('c.cid', 'DESC');
+
+  $query->setCountQuery($count_query);
+  $cids = $query->execute()->fetchCol();
+
+  return $cids;
+}
+
+/**
+ * Loads comment entities from the database.
+ *
+ * @param array $cids
+ *   (optional) An array of entity IDs. If omitted, all entities are loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return array
+ *   An array of comment objects, indexed by comment ID.
+ *
+ * @see entity_load()
+ * @see Drupal\Core\Entity\Query\QueryInterface
+ */
+function store_comment_load_multiple(array $cids = NULL, $reset = FALSE) {
+  return entity_load_multiple('store_comment', $cids, $reset);
+}
+
+/**
+ * Constructs render array from an array of loaded comments.
+ *
+ * @param $comments
+ *   An array of comments as returned by comment_load_multiple().
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
+ * @param $langcode
+ *   A string indicating the language field values are to be shown in. If no
+ *   language is provided the current content language is used.
+ *
+ * @return
+ *   An array in the format expected by drupal_render().
+ *
+ * @see drupal_render()
+ */
+function store_comment_view_multiple($comments, $view_mode = 'full', $langcode = NULL) {
+  return entity_view_multiple($comments, $view_mode, $langcode);
+}
+
+/**
+ * Returns a rendered form to comment the given store.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $store
+ *   The store entity to be commented.
+ *
+ * @return array
+ *   The renderable array for the comment addition form.
+ */
+function store_comment_add(EntityInterface $store) {
+  $values = array('sid' => $store->id());
+  $comment = entity_create('store_comment', $values);
+  return \Drupal::entityManager()->getForm($comment);
+}
+
+/**
+ * Prepare variables for store comment template.
+ *
+ * Default template: store-comment.html.twig.
+ */
+function template_preprocess_store_comment(&$variables) {
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['teaser'] = $variables['view_mode'] == 'teaser';
+  $variables['comment'] = $variables['elements']['#store_comment'];
+  $comment = $variables['comment'];
+  $store = $comment->sid->entity;
+
+  $account = $comment->getAuthor();
+  $variables['author'] = l($account->nickname, 'user/' . $account->id());
+  $username = array(
+    '#theme' => 'username',
+    '#account' => $account,
+  );
+  //$variables['author'] = drupal_render($username);
+  $variables['created'] = format_date($comment->created->value, 'custom', 'Y.m.d');
+  $picture = array('#theme' => 'account_picture', '#account' => $account);
+  $variables['user_picture'] = drupal_render($picture);
+  $variables['title'] = $comment->subject->value;
+
+  if ($variables['view_mode'] != 'full') {
+    $variables['store'] = store_view_multiple(array($store->id() => $store), 'comment');
+  }
+
+  // Gather comment classes.
+  $variables['attributes']['class'][] = 'store-comment';
+  if ($variables['view_mode']) {
+    $variables['attributes']['class'][] = drupal_html_class('store-comment-' . $variables['view_mode']);
+  }
+
+  $variables['theme_hook_suggestions'][] = 'store_comment__' . $variables['view_mode'];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function store_theme_suggestions_store_comment(array $variables) {
+  return array('store_comment__' . $variables['elements']['#view_mode']);
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_stores(&$variables) {
+  $conditions = array();
+  if (isset($_GET['keywords'])) {
+    $keywords = $_GET['keywords'];
+    $conditions['keywords'] = $keywords;
+    $variables['keywords'] = $keywords;
+  }
+  $all_catalog_query = $conditions;
+  $all_district_query = $conditions;
+  if (isset($_GET['cid'])) {
+    $cid = $_GET['cid'];
+    $conditions['cid'] = $cid;
+    $all_district_query['cid'] = $cid;
+  }
+  if (isset($_GET['did'])) {
+    $did = $_GET['did'];
+    $conditions['did'] = $did;
+    $all_catalog_query['did'] = $did;
+  }
+
+  $variables['all_catalog_url'] = url('store/search', array('query' => $all_catalog_query));
+  $variables['all_district_url'] = url('store/search', array('query' => $all_district_query));
+
+  // catalogs
+  if (isset($cid)) {
+    $current_catalog = store_catalog_load($cid);
+  }
+  $catalogs = store_catalog_load_children(0);
+  $links = array();
+  foreach ($catalogs as $catalog) {
+    $q = $all_catalog_query;
+    $q['cid'] = $catalog->id();
+    $link = array('title' => $catalog->label(), 'href' => 'store/search', 'query' => $q);
+    if (isset($current_catalog)) {
+      if ($catalog->id() == $current_catalog->parent_cid->value) {
+        $link['attributes']['class'][] = 'active';
+      }
+      if ($catalog->id() == $current_catalog->id() || $catalog->id() == $current_catalog->parent_cid->value) {
+        $parent_catalog = $catalog;
+      }
+    }
+    $links[] = $link;
+  }
+  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+
+  // sub catalogs
+  if (isset($current_catalog)) {
+    $catalogs = store_catalog_load_children($parent_catalog->id());
+    $links = array();
+    foreach ($catalogs as $catalog) {
+      $q = $all_catalog_query;
+      $q['cid'] = $catalog->id();
+      $link = array('title' => $catalog->name->value, 'href'=> 'store/search', 'query' => $q);
+      $links[] = $link;
+    }
+    $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
+  }
+
+  // districts
+  $districts = city_load_districts(city_get_current_city_id());
+  $links = array();
+  foreach ($districts as $district) {
+    $q = $all_district_query;
+    $q['did'] = $district->id();
+    $link = array('title' => $district->label(), 'href'=> 'store/search', 'query' => $q);
+    $links[] = $link;
+  }
+  $variables['districts'] = array('#theme' => 'links', '#links' => $links);
+
+  // stores
+  if ($sids = store_select_stores($conditions, TRUE, 16)) {
+    $stores = store_load_multiple($sids);
+    $variables['stores'] = store_view_multiple($stores);
+    $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+  }
+
+  // hot stores
+  $conditions = array();
+  if (isset($cid)) {
+    $conditions['cid'] = $cid;
+  }
+  if (isset($did)) {
+    $conditions['did'] = $did;
+  }
+  if ($sids = store_select_stores($conditions, FALSE, 6, array('s.coupon_count' => 'DESC', 's.follow_count' => 'DESC'))) {
+    $stores = store_load_multiple($sids);
+    $variables['hot_stores'] = store_view_multiple($stores, 'hot');
+  } else {
+    $variables['hot_stores'] = '暂无优惠信息';
+  }
+
+  // brands
+  $variables['brands'] = adv_block_view_items(8, 10);
+
+  // right_advs
+  $variables['right_advs'] = adv_block_view_items(14, 1);
+
+  // search
+  $variables['search'] = drupal_get_form('store_search_form');
+}
+
+function store_catalog_select_catalogs($parent, $pager = TRUE, $limit = FALSE, $order = array('c.weight' => 'ASC')) {
+  $query = db_select('store_catalog', 'c');
+  $query->condition('c.parent_cid', $parent);
+
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(c.cid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+
+  $query->addField('c', 'cid');
+
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+
+  return $query->execute()->fetchCol();
+}
+
+function store_catalog_names($parent) {
+  $ids = store_catalog_select_catalogs($parent, FALSE);
+  return array_map(function ($item) {
+    return $item->label();
+  }, entity_load_multiple("store_catalog", $ids));
+}
+
+function store_select_stores($conditions, $pager = TRUE, $limit = FALSE, $order = array('s.created' => 'DESC')) {
+  $query = db_select('stores', 's');
+  $query->condition('city_id', city_get_current_city_id());
+  if (isset($conditions['cid'])) {
+    if ($children = store_catalog_load_children($conditions['cid'])) {
+      $or = db_or();
+      $or->condition('cid', array_keys($children));
+      $or->condition('cid', $conditions['cid']);
+      $query->condition($or);
+    }
+    else {
+      $query->condition('cid', $conditions['cid']);
+    }
+  }
+  if (isset($conditions['did'])) {
+    $query->condition('district_id', $conditions['did']);
+  }
+  if (isset($conditions['keywords'])) {
+    $or = db_or();
+    $or->condition('name', '%' . db_like(trim($conditions['keywords'])) . '%', 'LIKE');
+    $or->condition('address', '%' . db_like(trim($conditions['keywords'])) . '%', 'LIKE');
+    $query->condition($or);
+  }
+
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(s.sid)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+
+  $query->addField('s', 'sid');
+
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_store_search_catalog(&$variables) {
+  $default_city_id = 292;
+  $p_cid = isset($_GET['cid']) ? $_GET['cid'] : 0;
+  $p_did = isset($_GET['did']) ? $_GET['did'] : 0;
+  
+  $top_cids = db_query('SELECT cid FROM {store_catalog} WHERE parent_cid=0 ORDER BY weight DESC')->fetchCol();
+  $current_catalog_parent_cids = $current_catalog_children_cids = array();
+  if ($p_cid) {
+    if (in_array($p_cid, $top_cids)) {
+      $current_catalog_children_cids = db_query('SELECT cid FROM {store_catalog} WHERE parent_cid=:parent_cid', array(':parent_cid' => $p_cid))->fetchCol();
+    } else {
+      $current_catalog_parent_cids = db_query('SELECT parent_cid FROM {store_catalog} WHERE cid=:cid', array(':cid' => $p_cid))->fetchCol();
+    }
+  }
+  $catalog_parents = array();
+  foreach (store_catalog_load_multiple($top_cids) as $store_catalog) {
+    $catalog_parents[] = array(
+      'cid' => $store_catalog->id(),
+      'name' => $store_catalog->label(),
+      'search_link' => url('store/search', array('query' => array('cid' => $store_catalog->id(), 'did' => $p_did))),
+      'seclect' => in_array($store_catalog->id(), $current_catalog_parent_cids) ? 'seclect' : '',
+    );
+  }
+  
+  $catalog_childrens = array();
+  foreach ($top_cids as $cid) {
+    $catalog_children_cids = db_query('SELECT cid FROM {store_catalog} WHERE parent_cid=:parent_cid', array(':parent_cid' => $cid))->fetchCol();
+    foreach (store_catalog_load_multiple($catalog_children_cids) as $store_catalog) {
+      $catalog_childrens[$cid][] = array(
+        'cid' => $store_catalog->id(),
+        'name' => $store_catalog->label(),
+        'search_link' => url('store/search', array('query' => array('cid' => $store_catalog->id(), 'did' => $p_did))),
+        'seclect' => in_array($store_catalog->id(), $current_catalog_parent_cids) ? 'seclect' : '',
+        
+      );
+    }
+  }
+
+  $result = db_query('SELECT * FROM {districts} WHERE cid=:cid', array(':cid' => $default_city_id));
+  $districts = array();
+  foreach ($result as $row) {
+    $districts[] = array(
+      'search_link' => url('store/search', array('query' => array('did' => $row->did, 'cid' => $p_did))),
+      'did' => $row->did,
+      'name' => $row->name,
+    );
+  }
+  $variables['catalogs'] = $catalog_parents;
+  $variables['catalog_childrens'] = $catalog_childrens;
+  $variables['districts'] = $districts;
+  $variables['links'] = array(
+    'catalog_all' => url('store/search', array('query' => array('did' => $p_did))),
+    'district_all' => url('store/search', array('query' => array('cid' => $p_cid))),
+  );
+
+  drupal_add_js(drupal_get_path('module', 'store') . '/js/store-search-catalog.js');
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_store_breadcrumb(&$variables) {
+  $store = $variables['store'];
+  if ($store->cid->value) {
+    if (db_query('SELECT cid FROM {store_catalog} WHERE cid=:cid AND parent_cid=0', array(':cid' => $store->cid->value))->fetchField()) {
+      $catalog = store_catalog_load($store->cid->value);
+    } else {
+      $catalog = store_catalog_get_top($store->cid->value);
+    }
+  }
+  $items[] = array('title' => '贵商网', 'url' => url(''));
+  $items[] = array('title' => '周边优惠', 'url' => url('coupons'));
+  if (isset($catalog)) { 
+    $items[] = array('title' => $catalog->label(), 'url' => url('store/search', array('query' => array('cid' => $catalog->id()))));
+  }
+  $items[] = array('title' => '商家', 'url' => '');
+
+  $variables['item_list'] = $items;
+}
+
+function store_search_form($form, &$form_state) {
+  $form['type'] = array(
+    '#type' => 'select',
+    '#title' => '类型',
+    '#title_display' => 'invisible',
+    '#options' => array('store' => '搜优惠', 'share' => '搜商品'),
+    '#default_value' => 'store',
+    '#attributes' => array('class' => array('js-select')),
+  );
+  $form['keywords'] = array(
+    '#type' => 'textfield',
+    '#title' => '关键词',
+    '#title_display' => 'invisible',
+  );
+  $form['submit'] = array('#type' => 'submit', '#value' => '');
+
+  return $form;
+}
+
+function store_search_form_submit($form, &$form_state) {
+  $form_state['redirect'] = array($form_state['values']['type'] . '/search', array('query' => array('keywords' => $form_state['values']['keywords'])));
+}
+

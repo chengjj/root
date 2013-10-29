@@ -1,0 +1,4 @@
+services:
+  share.manager:
+    class: Drupal\share\ShareManager
+    arguments: ['@database', '@plugin.manager.entity']

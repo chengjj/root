@@ -1,0 +1,73 @@
+<?php
+
+
+/**
+ * Implements hook_menu()
+ */
+function catalog_menu() {
+  //TODO remove
+  $items['catalog/js/%'] = array(
+    'type' => MENU_CALLBACK,
+    'file' => 'catalog.pages.inc',
+  );
+  return $items;
+}
+
+
+/**
+ * APIs store_catalog_load
+ *
+ */
+function store_catalog_load($cid, $reset = FALSE) {
+  //TODO entity_load
+  return entity_load('store_catalog', $cid, $reset);
+}
+
+/**
+ * APIs store_catalog_load_multiple
+ */
+function store_catalog_load_multiple(array $cids = NULL, $reset = FALSE) {
+  //TODO entity_load_multiple
+  return entity_load_multiple('store_catalog', $cids, $reset);
+}
+
+function store_catalog_load_children($cid) {
+  $children = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($children[$cid])) {
+    $query = db_select('store_catalog', 'c');
+    $query->addField('c', 'cid');
+    $query->condition('c.parent_cid', $cid);
+    $query->orderBy('c.weight');
+    $cids = $query->execute()->fetchCol();
+    $children[$cid] = entity_load_multiple('store_catalog', $cids);
+  }
+
+  return isset($children[$cid]) ? $children[$cid] : array();
+}
+
+function store_catalog_get_top($cid) {
+  if ($parent_cid = db_query('SELECT parent_cid FROM {store_catalog} WHERE cid=:cid ', array(':cid' => $cid))->fetchField()) {
+    return store_catalog_get_top($parent_cid);
+  } else {
+    return store_catalog_load($cid);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function catalog_theme() {
+  return array(
+    'store_catalog' => array(
+      'render element' => 'elements',
+      'template' => 'store-catalog',
+    ),
+  );
+}
+
+function template_preprocess_store_catalog(&$variables) {
+  $store_catalog = $variables['elements']['#store_catalog'];
+  $variables['store_catalog'] = $store_catalog;
+}
+

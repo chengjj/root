@@ -1,0 +1,8 @@
+<?php
+/**
+ * @file
+ *
+ * This module enable the users connect with Sina Weibo.
+ *
+ */
+define('SINA_LOGIN_TYPE', 'WEIBO');//第三方登录类型

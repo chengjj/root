@@ -1,0 +1,7 @@
+feedback.create:
+  path: '/feedback/create'
+  defaults:
+    _title: '意见反馈'
+    _entity_form: 'feedback.default'
+  requirements:
+    _access: 'TRUE'

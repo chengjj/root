@@ -1,0 +1,7 @@
+name: Account Settings
+type: module
+description: '用户设置模块.'
+package: '贵客'
+version: VERSION
+core: 8.x
+configure: admin/config/account_settings

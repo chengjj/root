@@ -1,0 +1,119 @@
+<?php
+/**
+ * Implements hook_schema()
+ */
+function adv_schema() {
+  $schema['advs'] = array(
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 80,
+        'default' => '',
+      ),
+      'fid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'redirect' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'start' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'expire' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'lid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '广告显示位置',
+      ),
+      'sid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Store ID',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'adv status',
+      ),      
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Advert City ID',
+      ),
+      'type' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0, '0代表手机客户端使用,1代表网站使用'
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'User ID',
+      ),
+    ),
+    'primary key' => array('aid'),
+    'foreign keys' => array(
+      'file' => array(
+        'table' => 'file_managed',
+        'columns' => array('fid', 'fid'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
+/**
+ * Implements hook_enable()
+ */
+ /*
+function adv_enable() {
+  $type = node_type_set_defaults();
+  $type->name = 'adv';
+  $type->description = "广告位";
+  $type->type = 'adv';
+  $type->base = 'node_content';
+  $type->module = 'node';
+  $type->custom = '1';
+  $type->modified = '1';
+  $type->locked = '0';
+  $type->disabled = '0';
+  $type->orig_type = 'adv';
+  
+  $has_node = node_type_load($type->name);
+  if (!$has_node) {
+    $type = node_type_set_defaults($type);
+    node_type_save($type);    
+  }
+  adv_install_node_field();
+}
+*/

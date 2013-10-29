@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */
+function statistic_permission() {
+  return array(
+    'administer statistic' => array(
+      'title' => t('Administer statistic'),
+      'description' => t('Perform administration tasks for statistic module.'),
+    ),
+  );
+}

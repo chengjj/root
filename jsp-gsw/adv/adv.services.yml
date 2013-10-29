@@ -1,0 +1,4 @@
+services:
+  adv.manager:
+    class: Drupal\adv\AdvManager
+    arguments: ['@database', '@plugin.manager.entity']

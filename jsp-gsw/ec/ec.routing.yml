@@ -1,0 +1,63 @@
+ec.front:
+  path: 'front'
+  defaults:
+    _title: '首页'
+    _content: '\Drupal\ec\Controller\EcController::front'
+  requirements:
+    _access: 'TRUE'
+ec.verify_code:
+  path: 'verify/code'
+  defaults:
+    _controller: '\Drupal\ec\Controller\EcController::verifyCodeImage'
+  requirements:
+    _access: 'TRUE'
+ec.email_verify_code:
+  path: 'verify/code/email'
+  defaults:
+    _controller: '\Drupal\ec\Controller\EcController::emailVerifyCodeImage'
+  requirements:
+    _access: 'TRUE'
+ec.user_agreement:
+  path: 'agreement'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::userAgreement'
+  requirements:
+    _access: 'TRUE'
+    
+ec.aboutUs_gsw:
+  path: 'aboutus_gsw'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::aboutUs_gsw'
+  requirements:
+    _access: 'TRUE'
+    
+ec.aboutUs_contact:
+  path: 'aboutus_contact'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::aboutUs_contact'
+  requirements:
+    _access: 'TRUE'
+
+ec.aboutUs_store:
+  path: 'aboutus_store'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::aboutUs_store'
+  requirements:
+    _access: 'TRUE'
+    
+ec.aboutUs_help:
+  path: 'aboutus_help'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::aboutUs_help'
+  requirements:
+    _access: 'TRUE'
+    
+ec.phone:
+  path: 'phone'
+  defaults:
+    _content: '\Drupal\ec\Controller\EcController::phone'
+  requirements:
+    _access: 'TRUE'    
+    
+    
+ 

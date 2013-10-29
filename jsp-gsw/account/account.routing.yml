@@ -1,0 +1,318 @@
+user_api_page:
+  path: '/api/user'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userApiPage'
+  requirements:
+    _access: 'TRUE'
+
+user_load_by_name_page:
+  path: '/api/users/{user_name}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userLoadByNamePage'
+  requirements:
+    _access: 'TRUE'
+user_register_store_role:
+  path: '/api/register/store/{user_name}/{user_pass}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::regsiterStoreRole'
+  requirements:
+    _access: 'TRUE'
+user_register_api:
+  path: '/api/register/{phone}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::regsiter'
+  requirements:
+    _access: 'TRUE'
+phone_verify:
+  path: '/api/phone/{phone}/verify'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::phoneVerify'
+  requirements:
+    _access: 'TRUE'
+user_follow_store:
+  path: '/api/user/followed/{store_sid}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userFollowStore'
+  requirements:
+    _access: 'TRUE'
+tripartite_login:
+  path: '/api/user/tripartite/login'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userTripartiteLogin'
+  requirements:
+    _access: 'TRUE'
+tripartite_register:
+  path: '/api/user/tripartite/register/{key}/{type}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userTripartiteRegister'
+  requirements:
+    _access: 'TRUE'
+user_edit_avatar:
+  path: '/api/user/{uid}/avatar'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userEditAvatar'
+  requirements:
+    _access: 'TRUE'
+user_edit_nickname:
+  path: '/api/user/{uid}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userEditNikename'
+  requirements:
+    _access: 'TRUE'
+user_change_passwd:
+  path: '/api/user/password'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userChangePasswd'
+  requirements:
+    _access: 'TRUE'
+user_follow_stores:
+  path: '/api/follows'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userFollowStoresList'
+  requirements:
+    _access: 'TRUE'
+user_partner_login:
+  path: '/api/partner_login/{type}/{uid}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userPartnerLogin'
+  requirements:
+    _access: 'TRUE'
+user_delete_all_follow_store:
+  path: '/api/user/followed'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::userDeleteFollowStores'
+  requirements:
+    _access: 'TRUE'
+get_autho_token:
+  path: '/api/authorizations'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::getAuthoToken'
+  requirements:
+    _access: 'TRUE'
+get_mobile_package:
+  path: '/api/package/{mobile}/{version}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::getMobilePackage'
+  requirements:
+    _access: 'TRUE'
+store_user_login:
+  path: '/api/store/login'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::storeUserLogin'
+  requirements:
+    _access: 'TRUE'
+
+js_user_followed:
+  path: '/js/user/{user}/followed'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::followed'
+  requirements:
+    _access: 'TRUE'
+js_user_follow:
+  path: '/js/user/{user}/follow'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::follow'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+js_user_unfollow:
+  path: '/js/user/{user}/unfollow'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::unfollow'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    
+account.edit:
+  path: '/account/{account}/edit'
+  defaults:
+    _entity_form: 'account.default'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.edit_avatar:
+  path: '/account/edit/avatar'
+  defaults:
+    _form: 'Drupal\account\Form\EditAvatarForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.edit_password:
+  path: '/account/edit/password'
+  defaults:
+    _form: 'Drupal\account\Form\EditPasswordForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.bind_phone:
+  path: '/account/bind/phone'
+  defaults:
+    _form: 'Drupal\account\Form\BindPhoneForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.bind_account:
+  path: '/account/bind/account'
+  defaults:
+    _form: 'Drupal\account\Form\BindAccountForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.store_edit:
+  path: '/account/store/edit'
+  defaults:
+    _form: 'Drupal\account\Form\EditStoreForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.store_image_edit:
+  path: '/account/store/image'
+  defaults:
+    _form: 'Drupal\account\Form\EditStoreImageForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account.add_coupon:
+  path: '/account/coupon/add'
+  defaults:
+    _form: 'Drupal\account\Form\AddCouponForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    
+account.coupon_list:
+  path: '/account/coupon/list'
+  defaults:
+    _form: 'Drupal\account\Form\EditCouponListForm'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    
+account.store_follows:
+  path: '/account/store/follows'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::storefollows'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    
+account.store_deals:
+  path: '/account/store/deals'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::storedeals'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+account_js_action:
+  path: '/account/js/{operation}'
+  defaults:
+    _controller: '\Drupal\account\Controller\AccountController::accountAjaxAction'
+  requirements:
+    _access: 'TRUE'
+
+account.login:
+  path: '/login'
+  defaults:
+    _title: '登录'
+    _content: '\Drupal\account\Controller\AccountController::accountLogin'
+  requirements:
+    _access: 'TRUE'
+account.register:
+  path: '/register'
+  defaults:
+    _title: '注册'
+    _content: '\Drupal\account\Controller\AccountController::accountRegister'
+  requirements:
+    _access: 'TRUE'
+account.email_register:
+  path: '/register/email'
+  defaults:
+    _title: '注册'
+    _content: '\Drupal\account\Controller\AccountController::accountEmailRegister'
+  requirements:
+    _access: 'TRUE'
+account.resetpwd:
+  path: '/resetpwd'
+  defaults:
+    _title: '找回密码'
+    _content: '\Drupal\account\Controller\AccountController::accountResetpwd'
+  requirements:
+    _access: 'TRUE'
+account.resetpwd_msg:
+  path: '/resetpwd/{user}/msg'
+  defaults:
+    _title: '找回密码'
+    _content: '\Drupal\account\Controller\AccountController::accountResetpwdMsg'
+  requirements:
+    _access: 'TRUE'
+account.resetpwd_login:
+  path: '/resetpwd/{user}/login'
+  defaults:
+    _title: '找回密码'
+    _content: '\Drupal\account\Controller\AccountController::accountResetpwdLogin'
+  requirements:
+    _access: 'TRUE'
+
+user.follows:
+  path: '/user/{user}/follows'
+  defaults:
+    _title: '关注的会员'
+    _content: '\Drupal\account\Controller\AccountController::userFollows'
+  requirements:
+    _access: 'TRUE'
+user.stores:
+  path: '/user/{user}/stores'
+  defaults:
+    _title: '关注的商家'
+    _content: '\Drupal\account\Controller\AccountController::userStores'
+  requirements:
+    _access: 'TRUE'
+user.fans:
+  path: '/user/{user}/fans'
+  defaults:
+    _title: '我的粉丝'
+    _content: '\Drupal\account\Controller\AccountController::userFans'
+  requirements:
+    _access: 'TRUE'
+account.reset:
+  path: '/account/reset/{uid}/{timestamp}/{hash}/{operation}'
+  defaults:
+    _content: '\Drupal\account\Form\UserForm::resetPass'
+    _title: '找回密码'
+    operation: NULL
+  requirements:
+    _access: 'TRUE'
+
+user.bookmark_share:
+  path: '/user/{user}/bookmark/share'
+  defaults:
+    _title: '搜藏的商品'
+    _content: '\Drupal\account\Controller\AccountController::userBookmarkShare'
+  requirements:
+    _access: 'TRUE'
+
+user.bookmark_coupon:
+  path: '/user/{user}/bookmark/coupon'
+  defaults:
+    _title: '搜藏的优惠'
+    _content: '\Drupal\account\Controller\AccountController::userBookmarkCoupon'
+  requirements:
+    _access: 'TRUE'
+
+user.share:
+  path: '/user/{user}/share'
+  defaults:
+    _title: '我晒的'
+    _content: '\Drupal\account\Controller\AccountController::userShare'
+  requirements:
+    _access: 'TRUE'
+
+user.comment_share:
+  path: '/user/{user}/comment/share'
+  defaults:
+    _title: '我评价的'
+    _content: '\Drupal\account\Controller\AccountController::userCommentShare'
+  requirements:
+    _access: 'TRUE'
+account.reset_passwd:
+  path: 'account/{user}/edit/password'
+  defaults:
+    _content: '\Drupal\account\Controller\AccountController::accountEditPasswdByToken'
+    _title: '找回密码'
+  requirements:
+    _access: 'TRUE'

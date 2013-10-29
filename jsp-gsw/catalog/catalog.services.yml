@@ -1,0 +1,4 @@
+services:
+  catalog.manager:
+    class: Drupal\catalog\CatalogManager
+    arguments: ['@database', '@plugin.manager.entity']

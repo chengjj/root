@@ -1,0 +1,34 @@
+{#
+/**
+ *
+ *
+ *  variables
+ *    $items
+ *
+ * see template_preprocess_store_breadcrumb(&$variables).
+ */
+#}
+{#
+<!--
+<nav class="path">
+   <ul>
+    <li><a target="_blank" href="首页.html">贵商网</a>&gt;</li>
+    <li><a target="_blank" href="搜周边.html">搜周边</a>&gt;</li>
+    <li><a target="_blank" href="搜周边_列表页.html">餐饮美食</a>&gt;</li>
+    <li class="current">商家</li>
+   </ul>
+  </nav>
+-->
+#}
+<nav class="path">
+ <ul>
+  {% for item in item_list %}
+   {% if loop.last %}
+    <li class="current">{{ item.title }}</li>
+   {% else %}
+    <li><a href="{{ item.url }}" target="_blank">{{ item.title }}</a>&gt;</li>
+   {% endif %}
+  {% endfor %}
+ </ul>
+</nav>
+

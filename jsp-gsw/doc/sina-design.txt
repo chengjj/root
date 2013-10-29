@@ -1,0 +1,37 @@
+*sina-design* sina(新浪)系统设计 |design-doc| |ec-doc|
+
+一、系统变量
+
+sina_key:新浪微博密钥
+sina_key_access:新浪微博密钥密码
+
+二、请求设计
+
+sina/redirect: (nocache) 用新浪微博登录
+sina/callback: (nocache) 链接微博账户，回调他们的用户
+
+三、权限设计
+
+无
+
+四、对象设计
+
+无
+
+五、数据库设计
+
+drupal7 包含 authmap表
+目前drupal8 没有该表，但user.install 中 hook_update出现了该表
+使用account_tripartite_login
+
+authmap
+aid: ID自增
+uid: user.id
+authname: authentication name (unique keys)
+module: Module which is controlling the authentication
+
+六、APIs设计
+
+无
+
+vim:tw=78:ts=8:ft=help:norl:

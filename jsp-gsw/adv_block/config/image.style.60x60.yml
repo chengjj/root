@@ -1,0 +1,13 @@
+name: 60x60
+label: 60x60
+uuid: 4e3e4b2f-5ead-4ed2-8005-5bc31fe6e19b
+status: '1'
+langcode: zh-hans
+effects:
+  57b446e3-d5bb-4edd-9300-f5d9da959575:
+    uuid: 57b446e3-d5bb-4edd-9300-f5d9da959575
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '60'
+      height: '60'

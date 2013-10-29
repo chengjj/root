@@ -1,0 +1,18 @@
+.ui-dialog { 
+  background: none repeat scroll 0 0 #C7C7C7;
+  border-radius: 5px 5px 5px 5px;
+  overflow: hidden;
+  padding: 10px;
+}
+.ui-dialog button.ui-button {
+  background: none;
+  border: none;
+  position: absolute;
+  right: 5px;
+}
+.ui-dialog-titlebar {
+  position: relative;
+}
+.ui-button-text {
+  display: none;
+}

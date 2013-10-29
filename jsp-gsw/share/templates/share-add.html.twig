@@ -1,0 +1,47 @@
+{#
+/*
+ *
+ * add share
+ *
+ */
+#}
+<div id="pop_up">
+ <div class="pw_box">
+ <div class="pw_con">
+  <div class="show_pd">
+   <input type="text" id="add-goods-url" autocomplete="off" accesskey="" name="" class="web r3" value="请将商品网址粘贴到这里" onblur="if(this.value==''){this.value='请将商品网址粘贴到这里';}" onfocus="if(this.value=='请将商品网址粘贴到这里'){this.value='';}">
+
+   <input type="button" class="botton" id="add-goods-submit" value="添加">
+   <p>已支持的网站：淘宝</p>
+  </div>
+  <div class="show_form">
+   <div class="field">
+    <label>选择分类：</label>
+    <select id="share-catalog-parent">
+    {% for share_catalog in share_catalog_parents %}
+      <option value="{{ share_catalog.cid }}">{{ share_catalog.name }}</option>
+    {% endfor %}
+    </select>
+    <select id="share-catalog">
+    {% for share_catalog in share_catalogs %}
+      <option value="{{ share_catalog.cid }}">{{ share_catalog.name }}</option>
+    {% endfor %}
+    </select> 
+   </div>
+   <div class="field">
+    <label>标签：</label>
+    <input type="text" id="goods-tag-values" maxlength="36" name="" class="text r3" value="请为它贴上标签，如复古、雪纺，多个标签以逗号分隔"onblur="if(this.value==''){this.value='请为它贴上标签，如复古、雪纺，多个标签以逗号分隔';}" onfocus="if(this.value=='请为它贴上标签，如复古、雪纺，多个标签以逗号分隔'){this.value='';}">
+    <input type="hidden" id="goods-tags" >
+   </div>
+   <div class="field">
+    <label>商品描述：</label>
+    <textarea id = "goods-description" class="pub_txt" onblur="if(this.value==''){this.value='这件分享的商品什么打动了你？';}" onfocus="if(this.value== '这件分享的商品什么打动了你？'){this.value=''}; return false;" value="这件分享的商品什么打动了你？"></textarea>
+    <span class="left-char">还可以输入200个字</span>
+   </div>
+   <div class="field">
+   <input type="submit" class="sub" id="share-goods-submit" value="发布">
+   </div>
+  </div>
+ </div>
+</div>
+</div>

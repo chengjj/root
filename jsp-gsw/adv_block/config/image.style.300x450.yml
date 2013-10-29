@@ -1,0 +1,13 @@
+name: 300x450
+label: 300x450
+uuid: dad4f326-4035-4a26-8d00-e4de4180bb10
+status: '1'
+langcode: zh-hans
+effects:
+  90459ab3-f39a-44fa-9400-def640224178:
+    uuid: 90459ab3-f39a-44fa-9400-def640224178
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '300'
+      height: '450'

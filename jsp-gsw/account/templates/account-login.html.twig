@@ -1,0 +1,20 @@
+{#
+#}
+<div class="login_box wrap_border">
+  <div class="login_left">
+    <h1>欢迎登录贵商网</h1>
+    <div class="login_form">
+    {{ user_login_form }}
+    </div>
+  </div>
+  <div class="register_right">
+    <div class="rst_login">
+      <span>还没有贵商网帐号？请</span>
+      <a href="{{ links.register }}">注册</a>
+    </div>
+    <div class="other_login">
+      <span>您也可以用以下方式登录：</span>
+      <a class="sina_icon" href="{{ links.sina_login }}">新浪微博</a>
+    </div>
+   </div>
+</div>

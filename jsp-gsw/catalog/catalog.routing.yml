@@ -1,0 +1,18 @@
+store_catalog_list:
+  path: '/api/taxonomies/{city_id}'
+  defaults:
+    _controller: '\Drupal\catalog\Controller\StoreCatalogController::storeCatalogList'
+  requirements:
+    _access: 'TRUE'
+store_catalog_datail:
+  path: '/api/taxonomy/{catalog_cid}'
+  defaults:
+    _controller: '\Drupal\catalog\Controller\StoreCatalogController::storeCatalogDetail'
+  requirements:
+    _access: 'TRUE'
+store_catalog.js:
+  path: '/catalog/js/{option}'
+  defaults:
+    _controller: '\Drupal\catalog\Controller\StoreCatalogController::storeCatalogJs'
+  requirements:
+    _access: 'TRUE'

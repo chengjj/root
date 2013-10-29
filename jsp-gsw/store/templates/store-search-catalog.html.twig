@@ -1,0 +1,64 @@
+{#
+/**
+ *
+ * @params:
+ *
+ *
+ * see template_preprocess_store_search_catalog(&$variables).
+ */
+#}
+{#
+<!--
+<div class="assortlist">
+      <label>分类</label>
+      <a class="all" href="搜周边.html">全部</a>
+      <ul>
+       <li><a target="_blank">生活服务</a></li>
+       <li><a target="_blank">购物</a></li>
+       <li><a target="_blank">运动健身</a></li>
+       <li><a class="seclect" target="_blank">餐饮美食</a></li>
+       <li><a target="_blank">休闲娱乐</a></li>
+      </ul>
+     </div>
+     <div class="open">
+       <a target="_blank" href="搜周边_列表页.html">川菜</a><a target="_blank" href="搜周边_列表页.html">粤菜</a><a target="_blank" href="搜周边_列表页.html">茶馆</a><a target="_blank" href="搜周边_列表页.html">火锅</a><a target="_blank" href="搜周边_列表页.html">特色小吃</a><a target="_blank" href="搜周边_列表页.html">日韩料理</a><a target="_blank" href="搜周边_列表页.html">西餐</a><a target="_blank" href="搜周边_列表页.html">自助餐</a><a target="_blank" href="搜周边_列表页.html">川菜</a><a target="_blank" href="搜周边_列表页.html">粤菜</a><a target="_blank" href="搜周边_列表页.html">茶馆</a><a target="_blank" href="搜周边_列表页.html">火锅</a><a target="_blank" href="搜周边_列表页.html">特色小吃</a><a target="_blank" href="搜周边_列表页.html">东南亚菜</a><a target="_blank" href="搜周边_列表页.html">其他</a>
+     </div>
+     <div class="assortlist">
+      <label>区域</label>
+      <a class="all" href="搜周边.html">全部</a>
+      <ul>
+       <li><a target="_blank">南明区</a></li>
+       <li><a target="_blank">白云区</a></li>
+       <li><a target="_blank">乌当区</a></li>
+       <li><a target="_blank">花溪区</a></li>
+       <li><a target="_blank">小河区</a></li>
+       <li><a target="_blank">金阳新区</a></li>
+      </ul>
+     </div>
+-->
+#}
+<div class="assortlist">
+  <label>分类</label>
+  <a class="all" href="{{ links.catalog_all }}" data-cid="0">全部</a>
+  <ul class="store-catalog">
+  {% for catalog in catalogs %}
+    <li><a data-cid="{{ catalog.cid }}" href="{{ catalog.search_link }}" class="{{ catalog.seclect }}" >{{ catalog.name }}</a></li>
+  {% endfor %}
+  </ul>
+</div>
+{% for cid, catalogs in catalog_childrens %}
+<div data-cid="{{ cid }}" style="display:none;">
+  {% for catalog in catalogs %}
+    <a href="{{ catalog.search_link }}" data-cid="{{ catalog.cid }}">{{ catalog.name }}</a>
+  {% endfor %}
+</div>
+{% endfor %}
+<div class="assortlist">
+  <label>区域</label>
+  <a class="all" href="{{ links.district_all }}" data-did="0">全部</a>
+  <ul>
+  {% for district in districts %}
+    <li><a href="{{ district.search_link }}" data-did="{{ district.did }}" >{{ district.name }}</a></li>
+  {% endfor %}
+  </ul>
+</div>

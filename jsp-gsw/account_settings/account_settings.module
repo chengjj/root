@@ -1,0 +1,43 @@
+<?php
+
+use Drupal\node\Plugin\Core\Entity\Node;
+
+/**
+ * Implements hook_menu().
+ */
+function account_settings_menu() {
+  $items['api/settings/store_image'] = array(
+    'title' => 'account settings',
+    'page callback' => 'settings_store_image_status_page',
+    'access callback' => TRUE,
+    'file' => 'account_settings.pages.inc',
+  );
+  $items['api/settings/store_image/%'] = array(
+    'title' => 'account settings',
+    'page callback' => 'settings_store_image_changed_page',
+    'page arguments' => array(3),
+    'access callback' => TRUE,
+    'file' => 'account_settings.pages.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_user_insert().
+ */
+function account_settings_user_insert($account) {
+  $query = db_insert('account_settings')->fields(array('uid', 'store_image'));
+  $query->values(array('uid' => $account->id(), 'store_image' => 1));
+  $query->execute();
+}
+
+/**
+ * APIs
+ */
+function account_settings_load($uid){
+  $query = db_select('account_settings', 'a')
+    ->fields('a', array('uid', 'store_image'))
+    ->condition('uid', $uid)
+    ->execute()->fetchObject();
+  return $query;
+}

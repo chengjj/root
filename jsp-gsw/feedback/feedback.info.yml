@@ -1,0 +1,6 @@
+name: Feedback
+type: module
+description: '意见反馈'
+package: Jsp
+version: VERSION
+core: 8.x

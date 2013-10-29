@@ -1,0 +1,62 @@
+*aactivity-design* (动态)系统设计 
+
+一、系统变量
+===================
+ACTIVITY_TYPE_POST_SHARE 分享 uid发布share的会员ID,param 代表 $share->sid
+ACTIVITY_TYPE_POST_COUPON 分享 uid为0,sid为发布coupon的商户ID 即$coupon->sid
+ACTIVITY_TYPE_COMS_SHARE 评论 param 被评论的 $share->sid, param2 评论内容$share_comment->cid
+ACTIVITY_TYPE_COMS_COUPON 评论 param 被评论的 $coupon->cid, param2评论内容$coupon_comments->mid,
+ACTIVITY_TYPE_BOOK_SHARE 收藏 param 被收藏的 $share->sid
+ACTIVITY_TYPE_BOOK_STORE 收藏 param 被收藏的 $store->sid
+ACTIVITY_TYPE_FOLL_STORE 关注 param 被关注的 $store->sid 
+ACTIVITY_TYPE_FOLL_USER 关注  related_uid被关注$user->uid
+
+二、请求设计
+===================
+user/%user/activity 会员动态列表
+activity/%/delete   会员删除动态
+
+三、权限设计
+===================
+
+
+四、对象设计
+===================
+*activity*
+content
+share_link
+
+五、数据库设计
+===================
+*activity* 动态信息
+aid:主键
+uid: 会员ID
+sid: 商户ID 默认值0
+related_uid: 默认值0 
+type: 类型包括 关注、评论、收藏、分享
+param: 可使用的对象，根据type不同而不同 默认0
+param2:可使用的对象，根据type不同而不同 默认0
+created: 创建时间
+
+
+六、APIs设计
+===================
+activity_load($aid)
+activity_prepare($activity);
+activity_save($activity, $edit = array());
+
+hook_share_comment_insert();
+hook_share_bookmark();
+hook_coupon_comment_insert();
+
+hook_user_delete();
+hook_store_delete()
+
+
+七、cache设计
+=======================
+$cid = $_SERVER['HOST_NAME'] . ':activity:id' : $aid
+$cache = cache('Memcache.Backend')->get('');
+$cache->set($cid, $activity);
+
+vim:tw=78:ts=8:ft=help:norl:

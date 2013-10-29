@@ -1,0 +1,4 @@
+services:
+  city.manager:
+    class: Drupal\city\CityManager
+    arguments: ['@database', '@plugin.manager.entity']

@@ -1,0 +1,8 @@
+services:
+  account.manager:
+    class: Drupal\account\AccountManager
+    arguments: ['@database', '@plugin.manager.entity']
+  account.event_subscriber:
+    class: Drupal\account\EventSubscriber\AccountRouteSubscriber
+    tags:
+      - { name: event_subscriber }

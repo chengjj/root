@@ -1,0 +1,13 @@
+name: 980x90
+label: 980x90
+uuid: 4234662e-f1b4-4e9f-8a00-b15d86342828
+status: '1'
+langcode: zh-hans
+effects:
+  bb43ebd2-c711-4a4a-b634-5254c4a7a1d5:
+    uuid: bb43ebd2-c711-4a4a-b634-5254c4a7a1d5
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '980'
+      height: '90'

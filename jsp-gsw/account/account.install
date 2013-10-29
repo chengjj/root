@@ -1,0 +1,257 @@
+<?php 
+/**
+ * Implements hook_schema().
+ */
+function account_schema() {
+  $schema['account_tripartite_login'] = array(
+    'description' => '用户第三方登录',
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ),   
+    ),
+    'primary key' => array('aid'),
+  );
+
+  $schema['autho_token'] = array(
+    'description' => '登录有效性',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'token' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),   
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+
+  $schema['accounts'] = array(
+    'description' => '用户表',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nickname' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'type' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'sex' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'follow_count' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The total number of follows on this user.',
+      ),
+      'fans_count' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The total number of fanss on this user.',
+      ),
+      'store_follow_count' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The total number of followed stores on this user.',
+      ),
+      'district' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The district of this user.',
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+  $schema['account_follows'] = array(
+    'description' => '会员关注会员表',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'follow_uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'follow_uid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Create follow_count and fans_count columns for accounts.
+ */
+function account_update_1() {
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The total number of follows on this user.',
+  );
+  db_add_field('accounts', 'follow_count', $spec);
+
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The total number of follows on this user.',
+  );
+  db_add_field('accounts', 'fans_count', $spec);
+}
+
+/**
+ * correct nikename field name to nickname
+ */
+function account_update_2() {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => TRUE,
+    'default' => '',
+  );
+
+  db_change_field('accounts', 'nikename', 'nickname', $spec);
+}
+
+function account_update_3() {
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The district of this user.',
+  );
+  db_add_field('accounts', 'district', $spec);
+}
+
+function account_update_4() {
+  db_drop_field('accounts', 'sex');
+  $specs = array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 1,
+    'size' => 'tiny',
+  );
+  db_add_field('accounts', 'sex', $specs);
+}
+
+function account_update_5() {
+  $specs = array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The total number of followed stores on this user.',
+  );
+  db_add_field('accounts', 'store_follow_count', $specs);
+}
+
+function account_update_6() {
+  $uids = db_query('SELECT uid FROM {accounts}')->fetchCol();
+  foreach ($uids as $uid) {
+    $cound = db_query('SELECT count(uid) FROM {store_follow} WHERE uid=' . $uid)->fetchField();
+    db_query('UPDATE accounts SET store_follow_count = ' . $cound . ' WHERE uid=' . $uid);
+  }
+}
+
+function account_update_7() {
+  $result = db_query('SELECT uid, `name` FROM {users} WHERE uid > 0');
+  foreach ($result as $row) {
+   if (strlen($row->name) == 11 && preg_match('/^13[0-9]{1}[0-9]{8}$|15[0189]{1}[0-9]{8}$|189[0-9]{8}$/', $row->name)) {
+     if ($account = db_query('SELECT * FROM {accounts} WHERE uid=:uid', array(':uid' => $row->uid))->fetchObject()) {
+       if (!$account->phone) {
+         db_update('accounts')
+           ->fields(array('phone' => $row->name))
+           ->condition('uid', $row->uid)
+           ->execute();
+       }
+     } else {
+       db_insert('accounts')
+         ->fields(array(
+           'uid' => $row->uid,
+           'phone' => $row->name,
+          ))
+         ->execute();
+     }
+   }
+  }
+}

@@ -1,0 +1,53 @@
+{#
+/**
+ *
+ * 首页 网购流行榜
+ *
+ *  @params:
+ *    $adv_block:
+ *      ->item_list
+ *    $item_list = array(
+ *      array('title' => '', 'price' => , 'share_link' => '', 'thumbnail_img_src' => '60x60', )
+ *    );
+ *
+ *
+ *  see template_preprocess_adv_block_share_image_title_price_1cols(&$variables).
+ */
+#}
+
+{% if has_content %}
+<ol class="share-image-title-price-1cols">
+{% for item in item_list %}
+ {% if loop.first %}
+ <li class="highlight open">
+ {% elseif loop.index < 4 %}
+ <li class="highlight">
+ {% elseif loop.last %}
+ <li class="last">
+ {% else %}
+ <li>
+ {% endif %}
+ <p><span>{{ loop.index }}</span>{{ item.title }}</p>
+ <div class="openbox">
+    <div class="img"><a href="{{ item.share_link }}" target="_blank"><img src="{{ item.thumbnail_img_src }}"></a></div>
+    <div class="txt"><a href="{{ item.share_link }}" target="_blank">{{ item.title }}</a><p>￥{{ item.price }}</p></div>
+ </div>
+ </li>
+{% endfor %}
+</ol>
+{% endif %}
+<!--
+<ol>
+ <li class="highlight"><span>1</span>小肥羊情侣套餐</li>
+ <li class="highlight open"><p><span>2</span>小肥羊情侣套餐</p>
+ <div class="openbox">
+  <div class="img"><a target="_blank" href="#"><img src="../images/pic60x60.png"></a></div>
+  <div class="txt"><a target="_blank" href="#">小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐</a><p>￥138</p></div>
+ </div>
+ </li>
+ <li><span>4</span>小肥羊情侣套餐小肥羊情侣套餐小肥羊情侣套餐</li>
+ <li><span>5</span>小肥羊情侣套餐</li>
+ <li><span>6</span>小肥羊情侣套餐小肥羊情侣套餐</li>
+ <li class="last"><span>7</span>小肥羊情侣套餐</li>     
+</ol>
+-->

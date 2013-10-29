@@ -1,0 +1,114 @@
+share_list:
+  path: '/api/share/list'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::shareList'
+  requirements:
+    _access: 'TRUE'
+share_bookmark:
+  path: '/api/user/bookmark/share/{share_id}'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::shareBookmark'
+  requirements:
+    _access: 'TRUE'
+bookmark_shares:
+  path: '/api/bookmark/shares'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::userBookmarkShares'
+  requirements:
+    _access: 'TRUE'
+
+share_js_bookmarked:
+  path: '/js/share/{share}/bookmarked'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::bookmarked'
+  requirements:
+    _access: 'TRUE'
+share_js_bookmark:
+  path: '/js/share/{share}/bookmark'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::bookmark'
+  requirements:
+    _access: 'TRUE'
+share_js_unbookmark:
+  path: '/js/share/{share}/unbookmark'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::unbookmark'
+  requirements:
+    _access: 'TRUE'
+
+share.history_read_share:
+  path: '/share/history/{share}/read'
+  defaults:
+    _controller: '\Drupal\share\Controller\HistoryController::readShare'
+  requirements:
+    _access: 'TRUE'
+
+share_catalog_children:
+  path: '/js/share-catalog/{share_catalog}/children'
+  defaults:
+    _controller: '\Drupal\share\Controller\AjaxController::catalogChildren'
+  requirements:
+    _access: 'TRUE'
+
+share.front:
+  path: '/share'
+  defaults:
+    _title: '网购精选'
+    _content: '\Drupal\share\Controller\ShareController::front'
+  requirements:
+    _access: 'TRUE'
+    
+share.editorshare:
+  path: '/share/editorshare'
+  defaults:
+    _title: '编辑推荐'
+    _content: '\Drupal\share\Controller\ShareController::editorshare'
+  requirements:
+    _access: 'TRUE'
+    
+share.view:
+  path: '/share/{share}'
+  defaults:
+    _entity_view: 'share.full'
+  requirements:
+    _access: 'TRUE'
+
+share.add:
+  path: 'share/add'
+  defaults:
+    _content: '\Drupal\share\Controller\ShareController::shareAdd'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+share.js:
+  path: '/share/js/{option}'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::shareJs'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+share.manage:
+  path: 'admin/share'
+  defaults:
+    _content: '\Drupal\share\Controller\ShareController::shareManage'
+  requirements:
+    _permission: 'administer share'
+share.admin_edit:
+  path: '/admin/share/edit/{share}'
+  defaults:
+    _content: '\Drupal\share\Controller\ShareController::shareAdminEdit'
+  requirements:
+    _permission: 'administer share'
+share.admin_delete:
+  path: '/admin/share/delete/{share}'
+  defaults:
+    _content: '\Drupal\share\Controller\ShareController::shareAdminDelete'
+  requirements:
+    _permission: 'administer share'
+
+share.search:
+  path: '/share/search'
+  defaults:
+    _title: '商品搜索'
+    _content: '\Drupal\share\Controller\ShareController::shareSearch'
+  requirements:
+    _access: 'TRUE'
+

@@ -1,0 +1,185 @@
+search_catalog_stores:
+  path: '/api/taxonomy/{catalog_cid}/stores'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::searchCatalogStores'
+  requirements:
+    _access: 'TRUE'
+user_stores_by_uid:
+  path: '/api/user/{user_id}/stores'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::userStoresByUid'
+  requirements:
+    _access: 'TRUE'
+user_stores:
+  path: '/api/user/stores'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::userStores'
+  requirements:
+    _access: 'TRUE'
+store_utils:
+  path: '/api/store/{store_sid}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::storeUtils'
+  requirements:
+    _access: 'TRUE'
+store_consumer:
+  path: '/api/store/{store_id}/consume/{user_uid}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::storeConsumer'
+  requirements:
+    _access: 'TRUE'
+store_edit:
+  path: '/api/store/{store_id}/{operate}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::storeEdit'
+  requirements:
+    _access: 'TRUE'
+search_stores:
+  path: '/api/stores'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::searchStores'
+  requirements:
+    _access: 'TRUE'
+search_stores:
+  path: '/api/stores/{keyword}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::searchStoresByKeyword'
+  requirements:
+    _access: 'TRUE'
+search_stores_by_keyword_city:
+  path: '/api/stores/{keyword}/{city_id}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::searchStoresByKeywordCity'
+  requirements:
+    _access: 'TRUE'
+hot_search_keywords:
+  path: '/api/hotkeywords/{city_id}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::hotKeyword'
+  requirements:
+    _access: 'TRUE'
+store_photos:
+  path: '/api/store/{store_id}/photos'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::storePhotos'
+  requirements:
+    _access: 'TRUE'
+
+store.view:
+  path: '/store/{store}'
+  defaults:
+    _entity_view: 'store.full'
+  requirements:
+    _access: 'TRUE'
+
+store.history_read_store:
+  path: '/store/history/{store}/read'
+  defaults:
+    _controller: '\Drupal\store\Controller\HistoryController::readStore'
+  requirements:
+    _access: 'TRUE'
+
+js_store_followed:
+  path: '/js/store/{store}/followed'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::followed'
+  requirements:
+    _access: 'TRUE'
+js_store_follow:
+  path: '/js/store/{store}/follow'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::follow'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+js_store_unfollow:
+  path: '/js/store/{store}/unfollow'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::unfollow'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+store.download_consumer:
+  path: '/download/consumer'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::downloadConsumer'
+  requirements:
+    _access: 'TRUE'
+store.download_store:
+  path: '/download/store'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::downloadStore'
+  requirements:
+    _access: 'TRUE'
+store.download:
+  path: 'download'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::download'
+  requirements:
+    _access: 'TRUE'
+store.download_android:
+  path: '/download/store/android'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::downloadAndroid'
+  requirements:
+    _access: 'TRUE'
+store.download_android_upper:
+  path: '/download/store/Android'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::downloadAndroid'
+  requirements:
+    _access: 'TRUE'
+store.admin_audit:
+  path: 'admin/store/audit/list'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeAdminAudit'
+  requirements:
+    _permission: 'administer store'
+store.admin:
+  path: 'admin/store'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeAdmin'
+  requirements:
+    _permission: 'administer store'
+store.admin_list:
+  path: 'admin/store/list'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeAdmin'
+  requirements:
+    _permission: 'administer store'
+store.add:
+  path: 'store/add'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeAdd'
+  requirements:
+    _permission: 'administer store'
+store.edit_form:
+  path: '/store/{store}/edit'
+  defaults:
+    _entity_form: 'store'
+  requirements:
+    _permission: 'administer store'
+store.delete_form:
+  path: '/store/{store}/delete'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeDeleteForm'
+  requirements:
+    _permission: 'administer store'
+store.register_user:
+  path: '/store/{store}/register'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeRegisterUser'
+  requirements:
+    _permission: 'administer store'
+store.search:
+  path: '/store/search'
+  defaults:
+    _title: '周边优惠'
+    _content: '\Drupal\store\Controller\StoreController::search'
+  requirements:
+    _access: 'TRUE'
+store.ajax:
+  path: 'store/js/{action}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::ajax'
+  requirements:
+    _access: 'TRUE'
+

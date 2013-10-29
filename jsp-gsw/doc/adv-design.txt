@@ -1,0 +1,161 @@
+*adv-design* adv(广告)系统设计 
+
+一、系统变量
+===================
+
+adv_picture_path:       广告图片保存路径, 缺省值为 advs
+adv_picture_file_size:  广告图片文件大小限制, 缺省值为 64k ?
+
+adv_block_types: 广告位类型数组, 其值为:
+    'adv'       => '广告',
+    'coupon'    => '优惠信息',
+    'share'     => '商品',
+
+adv_block_templates: 广告模板 array($type => array(模板文件名 => 样式名称))
+adv_block_templates = array(
+  'adv' => array(
+    '默认模板' => 'adv_block_adv_default',
+    '轮流播放' => 'adv_block_adv_turn_picture',
+    '品牌商户' => 'adv_block_adv_picture_2cols',
+   ),
+  'store' => array(
+    '默认模板' => 'adv_block_store_default',
+    '一栏式' => 'adv_block_store_1cols',
+  ),
+  'coupon' => array(
+    '默认模板' => 'adv_block_coupon_default'
+    '左图片-右标题-描述-商户' => 'adv_block_coupon_image_title_store',
+    '小图片-商户名-优惠信息标题' => 'adv_block_coupon_image_stoe_title',
+  ),
+  'share' => array(
+    '默认模板' => 'adv_block_share_default',
+    '图片-标题-价格(一栏式)' => 'adv_block_share_image_title_price_1cols',
+    '图片-标题(五栏式)' => 'adv_block_share_image_title_5cols',
+    '图片-标题-价格(四栏式)' => 'adv_block_share_image_title_price_4cols',
+   ),
+ );
+
+
+二、请求设计
+===================
+
+admin/adv: (nocache)广告管理
+admin/adv/list: (nocache)广告列表, 参数: keywords(关键字), pid(广告位ID)
+adv/edit: (nocache)添加广告
+adv/edit/%adv: (nocache)编辑/删除特定广告
+adv/delete/%adv: (nocache)删除广告位
+
+admin/adv_block: (nocache)广告位管理
+admin/adv_block/list: (nocache)广告位列表
+admin/adv_block/edit: (nocache)添加广告位
+admin/adv_block/edit/%adv_block: (nocache)编辑/删除广告位
+admin/adv_block/%adv_block/delete: (nocache)删除广告位
+
+admin/adv_block/%adv_block: (nocache)特定广告位管理 各个type的广告需要实现 admin_adv_block_$type_list_form
+admin/adv_block/%adv_block/sort: (nocache)特定广告位管理 各个type的广告需要实现 admin_adv_block_$type_list_fort_form
+
+admin/adv_block/%adv_block/adv/edit/%: (nocache)编辑/删除广告
+
+admin/adv_block/item/%adv_block_item/edit 针对广告位里的广告重新编辑图片或标题
+
+
+三、权限设计
+===================
+
+administer adv blocks: 广告位管理
+administer advs: 广告管理
+
+四、对象设计
+===================
+
+adv_block (广告位)
+picture: file对象
+
+adv (广告)
+picture: file对象
+
+五、数据库设计
+===================
+
+adv_blocks (广告位)
+bid: ID (主键)
+type: 广告位类型: adv, coupon,share 
+title: 标题
+template: 模板
+body: 缺省内容 (无广告时显示该内容)
+picture_dimentions: 图片文件尺寸，格式为 待定
+picture: 图片文件ID, 缺省图片 (无广告时显示该图片) $file->fid
+city_id: 城市ID
+
+根据type确定广告位关联内容,根据template 确定广告位展现形式
+
+advs (广告)
+aid: ID (主键)
+title: 标题
+body: 内容
+picture: 图片文件ID
+url: 要跳转的 url 地址
+start: 开始时间
+expire: 结束时间
+created: 添加时间
+status: 状态: 0=不显示 缺省为1
+city_id: 城市id
+
+adv_block_items (广告位的广告)
+iid: 主键ID
+bid: 广告位ID
+entity_id: 关联对象ID
+title: 标题
+picture: 图片
+type: 关联对象
+city_id: 城市id
+weight: 显示顺序
+status: $entity->status 避免join
+主键: iid
+
+
+预置数据:
+adv_blocks:
+1, adv, 顶部广告
+2, coupon, 首页推荐
+3, share 首页推荐
+
+六、APIs设计
+===================
+
+adv_cron: 每日0点根据 adv->start 和 adv->expire 设置 adv->status
+adv_load($aid);
+adv_save($adv, $edit = array())
+adv_block_load($bid)
+adv_block_save($adv_blcok, $edit = array())
+adv_block_view($bid, $count) 
+
+adv_block_item_save($adv_block_$type, $edit = array())
+adv_block_item_load($iid);
+
+七、cache设计
+=======================
+$adv_block->item_list
+广告位关联内容列表
+
+image style_name
+60x60
+125x54
+123x138
+151x151
+980x90
+473x290
+450x450
+400x540
+300x450
+200x200
+200x270
+200x300
+200x133
+
+array('bid' => $bid, 'type' => 'adv', 'title' => '首页品牌商户广告', 'template' => 'adv_block_adv_picture_2cols', 'picture_dimentions' => '125x54'),/*$bid=8*/
+array('bid' => ++$bid, 'type' => 'share', 'title' => '首页最新淘宝单体', 'template' => 'adv_block_share_image_title_5cols', 'picture_dimentions' => '123x138'),/*$bid=9*/
+array('bid' => ++$bid, 'type' => 'share', 'title' => '首页热门团购', 'template' => 'adv_block_share_image_title_price_4cols', 'picture_dimentions' => '151x151'),/*$bid=10*/
+);
+
+vim:tw=78:ts=8:ft=help:norl:

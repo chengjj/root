@@ -1,0 +1,13 @@
+statistic_api:
+  path: 'api/statistic'
+  defaults:
+    _controller: '\Drupal\statistic\Controller\StatisticController::statisticAdd'
+  requirements:
+    _access: 'TRUE'
+statistic.admin:
+  path: 'admin/statistic'
+  defaults:
+    _title: '贵客统计列表'
+    _content: '\Drupal\statistic\Controller\StatisticController::statisticManage'
+  requirements:
+    _permission: 'administer statistic'

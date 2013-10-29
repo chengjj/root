@@ -1,0 +1,9 @@
+name: activity
+type: module
+description: "关注动态"
+core: 8.x
+package : '贵客'
+version: VERSION
+dependencies:
+  - account 
+  - store 

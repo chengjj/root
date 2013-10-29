@@ -1,0 +1,61 @@
+adv-design adv(广告)系统设计
+
+一、请求设计
+==============================
+admin/adv/list: 广告列表
+
+adv/edit/: 广告添加
+
+adv/edit/%adv: 广告编辑
+
+api/adverts: 广告列表 (所有的广告)
+
+api/adverts/%: 广告列表 (%:地区ID: 列出指定的广告)
+
+二、数据库设计
+=============================
+advs (广告)
+aid: 广告ID(主键)
+title: 广告标题(varchar)
+fid: 广告图片ID(外键)(int)
+redirect: 广告跳转地址(varchar)
+start: 广告开始时间 (int)
+expire:  广告结束时间(int)
+lid: 广告位置(int)
+sid: 商户ID(int)
+cid: 广告地区(ID)(int)
+type: 广告类型(int) 
+created: 创建时间(int)
+changed: 更新时间(int)
+uid: 用户ID(int)
+status: 状态(是否启用)
+
+三、APIs设计
+=============================
+
+adv_save: 广告信息保存 
+adv_get_taxonomy($vid, $parent = 0) 广告地区列表
+_adv_type: 广告类型(商户)
+
+adv_load($nid) 
+
+adv_load_multiple($nids = array())
+
+adv_delete($id)
+
+adv_delete_multiple($ids = array())
+
+_adv_load($nid)
+
+
+＊ 地区术语列表
+＊ 广告位置术语列表
+
+四、权限管理
+
+administer advs: 广告管理
+
+五、对象设计
+picture: file 对象
+
+

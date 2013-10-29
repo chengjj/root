@@ -1,0 +1,347 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function adv_block_schema() {
+  $schema['adv_blocks'] = array(
+    'fields' => array(
+      'bid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'template' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'body' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture_dimentions' => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'city_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('bid'),
+  );
+  $schema['adv_block_items'] = array(
+    'fields' => array(
+      'iid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'bid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'city_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'reason' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => '推荐理由',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('iid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function adv_block_install() {
+  // 数据初始化
+  adv_blocks_initialize();
+
+  // 设置系统变量
+  $adv_block_types = array(
+    'adv' => '广告',
+    'store' => '商户',
+    'coupon' => '优惠信息',
+    'share' => '分享商品',
+  );
+  variable_set('adv_block_types', $adv_block_types);
+
+  $adv_block_type_templates = array(
+    'adv' => array(
+      '默认模板' => 'adv_block_adv_default',
+      '轮流播放' => 'adv_block_adv_turn_picture',
+      '品牌商户' => 'adv_block_adv_picture_2cols',
+      'banner(732x92)左侧' => 'adv_block_adv_banner_732x92',
+      'banner(236x372)右侧' => 'adv_block_adv_banner_236x372',
+     ),
+    'store' => array(
+      '默认模板' => 'adv_block_store_default',
+      '一栏式' => 'adv_block_store_1cols',
+    ),
+    'coupon' => array(
+      '默认模板' => 'adv_block_coupon_default',
+      '左图片-右标题-描述-商户' => 'adv_block_coupon_image_title_store',
+      '小图片-商户名-优惠信息标题' => 'adv_block_coupon_image_store_title',
+      '左图片-右标题-描述' => 'adv_block_coupon_image_title_desc',
+      '右图片-右标题-折扣-描述-位置' => 'adv_block_coupon_image_title_discount_location',
+    ),
+    'share' => array(
+      '默认模板' => 'adv_block_share_default',
+      '图片-标题-价格(一栏式)' => 'adv_block_share_image_title_price_1cols',
+      '图片-标题(五栏式)' => 'adv_block_share_image_title_5cols',
+      '图片-标题-价格(四栏式)' => 'adv_block_share_image_title_price_4cols',
+     ),
+  );
+
+  foreach ($adv_block_type_templates as $type => $templates) {
+    variable_set('adv_block_' . $type . '_templates', $templates);
+  }
+
+  adv_block_update_1();
+  adv_block_update_2();
+  adv_block_update_3();
+  adv_block_update_4();
+}
+
+/**
+ * adv_blocks 数据预置
+ */
+function adv_blocks_initialize() {
+  $blocks = array(
+    array('bid' => 1, 'type' => 'adv', 'title' => '首页轮播广告', 'template' => 'adv_block_adv_turn_picture', 'picture_dimentions' => '473x290'),
+    array('bid' => 2, 'type' => 'store', 'title' => '首页热点商户排行', 'template' => 'adv_block_store_1cols', 'picture_dimentions' => ''),
+    array('bid' => 3, 'type' => 'share', 'title' => '首页分享商品推荐', 'template' => 'adv_block_share_image_title_price_1cols', 'picture_dimentions' => ''),
+    array('bid' => 4, 'type' => 'coupon', 'title' => '首页最新商家优惠', 'template' => 'adv_block_coupon_image_title_store', 'picture_dimentions' => ''),
+    array('bid' => 5, 'type' => 'coupon', 'title' => '首页精选优惠推荐', 'template' => 'adv_block_coupon_image_store_title', 'picture_dimentions' => ''),
+  );
+
+  $query = db_insert('adv_blocks')->fields(array('bid', 'type', 'title', 'template', 'picture_dimentions'));
+  foreach($blocks as $block) {
+    $query->values($block);
+  }
+  $query->execute();
+}
+
+function adv_block_update_1() {
+  db_query('UPDATE {adv_blocks} SET picture_dimentions=:picture_dimentions WHERE bid=1', array(':picture_dimentions' => '473x290'));
+  $bid = db_query('SELECT MAX(bid)+1 FROM {adv_blocks}')->fetchField();
+  $blocks = array(
+    array('bid' => $bid, 'type' => 'adv', 'title' => '首页banner广告', 'template' => 'adv_block_adv_default', 'picture_dimentions' => '980x90'),
+    array('bid' => ++$bid, 'type' => 'store', 'title' => '首页周边热点排行', 'template' => 'adv_block_coupon_image_title_desc', 'picture_dimentions' => ''),
+  );
+  $query = db_insert('adv_blocks')
+    ->fields(array('bid', 'type', 'title', 'template', 'picture_dimentions'));
+  foreach($blocks as $block) {
+    $query->values($block);
+  }
+  $query->execute();
+}
+
+function adv_block_update_2() {
+  $coupon_templates = array(
+    'coupon' => array(
+      '默认模板' => 'adv_block_coupon_default',
+      '左图片-右标题-描述-商户' => 'adv_block_coupon_image_title_store',
+      '小图片-商户名-优惠信息标题' => 'adv_block_coupon_image_store_title',
+      '左图片-右标题-描述' => 'adv_block_coupon_image_title_desc',
+    ),
+  );
+  foreach ($coupon_templates as $type => $templates) {
+    variable_set('adv_block_' . $type . '_templates', $templates);
+  }
+}
+
+function adv_block_update_3() {
+  $adv_block_type_templates = array(
+    'adv' => array(
+      '默认模板' => 'adv_block_adv_default',
+      '轮流播放' => 'adv_block_adv_turn_picture',
+      '品牌商户' => 'adv_block_adv_picture_2cols',
+      'banner(732x92)左侧' => 'adv_block_adv_banner_732x92',
+      'banner(236x372)右侧' => 'adv_block_adv_banner_236x372',
+     ),
+     'share' => array(
+      '默认模板' => 'adv_block_share_default',
+      '图片-标题-价格(一栏式)' => 'adv_block_share_image_title_price_1cols',
+      '图片-标题(五栏式)' => 'adv_block_share_image_title_5cols',
+      '图片-标题-价格(四栏式)' => 'adv_block_share_image_title_price_4cols',
+     ),
+  );
+
+  foreach ($adv_block_type_templates as $type => $templates) {
+    variable_set('adv_block_' . $type . '_templates', $templates);
+  }
+
+  $bid = db_query('SELECT MAX(bid)+1 FROM {adv_blocks}')->fetchField();
+  $blocks = array(
+    array('bid' => $bid, 'type' => 'adv', 'title' => '首页品牌商户广告', 'template' => 'adv_block_adv_picture_2cols', 'picture_dimentions' => '125x54'),/*$bid=8*/
+    array('bid' => ++$bid, 'type' => 'share', 'title' => '首页最新淘宝单体', 'template' => 'adv_block_share_image_title_5cols', 'picture_dimentions' => '123x138'),/*$bid=9*/
+    array('bid' => ++$bid, 'type' => 'share', 'title' => '首页热门团购', 'template' => 'adv_block_share_image_title_price_4cols', 'picture_dimentions' => '151x151'),/*$bid=10*/
+  );
+
+  $query = db_insert('adv_blocks')
+    ->fields(array('bid', 'type', 'title', 'template', 'picture_dimentions'));
+  foreach($blocks as $block) {
+    $query->values($block);
+  }
+  $query->execute();
+}
+
+function adv_block_update_4() {
+  $adv_block_type_templates = array(
+    'adv' => array(
+      '默认模板' => 'adv_block_adv_default',
+      '轮流播放' => 'adv_block_adv_turn_picture',
+      '品牌商户' => 'adv_block_adv_picture_2cols',
+      'banner(732x92)左侧' => 'adv_block_adv_banner_732x92',
+      'banner(236x372)右侧' => 'adv_block_adv_banner_236x372',
+     ),
+     'coupon' => array(
+      '默认模板' => 'adv_block_coupon_default',
+      '左图片-右标题-描述-商户' => 'adv_block_coupon_image_title_store',
+      '小图片-商户名-优惠信息标题' => 'adv_block_coupon_image_store_title',
+      '左图片-右标题-描述' => 'adv_block_coupon_image_title_desc',
+      '右图片-右标题-折扣-描述-位置' => 'adv_block_coupon_image_title_discount_location',
+    ),
+  );
+
+  foreach ($adv_block_type_templates as $type => $templates) {
+    variable_set('adv_block_' . $type . '_templates', $templates);
+  }
+  
+  $bid = db_query('SELECT MAX(bid)+1 FROM {adv_blocks}')->fetchField();
+  $blocks = array(
+    array('bid' => ++$bid, 'type' => 'adv', 'title' => '搜周边左侧banner1(732x92)', 'template' => 'adv_block_adv_banner_732x92', 'picture_dimentions' => '732x92'),/*$bid=11*/
+    array('bid' => ++$bid, 'type' => 'adv', 'title' => '搜周边左侧banner2(732x92)', 'template' => 'adv_block_adv_banner_732x92', 'picture_dimentions' => '732x92'),/*$bid=12*/
+    array('bid' => ++$bid, 'type' => 'adv', 'title' => '搜周边右侧banner(236x372)', 'template' => 'adv_block_adv_banner_236x372', 'picture_dimentions' => '236x372'),/*$bid=13*/
+    array('bid' => ++$bid, 'type' => 'store', 'title' => '搜周边餐饮美食推荐', 'template' => 'adv_block_coupon_image_title_discount_location', 'picture_dimentions' => '200x133'),/*$bid=14*/
+    array('bid' => ++$bid, 'type' => 'store', 'title' => '搜周边生活服务推荐', 'template' => 'adv_block_coupon_image_title_discount_location', 'picture_dimentions' => '200x133'),/*$bid=15*/
+    array('bid' => ++$bid, 'type' => 'store', 'title' => '搜周边休闲娱乐推荐', 'template' => 'adv_block_coupon_image_title_discount_location', 'picture_dimentions' => '200x133'),/*$bid=16*/
+  );
+
+  $query = db_insert('adv_blocks')
+    ->fields(array('bid', 'type', 'title', 'template', 'picture_dimentions'));
+  foreach($blocks as $block) {
+    $query->values($block);
+  }
+  $query->execute();
+
+}
+
+function adv_block_update_5() {
+  db_query("UPDATE {adv_blocks} SET type='store' WHERE bid IN (15,16,17)");
+}
+
+function adv_block_update_6() {
+  db_query("UPDATE {adv_blocks} SET type='store' WHERE bid = 7");
+}
+
+/**
+ * Add reason column for adv_block_items
+ */
+function adv_block_update_9() {
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => '推荐理由',
+  );
+  db_add_field('adv_block_items', 'reason', $spec);
+}
+
+/**
+ * maintains records for adv_block_items
+ */
+function adv_block_update_10() {
+  // coupon item
+  $ids = db_query("SELECT bid FROM {adv_blocks} WHERE type='coupon'")->fetchCol();
+  $subquery = db_select('coupons', 'c');
+  $subquery->addField('c', 'cid');
+  db_delete('adv_block_items')
+    ->condition('bid', $ids, 'IN')
+    ->condition('entity_id', $subquery, 'NOT IN')
+    ->execute();
+
+  // store item
+  $ids = db_query("SELECT bid FROM {adv_blocks} WHERE type='store'")->fetchCol();
+  $subquery = db_select('stores', 's');
+  $subquery->addField('s', 'sid');
+  db_delete('adv_block_items')
+    ->condition('bid', $ids, 'IN')
+    ->condition('entity_id', $subquery, 'NOT IN')
+    ->execute();
+}
+
+//TODO add config
+

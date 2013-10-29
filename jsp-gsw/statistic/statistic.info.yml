@@ -1,0 +1,6 @@
+name: Statistic
+type: module
+description: "APP统计"
+package: '贵客'
+core: 8.x
+version: VERSION

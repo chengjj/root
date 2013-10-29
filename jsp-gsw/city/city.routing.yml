@@ -1,0 +1,24 @@
+city_list:
+  path: '/api/cities'
+  defaults:
+    _controller: '\Drupal\city\Controller\CityController::cityList'
+  requirements:
+    _access: 'TRUE'
+city_detail:
+  path: '/api/city/{city_name}'
+  defaults:
+    _controller: '\Drupal\city\Controller\CityController::cityDetail'
+  requirements:
+    _access: 'TRUE'
+district_list:
+  path: '/api/city/{city_id}/districts'
+  defaults:
+    _controller: '\Drupal\city\Controller\CityController::districtList'
+  requirements:
+    _access: 'TRUE'
+district_detail:
+  path: '/api/city/{city_id}/district/{district_name}'
+  defaults:
+    _controller: '\Drupal\city\Controller\CityController::districtDetail'
+  requirements:
+    _access: 'TRUE'

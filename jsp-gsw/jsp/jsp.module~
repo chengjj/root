@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function jsp_menu() {
+  $items['admin/entity/%'] = array(
+    'title' => '实体管理',
+    'route_name' => 'jsp.overview_entities',
+  );
+  $items['admin/entity/%/list'] = array(
+    'title' => '列表',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/entity/%/create'] = array(
+    'title' => '添加',
+    'route_name' => 'jsp.admin_entity_create',
+    'type' => MENU_LOCAL_ACTION,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function jsp_library_info() {
+  $path = drupal_get_path('module', 'jsp');
+  $libraries['drupal.hover-class'] = array(
+    'title' => 'Hover class',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/hover-class.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupal'),
+    ),
+  );
+  $libraries['drupal.input-text-hint'] = array(
+    'title' => 'Input text hint',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/input-text-hint.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupal'),
+      array('system', 'drupalSettings'),
+      array('system', 'drupal.ajax'),
+    ),
+  );
+  $libraries['drupal.js-select'] = array(
+    'title' => 'js select',
+    'version' => \Drupal::VERSION,
+    'js' => array(
+      $path . '/js/select.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('system', 'drupal'),
+    ),
+  );
+  return $libraries;
+}

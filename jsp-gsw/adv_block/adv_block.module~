@@ -1,0 +1,771 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_cron()
+ */
+function adv_block_cron() {
+  $expires = variable_get('adv_block_cron_expires', 0);
+  if ($expires + 3600 < REQUEST_TIME) {
+    //TODO 
+    variable_set('adv_block_cron_expires', REQUEST_TIME);
+  }
+}
+/**
+ * Implements hook_menu()
+ */
+function adv_block_menu() {
+  $items['admin/adv_block'] = array(
+    'title' => '广告管理',
+    'route_name' => 'adv_block.admin',
+  );
+  $items['admin/adv_block/list'] = array(
+    'title' => '广告列表',
+    'access arguments' => array('administer adv blocks'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/adv_block/edit'] = array(
+    'title' => '添加广告位',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('admin_adv_block_edit_form'),
+    'access arguments' => array('administer adv blocks'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'adv_block.admin.inc',
+  );
+  $items['admin/adv_block/edit/%adv_block'] = array(
+    'title' => '编辑广告位',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('admin_adv_block_edit_form', 3),
+    'access arguments' => array('administer adv blocks'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'adv_block.admin.inc',
+  );
+  $items['admin/adv_block/%adv_block/delete'] = array(
+    'title' => '编辑广告位',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('admin_adv_block_delete_form', 2),
+    'access arguments' => array('administer adv blocks'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'adv_block.admin.inc',
+  );
+  $items['admin/adv_block/%'] = array(
+    'title' => '广告管理',
+    'route_name' => 'adv_block.admin_adv_block',
+  );
+  $items['admin/adv_block/%adv_block/sort'] = array(
+    'title' => '广告排序',
+    'route_name' => 'adv_block.admin_adv_block_sort',
+  );
+  $items['admin/adv_block/item/%adv_block_item/edit'] = array(
+    'title' => '广告图片标题编辑',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('admin_adv_block_item_edit_form', 3),
+    'access arguments' => array('administer adv blocks'),
+    'file' => 'adv_block.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function adv_block_permission() {
+  return array(
+    'administer adv blocks' => array(
+      'title' => '广告位管理',
+      'restrict access' => TRUE,
+    ),
+  );
+}
+/**
+ * Implements hook_theme().
+ */
+function adv_block_theme() {
+  $hooks = array(
+    'admin_adv_block_item_list_sort_form' => array(
+      'render element' => 'form',
+      'description' => '广告位排序表单模板',
+    ),
+  );
+  foreach (variable_get('adv_block_types') as $type => $type_name) {
+    foreach(variable_get('adv_block_' . $type .'_templates') as $template) {
+      $temp = substr($template, 9);
+      $hooks[$template] = array(
+        'variables' => array('adv_block' => NULL),
+        'template' => 'adv_block' . str_replace('_', '-', $temp),
+      );
+    }
+  }
+  return $hooks;
+}
+
+/**
+ * APIs adv_block_view().
+ */
+function adv_block_view($bid, $count = 10) {
+  $adv_block = adv_block_load($bid);
+  $adv_block->item_list = adv_block_load_items($bid, $count);
+  return theme($adv_block->template, array('adv_block' => $adv_block));
+}
+/**
+ * APIs adv_block_load_items().
+ */
+function adv_block_load_items($bid, $count = 10) {
+  $iids = db_select('adv_block_items', 'i')
+    ->fields('i', array('iid'))
+    ->condition('bid', $bid)
+    ->range(0, $count)
+    ->orderBy('weight')
+    ->execute()
+    ->fetchCol();
+  return adv_block_item_load_multiple($iids);
+}
+/**
+ * APIs adv_block_load().
+ */
+function adv_block_load($bid) {
+  if (!is_numeric($bid)) return;
+  $cache = FALSE;
+  //$cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cid = $_SERVER['SERVER_NAME'] . ':adv_block:id:' . $bid;
+  if ($cache) {
+    if ($cached = $cache->get($cid)) {
+      $adv_block = $cached->data;
+    } else {
+      $adv_block = _adv_block_load($bid);
+      $adv_block->picture && $adv_block->picture = file_load($adv_block->picture);
+      $cache->set($cid, $adv_block);
+    }
+  } else {
+    $adv_block = _adv_block_load($bid);
+    $adv_block->picture && $adv_block->picture = file_load($adv_block->picture);
+  }
+  return $adv_block;
+}
+
+/**
+ * APIs _adv_block_load(). load adv_block from db
+ */
+function _adv_block_load($bid) {
+  return db_select('adv_blocks', 'a')
+    ->fields('a')
+    ->condition('bid', $bid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * APIs adv_block_load_multiple()
+ */
+function adv_block_load_multiple($bids) {
+  $adv_blocks = array();
+  foreach ($bids as $bid) {
+    $adv_blocks[] = adv_block_load($bid);
+  }
+  return $adv_blocks;
+}
+
+/**
+ * APIs adv_block_save().
+ */
+function adv_block_save($adv_block, $edit = array()) {
+   // Load the stored entity, if any.
+  if ($adv_block->bid && !isset($adv_block->original)) {
+    $adv_block->original = adv_block_load($adv_block->bid);
+  }
+
+  if (empty($adv_block)) {
+    $adv_block = new stdClass();
+  }
+  if (!isset($adv_block->is_new)) {
+    $adv_block->is_new = empty($adv_block->bid);
+  }
+  
+  // Invoke hook_adv_block_presave() for all modules.
+  //adv_block_module_invoke('presave', $edit, $adv_block);
+  
+  foreach ($edit as $key => $value) {
+    $adv_block->$key = $value;
+  }
+  
+  if (is_object($adv_block) && !$adv_block->is_new) {
+    // Process picture uploads.
+    /*
+      $adv_block_picture_id = $adv_block->picture->id();
+      $adv_block_original_picture_id = $adv_block->original->picture->id();
+    if ($adv_block_picture_id && (!isset($adv_block_original_picture_id) || $adv_block->picture->id() != $adv_block_original_picture_id)) {
+      $picture = $adv_block->picture;
+      // If the picture is a temporary file move it to its final location and
+      // make it permanent.
+      //if (!$picture->status) {
+      if (!$picture->isPermanent()) {
+        $info = image_get_info($picture->getFileUri());
+        $picture_directory =  file_default_scheme() . '://' . variable_get('adv_block_picture_path', 'adv_blocks');
+
+        // Prepare the pictures directory.
+        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+        $destination = file_stream_wrapper_uri_normalize($picture_directory . '/adv_block-' . $adv_block->bid . '-' . REQUEST_TIME . '.' . $info['extension']);
+
+        // Move the temporary file into the final location.
+        if ($picture = file_move($picture, $destination, FILE_EXISTS_RENAME)) {
+          //$picture->status = FILE_STATUS_PERMANENT;
+          $picture->setPermanent();
+          $picture->save();
+          $adv_block->picture = $picture;
+          file_usage()->add($picture, 'adv_block', 'adv_block', $adv_block->bid);
+        }
+      }
+      // Delete the previous picture if it was deleted or replaced.
+      if (!empty($adv_block_original_picture_id)) {
+        file_usage()->delete($adv_block->original->picture, 'adv_block', 'adv_block', $adv_block->bid);
+        file_delete($adv_block->original->picture);
+      }
+    }
+    $adv_block->picture = empty($adv_block_picture_id) ? 0 : $adv_block->picture->id();
+    $success = drupal_write_record('adv_blocks', $adv_block, 'bid');
+    if ($success === FALSE) {
+      return FALSE;
+    }
+     */
+
+    // Update $edit with any interim changes to $adv_block.
+    foreach ($adv_block as $key => $value) {
+      if (!property_exists($adv_block->original, $key) || $value !== $adv_block->original->$key) {
+        $edit[$key] = $value;
+      }
+    }
+    adv_block_module_invoke('update', $edit, $adv_block);
+  }
+  else {
+    // Allow 'created' to be set by the caller.
+    if (!isset($adv_block->created)) {
+      $adv_block->created = REQUEST_TIME;
+    }
+
+    if (@is_object($adv_block->picture)) {
+      $new_picture = $adv_block->picture;
+     // print_r($new_picture);
+      unset($adv_block->picture);
+    }
+
+    $success = drupal_write_record('adv_blocks', $adv_block);
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    if (isset($new_picture)) {
+      $adv_block->picture = $new_picture;
+      $adv_block->is_new = FALSE;
+      adv_block_save($adv_block, array('picture' => $new_picture));
+    }
+
+    $edit = (array) $adv_block;
+    adv_block_module_invoke('insert', $edit, $adv_block);
+  }
+  // Clear internal properties.
+  unset($adv_block->is_new);
+  unset($adv_block->original);
+  
+  return $adv_block;
+}
+/**
+ * APIs hook_module_invoke().
+ */
+function adv_block_module_invoke($type, &$edit, $adv_block) {
+  foreach (module_implements('adv_block_' . $type) as $module) {
+    $function = $module . '_adv_block_' . $type;
+    $function($edit, $adv_block);
+  }
+}
+
+/**
+ * APIs adv_block_delete().
+ */
+function adv_block_delete($bid) {
+  adv_block_delete_multiple(array($bid));
+}
+
+/**
+ * APIs adv_block_delete_multiple().
+ */
+function adv_block_delete_multiple(array $bids) {
+  if (!empty($bids)) {
+    $adv_blocks = adv_block_load_multiple($bids);
+
+    $transaction = db_transaction();
+    try {
+      foreach ($adv_blocks as $bid => $adv_block) {
+        module_invoke_all('adv_block_delete', $adv_block);
+      }
+
+      db_delete('adv_blocks')
+        ->condition('bid', $bids, 'IN')
+        ->execute();
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
+  }
+}
+
+/**
+ * Implements hook_adv_block_delete().
+ */
+function adv_block_adv_block_delete($adv_block) {
+  /*$cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cid = $_SERVER['SERVER_NAME'] . ':adv_block:id:' . $adv_block->bid;
+  if ($cache) {
+    $cache->delete($cid);
+  }*/
+}
+/**
+ * Implements hook_adv_block_item_delete().
+ */
+function adv_block_adv_block_item_delete($adv_block_item) {
+  /*$cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cid = $_SERVER['SERVER_NAME'] . ':adv_block_item:id:' . $adv_block_item->iid;
+  if ($cache) {
+    $cache->delete($cid);
+  }*/
+}
+/**
+ * APIs adv_block_item_load().
+ */
+function adv_block_item_load($iid) {
+  $cache = FALSE;
+  //$cache = cache('Backend.Memcache')->get('Memcache'); 
+  $cid = $_SERVER['SERVER_NAME'] . ':adv_block_item:id:' . $iid;
+  if ($cache) {
+    if ($cached = $cache->get($cid)) {
+      $adv_block_item = $cached->data;
+    } else {
+      $adv_block_item = _adv_block_item_load($iid);
+      $adv_block_item->picture && $adv_block_item->picture = file_load($adv_block_item->picture);
+      $cache->set($cid, $adv_block_item);
+    }
+  } else {
+    $adv_block_item = _adv_block_item_load($iid);
+    $adv_block_item->picture && $adv_block_item->picture = file_load($adv_block_item->picture);
+  }
+  return $adv_block_item;
+}
+/**
+ * APIs _adv_block_item_load() load $adv_block_item form db
+ */
+function _adv_block_item_load($iid) {
+  return db_select('adv_block_items', 'i')
+    ->fields('i')
+    ->condition('iid', $iid)
+    ->execute()
+    ->fetchObject();
+}
+/**
+ * APIs adv_block_item_load_multiple().
+ */
+function adv_block_item_load_multiple($iids) {
+  $adv_block_items = array();
+  foreach ($iids as $iid) {
+    $adv_block_items[] = adv_block_item_load($iid);
+  }
+  return $adv_block_items;
+}
+/**
+ * APIs adv_block_item_delete().
+ */
+function adv_block_item_delete($iid) {
+  adv_block_item_delete_multiple(array($iid));
+}
+
+/**
+ * APIs adv_block_item_delete_multiple().
+ */
+function adv_block_item_delete_multiple(array $iids) {
+  if (!empty($iids)) {
+    $adv_block_items = adv_block_item_load_multiple($iids);
+
+    $transaction = db_transaction();
+    try {
+      foreach ($adv_block_items as $iid => $adv_block_item) {
+        module_invoke_all('adv_block_item_delete', $adv_block_item);
+      }
+
+      db_delete('adv_block_items')
+        ->condition('iid', $iids, 'IN')
+        ->execute();
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
+  }
+}
+/**
+ * APIs adv_block_item_save().
+ */
+function adv_block_item_save($adv_block_item, $edit = array()) {
+  // Load the stored entity, if any.
+  if ($adv_block_item->iid && !isset($adv_block_item->original)) {
+    $adv_block_item->original = adv_block_item_load($adv_block_item->iid);
+  }
+
+  if (empty($adv_block_item)) {
+    $adv_block_item = new stdClass();
+  }
+  if (!isset($adv_block_item->is_new)) {
+    $adv_block_item->is_new = empty($adv_block_item->iid);
+  }
+  
+  // Invoke hook_adv_block_item_presave() for all modules.
+  //adv_block_item_module_invoke('presave', $edit, $adv_block_item);
+  
+  foreach ($edit as $key => $value) {
+    $adv_block_item->$key = $value;
+  }
+  
+  if (is_object($adv_block_item) && !$adv_block_item->is_new) {
+    // Process picture uploads.
+    //if (($adv_block_item->picture->id()) && (!isset($adv_block_item->original->picture->id()) || $adv_block_item->picture->id() != $adv_block_item->original->picture->id())) {
+      $adv_block_item_picture_id = $adv_block_item->picture ? $adv_block_item->picture->id() : 0;
+      $adv_block_item_original_picture_id = $adv_block_item->original->picture ? $adv_block_item->original->picture->id() : 0;
+    if ($adv_block_item_picture_id && (!isset($adv_block_item_original_picture_id) || $adv_block_item->picture->id() != $adv_block_item_original_picture_id)) {
+      $picture = $adv_block_item->picture;
+      // If the picture is a temporary file move it to its final location and
+      // make it permanent.
+      //if (!$picture->status) {
+      if (!$picture->isPermanent()) {
+        $image_factory = Drupal::service('image.factory');
+        $image = $image_factory->get($picture->getFileUri());
+        $image_extension = $image->getExtension();
+        $picture_directory =  file_default_scheme() . '://' . variable_get('adv_block_item_picture_path', 'adv_block_items');
+
+        // Prepare the pictures directory.
+        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+        $destination = file_stream_wrapper_uri_normalize($picture_directory . '/adv_block_item-' . $adv_block_item->iid . '-' . REQUEST_TIME . '.' . $image_extension);
+
+        // Move the temporary file into the final location.
+        if ($picture = file_move($picture, $destination, FILE_EXISTS_RENAME)) {
+          //$picture->status = FILE_STATUS_PERMANENT;
+          $picture->setPermanent();
+          $picture->save();
+          $adv_block_item->picture = $picture;
+          file_usage()->add($picture, 'adv_block_item', 'adv_block_item', $adv_block_item->iid);
+        }
+      }
+      // Delete the previous picture if it was deleted or replaced.
+      if (!empty($adv_block_item_original_picture_id)) {
+        file_usage()->delete($adv_block_item->original->picture, 'adv_block_item', 'adv_block_item', $adv_block_item->iid);
+        file_delete($adv_block_item->original->picture);
+      }
+    }
+    $adv_block_item->picture = empty($adv_block_item_picture_id) ? 0 : $adv_block_item->picture->id();
+    $success = drupal_write_record('adv_block_items', $adv_block_item, 'iid');
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    // Update $edit with any interim changes to $adv_block_item.
+    foreach ($adv_block_item as $key => $value) {
+      if (!property_exists($adv_block_item->original, $key) || $value !== $adv_block_item->original->$key) {
+        $edit[$key] = $value;
+      }
+    }
+    adv_block_item_module_invoke('update', $edit, $adv_block_item);
+  }
+  else {
+    // Allow 'created' to be set by the caller.
+    if (!isset($adv_block_item->created)) {
+      $adv_block_item->created = REQUEST_TIME;
+    }
+
+    if (@is_object($adv_block_item->picture)) {
+      $new_picture = $adv_block_item->picture;
+     // print_r($new_picture);
+      unset($adv_block_item->picture);
+    }
+
+    $success = drupal_write_record('adv_block_items', $adv_block_item);
+    if ($success === FALSE) {
+      return FALSE;
+    }
+
+    if (isset($new_picture)) {
+      $adv_block_item->picture = $new_picture;
+      $adv_block_item->is_new = FALSE;
+      adv_block_item_save($adv_block_item, array('picture' => $new_picture));
+    }
+
+    $edit = (array) $adv_block_item;
+    adv_block_item_module_invoke('insert', $edit, $adv_block_item);
+  }
+  // Clear internal properties.
+  unset($adv_block_item->is_new);
+  unset($adv_block_item->original);
+  
+  return $adv_block_item;
+}
+
+/**
+ * APIs adv_block_item_module_invoke().
+ */
+function adv_block_item_module_invoke($type, &$edit, $adv_block_item) {
+  foreach (module_implements('adv_block_item_' . $type) as $module) {
+    $function = $module . '_adv_block_item_' . $type;
+    $function($edit, $adv_block_item);
+  }
+}
+
+/**
+ * Return items attached to a adv block across all field instances.
+ *
+ * @param $bid
+ *   The adv block ID.
+ * @param $pager
+ *   Boolean to indicate whether a pager should be used.
+ * @param $limit
+ *   Integer. The maximum number of items to find.
+ *   Set to FALSE for no limit.
+ * @param $order
+ *   An array of fields and directions.
+ *
+ * @return
+ *   An array of nids matching the query.
+ */
+function adv_block_select_entities($bid, $pager = TRUE, $limit = FALSE, $order = array('i.weight' => 'ASC')) {
+  $query = db_select('adv_block_items', 'i');
+  $query->condition('bid', $bid);
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(i.entity_id)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+  $query->addField('i', 'entity_id');
+  $query->addField('i', 'bid');
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+  return $query->execute()->fetchCol();
+}
+
+function adv_block_select_items($bid, $pager = TRUE, $limit = FALSE, $order = array('i.weight' => 'ASC')) {
+  $query = db_select('adv_block_items', 'i');
+  $query->condition('bid', $bid);
+  if ($pager) {
+    $count_query = clone $query;
+    $count_query->addExpression('COUNT(i.entity_id)');
+
+    $query = $query->extend('Drupal\Core\Database\Query\PagerSelectExtender');
+    if ($limit !== FALSE) {
+      $query = $query->limit($limit);
+    }
+    $query->setCountQuery($count_query);
+  }
+  else {
+    if ($limit !== FALSE) {
+      $query->range(0, $limit);
+    }
+  }
+  $query->addField('i', 'iid');
+  $query->addField('i', 'bid');
+  foreach ($order as $field => $direction) {
+    $query->orderBy($field, $direction);
+    // ORDER BY fields need to be loaded too, assume they are in the form
+    // table_alias.name
+    list($table_alias, $name) = explode('.', $field);
+    $query->addField($table_alias, $name);
+  }
+  return $query->execute()->fetchCol();
+}
+
+function adv_block_view_items($bid, $limit, $view_mode = 'adv', $pager = FALSE) {
+  $adv_block = entity_load('adv_block', $bid);
+  
+  if ($ids = adv_block_select_items($bid, $pager, $limit)) {
+    $items = entity_load_multiple('adv_block_item', $ids);
+    //print_r($items);
+    $entities = array();
+    foreach ($items as $item) {
+      $entity = entity_load($adv_block->type->value, $item->entity_id->value);
+      if (!empty($item->title->value)) {
+        $entity_info = $entity->entityInfo();
+        $entity->{$entity_info['entity_keys']['label']}->value = $item->title->value;
+      }
+      $entities[$entity->id()] = $entity;
+    }
+    return entity_view_multiple($entities, $view_mode);
+  }
+  else {
+    return '';
+  }
+}
+
+function adv_block_select_blocks($type) {
+  $query = db_select('adv_blocks', 'b')
+    ->condition('type', $type);
+  $query->addField('b', 'bid');
+  return $query->execute()->fetchCol();
+}
+
+/**
+ * hook_coupon_delete
+ */
+function adv_block_coupon_delete(EntityInterface $entity) {
+  $ids = db_query("SELECT bid FROM {adv_blocks} WHERE type='coupon'")->fetchCol();
+  db_delete('adv_block_items')
+    ->condition('bid', $ids, 'IN')
+    ->condition('entity_id', $entity->id())
+    ->execute();
+}
+
+/**
+ * page callback: admin/adv_block/%adv_block 广告位内容为item的广告位管理 
+ */
+function admin_adv_block_item_list_form($form, &$form_state, $adv_block) {
+  drupal_set_title('管理' . $adv_block->label());
+  drupal_add_library('system', 'ui.dialog');
+  
+  $ids = adv_block_select_items($adv_block->id());
+  $adv_block_items = entity_load_multiple('adv_block_item', $ids);
+  $form_state['adv_block'] = $adv_block;
+  $header = array(
+    'item' => array('data' => '广告项'),
+    'title' => array('data' => '新标题'),
+    'operations' => array('data' => '操作'),
+  );
+
+  $options = array();
+  foreach ($adv_block_items as $item) {
+    $entity = entity_view(entity_load($adv_block->type->value, $item->entity_id->value), 'adv');
+    $options[$item->id()] = array(
+      'item' => drupal_render($entity),
+      'title' => $item->label(),
+      'operations' => l('编辑', 'admin/adv_block_item/' . $item->id() . '/edit'),
+    );
+  }
+  $form['choose_item'] = array(
+    '#markup' => '<a href="' . url('ajax/adv_block/' . $adv_block->id() . '/load_adv_list') . '" dialog-width="800" dialog-height="400" class="ajax-dialog download" style="display:none;" title="促销列表" >选择促销</a>' . l('选择促销', 'admin/item') . ' | ' . l('广告排序', 'admin/adv_block/' . $adv_block->id() . '/sort'),
+ );
+  $form['items'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => '没有推荐的广告项',
+  );
+  if ($ids) {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => '取消推荐',
+    );
+  }
+  $form['pager'] = array('#markup' => theme('pager'));
+  return $form;
+}
+
+function admin_adv_block_item_list_form_validate($form, &$form_state) {
+  $items = $form_state['input']['items'];
+
+  $ids = array();
+  foreach ($items as $iid => $item) {
+    if (!empty($item)) {
+      $ids[] = $iid;
+    }
+  }
+  if (!count($ids)) {
+    form_set_error('items', '请选择商品信息');
+  } else {
+    $form_state['ids'] = $ids;
+  }
+}
+
+function admin_adv_block_item_list_form_submit($form, &$form_state) {
+  adv_block_item_delete_multiple($form_state['ids']);
+  drupal_set_message('设置已保存');
+}
+
+/**
+ * page callback: admin/adv_block/%adv_block/sort 
+ */
+function admin_adv_block_item_list_sort_form($form, &$form_state, $adv_block) {
+  drupal_set_title($adv_block->label() . '列表排序');
+
+  $ids = adv_block_select_items($adv_block->id());
+  $adv_block_items = entity_load_multiple('adv_block_item', $ids);
+  $form_state['adv_block'] = $adv_block;
+  $form['choose_item'] = array(
+    '#markup' => l('列表管理', 'admin/adv_block/' . $adv_block->id()),
+  );
+  $form['#tree'] = TRUE;
+  $form['#theme'] = 'admin_adv_block_item_list_sort_form';
+  foreach ($adv_block_items as $item) {
+    $entity = entity_view(entity_load($adv_block->type->value, $item->entity_id->value), 'adv');
+
+    $form[$item->id()] = array(
+      'item' => array(
+        '#markup' => drupal_render($entity),
+      ),
+      'sort' => array(
+        '#type' => 'weight',
+        '#delta' => 128, 
+        '#default_value' => $item->weight->value,
+        '#attributes' => array('class' => array('sort'))
+      ),
+    );
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => '保存',
+  );
+  return $form;
+}
+
+function theme_admin_adv_block_item_list_sort_form($form) {
+  drupal_add_tabledrag('adv_block_item_sort', 'order', 'sibling', 'sort');
+  $header = array('', '广告项', '排序');
+  foreach ($form['form'] as $key => $node) {
+    if (is_array($node) && is_numeric($key)) {
+      $rows[] = array(
+        'data' => array(
+          '',
+          render($form['form'][$key]['item']),
+          render($form['form'][$key]['sort']),
+        ),
+        'class' => array('draggable'),
+      );
+    }
+  }
+  $output  = render($form['form']['choose_item']);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'adv_block_item_sort'), 'empty' => '没有商品信息'));
+  $output .= render($form['form']['submit']);
+  $output .= render($form['form']['form_id']);
+  $output .= render($form['form']['form_token']);
+  $output .= render($form['form']['form_build_id']);
+
+  return $output;
+}
+
+function admin_adv_block_item_list_sort_form_submit($form, &$form_state) {
+  $adv_block = $form_state['adv_block'];
+  foreach ($form_state['values'] as $iid => $item) {
+    if (is_array($item) && is_numeric($iid)) {
+      $adv_block_item = adv_block_item_load($iid);
+      adv_block_item_save($adv_block_item, array('weight' => $item['sort']));
+    }
+  }
+  drupal_set_message('设置已保存');
+}
+

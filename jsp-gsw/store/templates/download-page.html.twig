@@ -1,0 +1,28 @@
+{#
+/*
+ * @file 
+ *
+ * @params
+ * guike_font_src:
+ * guike_android_download:
+ * guike_phone_img_src:
+ * see template_preprocess_download_page()
+ * see guike_preprocess_download_page(&$variables).
+ */
+#}
+<div class="outer">
+  <div class="warpper">
+  <div class="content">
+  <div class="gk_icon">
+  </div>
+  <div class="mark_title"><img src="{{ guike_font_src }}" /></div>
+  <p>请根据您的手机种类选择对应的贵客个人版客户端下载</p>
+  <div class="btn">
+  <a class="gk_andorid" href="{{ guike_android_download }}">andorid下载</a>
+  <a class="gk_iphone" href="https://itunes.apple.com/cn/app/gui-ke/id680993772?ls=1&mt=8">iphone下载</a>
+  </div>
+  <div class="phone_img"><img src="{{ guike_phone_img_src }}" />
+  </div>
+  </div>
+  </div>
+</div>

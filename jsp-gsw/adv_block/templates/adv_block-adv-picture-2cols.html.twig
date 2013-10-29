@@ -1,0 +1,38 @@
+{#
+/*
+ * 首页品牌商户
+ *
+ *
+ *  @params:
+ *    $adv_block:
+ *    $adv_block->item_list: advs
+ *    $item_list = array(
+ *      array('title' => '', 'adv_link' => '', 'thumbnail_img_src' => '125x54', 'default_img_src' => '')
+ *    );
+ *
+ *
+ *  see template_preprocess_adv_block_adv_picture_2cols($vairables). 
+ */
+#}
+
+{% if has_content  %}
+ <ul>
+ {% for item in item_list %}
+ <li><a target="_blank" href="{{ item.adv_link }}" title="{{ item.title }}"><img src="{{ item.thumbnail_img_src }}"></a></li>
+ {% endfor %}
+ </ul>
+{% endif%}
+<!--
+<ul>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+  <li><a target="_blank" href=""><img src="../images/pic125x54.png"></a></li>
+</ul>
+-->

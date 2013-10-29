@@ -1,0 +1,13 @@
+*taobao-sdk* taobao接口说明 
+
+App Key: 21611094
+App Secret: f6d6055607fc0f8f18ac5ef781ad53b7
+应用安全等级: 2级
+证书流量: 5000次/每天
+基础开放权限: 天猫精品库 买家基本信息 系统工具 商品信息展示 商品类目属性 商品关联推荐 店铺信息查询
+ 
+http://my.open.taobao.com/app/manageLicense.htm?cat=site&app_id=1429727
+
+http://api.taobao.com/apidoc/api.htm?spm=0.0.0.0.Qp4LIa&path=cid:4-apiId:20
+
+vim:tw=78:ts=8:ft=help:norl:

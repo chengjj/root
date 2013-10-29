@@ -1,0 +1,232 @@
+<?php
+
+/**
+ * @file
+ * Enables the organization of content into categories.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+
+define('ACTIVITY_TYPE_POST_SHARE', 1);//分享商品 uid发布share的会员ID,param 代表 $share->sid
+define('ACTIVITY_TYPE_POST_COUPON', 2);//分享优惠信息 sid为发布coupon的商户ID 即$coupon->sid
+define('ACTIVITY_TYPE_COMS_SHARE', 3);//评论 param 被评论的 $share->sid, param2 评论内容$share_comment->cid
+define('ACTIVITY_TYPE_COMS_COUPON', 4);//评论 param 被评论的 $coupon->cid, param2评论内容$coupon_comments->mid
+define('ACTIVITY_TYPE_BOOK_SHARE', 5);//收藏 param 被收藏的 $share->sid
+define('ACTIVITY_TYPE_BOOK_STORE', 6);//收藏 param 被收藏的 $store->sid
+define('ACTIVITY_TYPE_FOLL_STORE', 7);//关注 param 被关注的 $store->sid
+define('ACTIVITY_TYPE_FOLL_USER', 8);//关注  related_uid被关注$user->uid
+
+/**
+ * Implements hook_menu()
+ */
+function activity_menu() {
+  $items['user/%account/activity'] = array(
+    'title callback' => 'activity_get_user_activity_title',
+    'title arguments' => array(1),
+    'page callback' => 'activity_get_user_activity_page',
+    'page arguments' => array(1),
+    'access callback' => 'user_is_logged_in',
+    'file' => 'activity.pages.inc',
+  );
+  return $items;
+}
+/**
+ * Implements hook_theme().
+ */
+function activity_theme() {
+  return array(
+    'activity' => array(
+      'template' => 'activity',
+      'render element' => 'elements',
+    ),
+    'account_activity' => array(
+      'variables' => array('account' => NULL, 'pager' => FALSE),
+      'template' => 'account-activity',
+    ),
+    'activity_item' => array(
+      'variables' => array('activity' => NULL),
+      'template' => 'activity-item',
+    ),
+    'activity_list' => array(
+      'variables' => array('activities' => NULL),
+      'template' => 'activity-list',
+    ),
+  );
+}
+/**
+ * Implementation of hook_user_delete().
+ */
+function activity_user_delete($account) {
+  db_delete('activity')
+    ->condition('uid', $account->uid)
+    ->execute();
+}
+
+/**
+ * Implementation of hook_store_delete().
+ */
+function activity_store_delete($store) {
+  db_delete('activity')
+    ->condition('sid', $store->sid)
+    ->execute();
+}
+
+/**
+ * Loads the entire activity by activity ID.
+ *
+ * @param int $aid
+ *   The ID of the activity to be loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return
+ *   The activity object.
+ */
+function activity_load($aid, $reset = FALSE) {
+  return entity_load('activity', $aid, $reset);
+}
+
+/**
+ * APIs _activity_load(). load activity form db
+ */
+function _activity_load($aid) {
+  return db_select('activity', 'a')
+    ->fields('a')
+    ->condition('aid', $aid)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * APIs activity_prepare().
+ */
+function activity_prepare(&$activity) {
+  $activity->uid && $activity->account = user_load($activity->uid);
+
+  switch($activity->type) {
+    case ACTIVITY_TYPE_POST_SHARE:
+      //分享商品
+      break;
+  }
+}
+
+/**
+ * Loads activity entities from the database.
+ *
+ * @param array $aids
+ *   (optional) An array of entity IDs. If omitted, all entities are loaded.
+ * @param bool $reset
+ *   (optional) Whether to reset the internal static entity cache.
+ *
+ * @return array
+ *   An array of activity objects, indexed by activity ID.
+ *
+ * @see entity_load()
+ * @see Drupal\Core\Entity\Query\QueryInterface
+ */
+function activity_load_multiple(array $aids = NULL, $reset = FALSE) {
+  return entity_load_multiple('activity', $aids, $reset);
+}
+
+/**
+ * Implements hook_share_insert().
+ */
+function activity_share_insert(EntityInterface $share) {
+  $user = \Drupal::currentUser();
+  $activity = entity_create('activity', array(
+    'uid' => $user->id(),
+    'param' => $share->id(),
+    'type' => ACTIVITY_TYPE_POST_SHARE,
+  ));
+  $activity->save();
+}
+
+/**
+ * Constructs render array from an array of loaded activities.
+ *
+ * @param $activities
+ *   An array of activities as returned by activity_load_multiple().
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
+ * @param $langcode
+ *   A string indicating the language field values are to be shown in. If no
+ *   language is provided the current content language is used.
+ *
+ * @return
+ *   An array in the format expected by drupal_render().
+ *
+ * @see drupal_render()
+ */
+function activity_view_multiple($activities, $view_mode = 'full', $langcode = NULL) {
+  return entity_view_multiple($activities, $view_mode, $langcode);
+}
+
+/**
+ * Prepares variables for activity templates.
+ *
+ * Default template: activity.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing the activity objects.
+ *     Array keys: #activity.
+ */
+function template_preprocess_activity(&$variables) {
+  $activity = $variables['elements']['#activity'];
+  $variables['activity'] = $activity;
+
+  if ($account = $activity->getAuthor()) {
+    $username = array(
+      '#theme' => 'username',
+      '#account' => $account,
+    );
+    $variables['author'] = drupal_render($username);
+    date_default_timezone_set('Asia/Shanghai');//解决日期格式不正确的问题，by：mashh@72e.com
+    $variables['created'] = date_format($activity->created->value); 
+
+    $picture = array('#theme' => 'account_picture', '#account' => $account);
+    //$picture['#title'] = $activity->getLable(); 
+    $variables['user_picture'] = drupal_render($picture);
+
+    $uri = $activity->uri();
+    // TODO
+
+    switch ($activity->type->value) {
+    case ACTIVITY_TYPE_POST_SHARE:
+      $action = "分享了商品";
+      $share = share_load($activity->param->value);
+      $content = share_view_multiple(array($share->id() => $share), 'activity');
+      break;
+    case ACTIVITY_TYPE_POST_COUPON:
+      $action = "发布了优惠";
+      $coupon = coupon_load($activity->param->value);
+      $content = share_view_multiple(array($coupon->id() => $coupon), 'activity');
+      break;
+    default:
+      $action = "TODO";
+      $content = "TODO";
+    }
+    $variables['action'] = $action;
+    $variables['content'] = $content;
+
+    // Gather activity classes.
+    $variables['attributes']['class'][] = 'activity';
+  }
+}
+
+/**
+ * Implements hook_coupon_insert().
+ */
+function activity_coupon_insert(EntityInterface $coupon) {
+  $store = $coupon->sid->entity;
+  if ($store->uid->value) {
+    $activity = entity_create('activity', array(
+      'uid' => $store->uid->value,
+      'sid' => $coupon->sid->value,
+      'param' => $coupon->id(),
+      'type' => ACTIVITY_TYPE_POST_COUPON,
+    ));
+    $activity->save();
+  }
+}
+

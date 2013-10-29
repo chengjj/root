@@ -1,0 +1,13 @@
+name: 200x133
+label: 200x133
+uuid: 59763118-0d9d-4ff1-a65e-9497d1466615
+status: '1'
+langcode: zh-hans
+effects:
+  05f1e19d-f6ff-449c-b000-ea1a5155b485:
+    uuid: 05f1e19d-f6ff-449c-b000-ea1a5155b485
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '200'
+      height: '133'

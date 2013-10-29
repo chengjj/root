@@ -1,0 +1,6 @@
+name: Adv
+type: module
+description: "广告位"
+core: 8.x
+package : '贵客'
+version: VERSION

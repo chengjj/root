@@ -1,0 +1,66 @@
+*account-design* (用户)系统设计 
+
+为商户用户添加子账户、管理商户信息、扫码、发布促销
+商户可对子帐号进行权限分配
+
+问题:
+该帐号是否允许手机、网站同时登录？
+
+一、系统变量
+===================
+
+二、请求设计
+===================
+account/edit: (nocache)基本信息
+account/picture: (nocache)个人头像
+account/resetpass: (nocache)修改密码
+account/bind/phone: (nocache)绑定手机
+
+三、权限设计
+===================
+
+
+四、对象设计
+===================
+
+
+五、数据库设计
+===================
+*account_follows* (会员关注会员)
+uid:会员ID
+follow_uid:被关注会员ID
+created:
+主键 uid, follow_uid
+
+*store_follows* (会员关注商户)
+uid:
+follow_sid:
+created:
+主键 uid,sid
+
+accounts (会员扩展表)
+uid:user_id
+nickname: 昵称
+picture: 头像
+type：注册类型 1代表手机注册 2代表网站注册
+sex: 性别
+phone: 绑定手机号码
+主键 uid
+
+
+六、APIs设计
+===================
+account_follow_save($account_follow)
+account_follow_delete($account_follow);
+account_follows_load($uid)
+
+store_follow_save($store_follow);
+store_follow_delete($store_follow)
+store_follows_load($uid);
+
+
+
+七、cache设计
+=======================
+
+vim:tw=78:ts=8:ft=help:norl:

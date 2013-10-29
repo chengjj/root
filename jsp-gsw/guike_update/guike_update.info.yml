@@ -1,0 +1,6 @@
+name: drupal_update 
+type: module
+description: "升级贵客数据"
+core: 8.x
+package : '贵客'
+version: VERSION

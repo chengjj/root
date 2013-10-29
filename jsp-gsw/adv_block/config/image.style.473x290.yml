@@ -1,0 +1,13 @@
+name: 473x290
+label: 473x290
+uuid: 498c1dcc-588b-4c5c-8b00-fb98680634ee
+status: '1'
+langcode: zh-hans
+effects:
+  92a8c2ba-9146-4afa-9f00-a696dfb16e6f:
+    uuid: 92a8c2ba-9146-4afa-9f00-a696dfb16e6f
+    id: image_scale_and_crop
+    weight: '2'
+    data:
+      width: '473'
+      height: '290'

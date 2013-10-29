@@ -1,0 +1,29 @@
+adv_block.edit_adv_block_item_page:
+  path: '/admin/adv_block_item/{adv_block_item}/edit'
+  defaults:
+    _entity_form: 'adv_block_item.default'
+  requirements:
+    _permission: 'access administration pages'
+
+adv_block.admin:
+  path: '/admin/adv_block'
+  defaults:
+    _title: '广告管理'
+    _content: '\Drupal\adv_block\Controller\AdvBlockController::admin'
+  requirements:
+    _permission: 'administer adv blocks'
+adv_block.admin_adv_block:
+  path: '/admin/adv_block/{adv_block}'
+  defaults:
+    _title: '广告管理'
+    _content: '\Drupal\adv_block\Controller\AdvBlockController::admin_adv_block'
+  requirements:
+    _permission: 'administer adv blocks'
+adv_block.admin_adv_block_sort:
+  path: '/admin/adv_block/{adv_block}/sort'
+  defaults:
+    _title: '广告排序'
+    _content: '\Drupal\adv_block\Controller\AdvBlockController::admin_adv_block_sort'
+  requirements:
+    _permission: 'administer adv blocks'
+

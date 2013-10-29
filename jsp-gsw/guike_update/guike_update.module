@@ -1,0 +1,131 @@
+<?php
+
+use Drupal\taxonomy\Plugin\Core\Entity\Term;
+/**
+ * Implements hook_menu().
+ */
+function guike_update_menu() {
+  $items['guike_update'] = array(
+    'title' => '首页',
+    'page callback' => 'guike_update_pages',
+    'access callback' => TRUE,
+  );
+  $items['guike_update/demo'] = array(
+    'title' => '首页',
+    'page callback' => 'guike_update_demo_pages',
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+function guike_update_demo_pages() {
+  db_set_active('guike');
+  $result = db_query('SELECT * FROM {taxonomy_term_data}');
+  foreach ($result as $row) {
+    print_r($row);
+  }
+  db_set_active('default');
+  return "";
+}
+
+/**
+ * pagecallback: guike_update
+ */
+function guike_update_pages() {
+  //TODO picture object Drupal\file\Plugin\Core\Entity\File.
+  if (variable_get('guike_update_status', FALSE)) {
+    return "已升级";
+  }
+  
+  db_set_active('guike');
+  //update accounts
+  $account_sqls = array();
+  $uids = db_query('SELECT uid FROM {users} WHERE uid > 0')->fetchCol();
+  $accounts = user_load_multiple($uids);
+  foreach ($accounts as $account) {
+    $uid = $account->id();
+    $nickname = db_query('SELECT account_nickname_value FROM {field_data_account_nickname} WHERE entity_type=:entity_type AND entity_id=:entity_id AND deleted=0', array(':entity_type' => 'user', ':entity_id' => $uid))->fetchField();
+    $picture = db_query('SELECT user_picture_fid FROM {field_data_user_picture} WHERE entity_type=:entity_type AND entity_id = :entity_id AND deleted=0', array(':entity_type' => 'user', ':entity_id' => $uid))->fetchField();
+    //$nickname = isset($account->account_nickname['und']) ? $account->account_nickname['und'][0]['value'] : '';
+    //$picture =  isset($account->user_picture['und']) ? $account->user_picture['und'][0]['fid'] : 0;
+    if (!$picture)
+      $picture = 0;
+    $account_sqls[] = "INSERT INTO {accounts} (uid, nickname, `picture`,`type`, `sex`)VALUES($uid, '$nickname', $picture, 1, '')";
+  }
+  //update store_revision
+  $update_store_revision = array("ALTER TABLE store_revision CHANGE COLUMN nid sid INT;");
+  //update store_account follow
+  $update_store_follow_sqls = array("ALTER TABLE store_account_follow CHANGE COLUMN nid sid INT;");
+  //update store_consumer_record 
+  $update_store_consumer_sqls = array(
+    "ALTER TABLE store_consumer_records CHANGE COLUMN sid rid INT;",
+    "ALTER TABLE store_consumer_records CHANGE COLUMN nid sid INT;",
+  );
+  //update cities distrcts cities_seq distrcts_seq
+  $cities = array(
+    '贵阳市' => array('南明区', '云岩区', '花溪区', '乌当区', '白云区', '观山湖区'),
+    '重庆市' => array('渝中区', '大渡口区', '江北区', '沙坪坝区', '九龙坡区', '南岸区', '渝北区', '北碚区'),
+    '晋中市' => array('榆次区'),
+    '太原市' => array('小店区', '万柏林区', '杏花岭区', '迎泽区', '晋源区', '尖草坪区', ),
+
+  );
+  
+  $city_sqls = array();
+  $district_sqls = array();
+  $did_seq = $cid_seq = db_query("SELECT MAX(tid) FROM {taxonomy_term_data}")->fetchField();
+  foreach ($cities as $city => $districts) {
+    $cid = 0;
+    if ($city_obj = db_query("SELECT * FROM {taxonomy_term_data} WHERE `name`=:name", array(':name' => $city))->fetchObject()) {
+      $cid = $city_obj->tid;
+      $city_sqls[] = "INSERT INTO {cities} (cid, `name`, `weight`) VALUES ($cid, '$city', $city_obj->weight)";
+    } else {
+      $cid = ++$cid_seq;
+      $city_sqls[] = "INSERT INTO {cities} (cid, `name`, `weight`) VALUES ($cid, '$city', 0)";
+    }
+    foreach ($districts as $district) {
+      if ($district_obj = db_query("SELECT * FROM {taxonomy_term_data} WHERE `name`=:name", array(':name' => $district))->fetchObject()) {
+        $district_sqls[] = "INSERT INTO {districts} (did, `name`, `weight`, cid)VALUES($district_obj->tid, '$district', $district_obj->weight, $cid)";
+      } else {
+        $did = ++$did_seq;
+        $district_sqls[] = "INSERT INTO {districts} (did, `name`, `weight`, cid)VALUES($did, '$district', 0, $cid)";
+      }
+    }
+  }
+  $city_sqls[] = "INSERT INTO {cities_seq} (cid)VALUES($cid_seq)";
+  $district_sqls[] = "INSERT INTO {districts_seq} (did)VALUES($did_seq)";
+
+  //convert store_catalog 
+  $store_catalog_sqls = array();
+  $result = db_query("SELECT * FROM {taxonomy_term_data} WHERE vid=:vid", array(':vid' => 'account'));
+  $city_id = variable_get('default_city_id', 0);
+  foreach ($result as $term_data) {
+    $term = taxonomy_term_load($term_data->tid);
+    //taxonomy_term_view($term);
+    $picture = db_query('SELECT field_picture_fid FROM {field_data_field_picture} WHERE entity_type = :entity_type AND entity_id = :entity_id', array(':entity_type' => 'taxonomy_term', ':entity_id' => $term_data->tid))->fetchField();
+    if (!$picture) 
+      $picture = 0;
+    $store_catalog_sqls[] = "INSERT INTO {store_catalog} (cid, parent_cid, `name`, `picture`, `weight`, city_id)VALUES($term_data->tid, 0, '$term_data->name', $picture, $term_data->weight, $city_id)";
+  }
+
+  db_set_active('default');
+  //convert cities and cities_seq
+  foreach ($city_sqls as $sql) {
+    db_query($sql);
+  }
+  //convert districts and districts_seq
+  foreach ($district_sqls as $sql) {
+    db_query($sql);
+  }
+  //convert store_catalog 
+  foreach ($store_catalog_sqls as $sql) {
+    db_query($sql);
+  }
+
+  //insert into accounts 
+  foreach ($account_sqls as $sql) {
+    db_query($sql);
+  }
+  variable_set('guike_update_status', TRUE);
+  return "升级成功";
+
+}

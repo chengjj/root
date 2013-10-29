@@ -1,0 +1,14 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a share.
+ *
+ * Available variable:
+ * - share: Full share entity.
+ */
+#}
+<article{{ attributes }}>
+  <a href="{{ share_url }}" title="{{ picture.title }}">{{ picture }}</a>
+  <a href="{{ share_url }}" rel="bookmark">{{ label|truncate(20) }}</a>
+  ¥{{ price }}
+</article>

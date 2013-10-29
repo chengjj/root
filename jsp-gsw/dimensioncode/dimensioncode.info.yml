@@ -1,0 +1,6 @@
+name : 'QRCode -- 二维码' 
+type: module
+description : '生成二维码' 
+version : VERSION
+core : 8.x
+package : '贵客'

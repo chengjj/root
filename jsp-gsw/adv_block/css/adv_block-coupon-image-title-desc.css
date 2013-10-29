@@ -1,0 +1,6 @@
+li.open p {
+  display: none;
+}
+li.open .openbox {
+  display: block;
+}

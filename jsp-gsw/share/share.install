@@ -1,0 +1,575 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall function for the share module.
+ */
+
+use Drupal\Component\Uuid\Uuid;
+use Drupal\Core\Entity\DatabaseStorageController;
+use Drupal\field\Entity\Field;
+
+/**
+ * Implements hook_schema()
+ */
+function share_schema() {
+  $schema['shares'] = array(
+    'description' => '分享商品',
+    'fields' => array(
+      'sid' => array(
+        'description' => '商品id主键',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
+      'cid' => array(
+        'description' => '商品行业分类id',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'source' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'item_id' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'price' => array(
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'description' => array(
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'picture' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'url' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'view_count' => array(
+        'description' => 'The total number of times the {shares} has been viewed.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sold_count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+    'primary key' => array('sid'),
+  );
+
+  $schema['share_comments'] = array(
+    'description' => '商品评论',
+    'fields' => array(
+      'cid' => array(
+        'description' => '主键',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sid' => array(
+        'description' => '商品主键',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => '会员id',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'subject' => array(
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The comment title.',
+      ),
+      'created' => array(
+        'description' => '评论时间',
+        'type' => 'int',
+        'default' => 0,
+      ),
+      'reply_uid' => array(
+        'description' => '被回复者id',
+        'type' => 'int',
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
+
+  $schema['share_bookmarks'] = array(
+    'description' => '商品收藏',
+    'fields' => array(
+      'uid' => array(
+        'description' => '会员id',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => '商品id',
+        'type' => 'int',
+        'default' => 0,
+        'not null' => TRUE,
+      ),
+      'created' => array(
+        'description' => '评论时间',
+        'type' => 'int',
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+  );
+
+  $schema['terms'] = array(
+    'description' => '标签',
+    'fields' => array(
+      'tid' => array(
+        'description' => '主键',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'unique keys' => array(
+      'name' => array('name')
+    ),
+    'primary key' => array('tid'),
+  );
+
+  $schema['share_terms'] = array(
+    'description' => '商品标签',
+    'fields' => array(
+      'tid' => array(
+        'description' => '标签id',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => '商品id',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('tid', 'sid'),
+  );
+
+  $schema['share_history'] = array(
+    'description' => 'A record of which {users} have read which {share}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {share} sid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'The {share}.sid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+    'indexes' => array(
+      'sid' => array('sid'),
+    ),
+  );
+
+  $schema['share_catalog'] = array(
+    'description' => '商品行业分类',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'parent_cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
+
+  return $schema;
+}
+//TODO init like core/modules/image/config/schema/image.style.large.yml 
+//large
+//1:1 450x450 
+//1:1.35 400x540 
+//1:1.5 300x450
+
+//small
+//1:1 200x200 
+//1:1.35 200x270 
+//1:1.5 200x300
+
+/**
+ * Implements hook_install().
+ */
+function share_install() {
+  /*$catalogs = array(
+        '食品饮料' => array(
+          '酒水' => array('白酒/葡萄酒/洋酒/保健酒/黄酒'),
+          '冲调饮品' => array('绿茶/乌龙茶/红茶/普洱茶/花茶/保健茶/其他冲调'),
+          '粮油干货' => array('食用油/大米/杂粮/枣类/枸杞/米面制品/面条/面粉/干货'),
+          '休闲零食' => array('坚果薯片/膨化食品/蜜饯/糖果/卤味小食/肉松/肉脯/饼干糕点'),
+          '保健食品' => array('综合保健/女性保健/男性保健/中老年保健/少儿保健/滋补调养'),
+          '进口食品' => array('饮料饮品/粮油米面/调料/干货/休闲零食/饼干糕点/冲调饮品/方便速食'),
+          '饮料饮品' => array('运动饮品/功能饮品/碳酸饮品'),
+          '方便速食' => array('方便面/方便粉丝/罐头'),
+        ),
+        '生活家居' => array(
+          '家纺' => array('床品套件/被子/枕芯枕套/床单被罩/毛巾被/毯床垫/床褥/蚊帐/凉席/毛巾/浴巾/坐垫/抱枕'),
+          '家居建材' => array('插座/转换器/电工电料/五金工具'),
+          '家居照明' => array('台灯/节能灯/吸顶灯/LED灯/装饰灯/应急/手电/氛围照明/落地灯/厨卫灯/镜前灯吊灯'),
+          '生活日用' => array('收纳用具/雨伞雨具/卫浴用品/家装软饰/净化除味/安全用品/保健用品/眼罩/宠物用品'),
+          '家具' => array('柜类/床/床垫/书架层架/衣橱衣架/晒衣架/烫衣板/休闲椅凳/边桌/茶几'),
+          '厨卫' => array('卫浴龙头/淋浴花洒/卫浴家具/坐便器/厨盆/水槽/整体厨柜/淋浴房/浴缸/厨房挂架/角阀/地漏'),
+          '布艺软饰' => array('十字绣/窗帘/地毯/地垫/沙发套/沙发垫/桌布/门帘/飘窗垫'),
+          '厨房餐饮' => array('杯子/茶具/烹饪锅具/瓷器餐具/厨房置物架/厨房小工具/酒具/保鲜用品/厨房刀具/厨房清洁'),
+          '家居饰品' => array('风水摆件/装饰摆件/墙贴/相框/照片墙/装饰画/油画/花瓶/DIY数字油画/香薰炉/工艺挂钟'),
+          '清洁用品' => array('日化清洁/清洁工具/衣物洗护/纸品湿巾/防蚊除虫'),
+        ),
+        '鞋帽箱包' => array(
+          '男鞋' => array('商务鞋/休闲鞋/凉鞋/沙滩鞋/帆布鞋/靴子'),
+          '女鞋' => array('单鞋/凉鞋/帆布鞋/休闲鞋/靴子/雪地靴'),
+          '女包' => array('女士单肩包/女士斜挎包/女士双肩包/女士手提包/女士手拿包/女士钱包/卡包钥匙包'),
+          '男包' => array('男士单肩包/男士斜挎包/男士商务公文包/男士手包/男士钱包/卡包/礼盒套装/钥匙包'),
+          '功能箱包' => array('商务包/登机箱/万向轮拉杆箱/双轮拉杆箱/运动包/休闲包/登山包/旅行包/书包/腰包/其他功能包/旅行配件'),
+        ),
+        '个护化妆' => array(
+          '护肤 清洁 面膜' => array('面部卸妆/面部清洁/面部护肤/面膜面贴/面膜功效/眼部护理/颈部护理/唇部护理/护肤工具/美容食品'),
+          '彩妆 工具 美甲' => array('面部底妆/眉部/眼部/唇部/卸妆/彩妆工具/甲油卸甲/美甲工具/美妆套装'),
+          '香水 香氛 精油' => array('香水类型/香水香型/场景情谊/精油类型/精油成份/精油功效'),
+          '男士 护肤 剃须' => array('面部清洁/面部护肤/眼部护理/男士面膜/剃须护理/唇部护理'),
+          '美发 染烫 口腔' => array('洗护发/染烫造型/美发工具/口腔护理'),
+          '美体 沐浴 手足' => array('身体保养/瘦身美体/身体沐浴/手部护理/手部清洁/足部护理'),
+          '女性 护理 卫生' => array('卫生巾/女性洗液/女性护理'),
+        ),
+        '珠宝饰品' => array(
+          '钟表'     => array('瑞士品牌/日本品牌/国产品牌/时尚品牌/儿童品牌/闹钟挂钟/钟表配件'),
+          '珠宝首饰' => array('钻石/黄金/K金/铂金/银饰/翡翠/玉石/碧玺/宝石/珍珠/玛瑙/琥珀/金条银条/金银藏品'),
+          '时尚饰品' => array('吊坠项链/戒指/手镯手链/耳饰/脚链/摆件挂件/胸针/套装/婚庆饰品/水晶/男士太阳镜/女士太阳镜'),
+          '工艺礼品' => array('火机烟具/瑞士军刀/创意礼品/工艺摆件/礼品礼券/工艺藏品'),
+        ),
+        '数码家电' => array(
+          '手机配件' => array('手机/移动电源/蓝牙耳机/手机贴膜/保护壳(套)/手机电池/有线耳机/手机音箱/手机存储卡/iPhone配件/车载配件/充电器/手机饰品/其他配件'),
+          '摄影摄像' => array('数码相机/(微单/单电)/单反相机/数码摄像机/专业摄像机/一次成像相机'),
+          '照摄配件' => array('摄影包/电池充电器/存储卡/录像带/读卡器/反光板/液晶膜/摄影灯/配件套装/清洁工具/拍立得附件/单反镜头/三脚架/云台/滤镜/遥控器/镜头附件/机身附件/视频拍摄附件/闪光灯/手柄防潮箱/其他配件'),
+          '时尚影音' => array('家庭影院/迷你音响/高清播放器/DVD/蓝光DVD/HiFi音箱/功放/HiF耳机/麦克风/电视配件/影音线材/清洁保养/3D眼镜/底座/挂架/机顶盒/遥控器/MID/平板/耳机/耳麦/MP3/MP4/数码相框/录音笔/收录机/iPod配件/充电宝/影音配件'),
+          '电子教育' => array('学生电脑/电子辞典/点读机/点读笔/电子书/复读机'),
+          '电视'     => array('平板电视/32英寸/37-39英寸/40-43英寸/46-48英寸/50-52英寸/55英寸/58英寸/60英寸/60英寸以上/32英寸以下'),
+          '洗/干衣机'=> array('波轮/滚筒/双缸/洗干一体机/干衣机/脱水机'),
+          '冰箱/冷柜'=> array('冰箱/冷柜/酒柜/三门/对开门/双门/单门/多门/冰箱配件'),
+          '空调'     => array('商用空调/空调配件/家用挂机/家用柜机/变频空调'),
+          '厨房电器' => array('烟灶消套装/油烟机/燃气灶/消毒柜/热水器/豆浆机/电饭煲/面包机/微波炉/电压力锅/电水壶/净水器/电磁炉/电炖锅/电饼铛/电烤箱/料理机/酸奶机/煮蛋器/咖啡机'),
+          '生活电器' => array('取暖器/加湿器/挂烫机/暖手/脚宝/电热毯/干衣机/吸尘器/电话机/空气净化/除湿器/电熨斗/电热毯/干鞋器'),
+        ),
+        '母婴亲子' => array(
+          '奶粉'     => array('妈妈奶粉/1段奶粉/2段奶粉/3段奶粉/4段奶粉/羊奶粉/特殊配方'),
+          '营养辅食' => array('米粉/泥糊/肉松/饼干/面食/(果汁/水)/宝宝零食/钙铁锌/DHA/免疫类/维生素/牛初乳/鱼肝油/调节肠胃/清火开胃/孕婴营养品'),
+          '尿裤湿巾' => array('新生儿/S号/M号/L号/XL/XXL号/成长裤/湿巾'),
+          '喂养用品' => array('奶瓶/奶嘴/吸奶器/暖奶/消毒餐具/水具/牙胶/安抚'),
+          '洗护用品' => array('洁面乳/润肤油/身体乳/爽身粉/婴儿皂/护臀霜/润唇膏/护手霜/防晒霜'),
+          '童车童床' => array('婴儿推车/ 餐椅摇椅/ 婴儿床/学步车/三轮车/自行车/电动车/健身车/安全座椅'),
+          '寝具服饰' => array('新生婴幼儿0-3岁/宝宝寝居/男童3-12岁/女童3-12岁/亲子装/童鞋/配饰'),
+          '妈妈专区' => array('妈咪包/背婴带/妈妈护理/产后塑身/孕妇内衣/防辐射服/孕妇装/孕妇食品/妈妈美容'),
+          '玩具文具' => array('婴幼玩具/户外玩具/毛绒玩具/遥控玩具/(DIY手工/绘画)/娃娃/积木拼插/模型玩具/动漫电影周边/儿童文具'),
+        ),
+        '服装服饰' => array(
+          '女装' => array('上装/下装/连衣裙/其他'),
+          '男装' => array('上装/下装'),
+          '童装' => array('上装/下装/裙装/内衣'),
+          '运动装' => array('户外/NBA/足球'),
+          '内衣' => array('女士内衣/男士内衣/家居服男款/家居服女款'),
+          '服装配饰' => array('帽子/腰带/眼镜/围巾/袜子'),
+        ),
+  );
+
+  foreach ($catalogs as $key_1 => $row_1) {
+          db_insert('share_catalog')
+            ->fields(array(
+              'name' => $key_1,
+              'weight' => 0,
+            ))->execute();
+          $parent_cid = db_query("SELECT LAST_INSERT_ID();")->fetchField();
+          foreach ($row_1 as $k2 => $v2) {
+            db_insert('share_catalog')
+              ->fields(array(
+                'name' => $k2,
+                'weight' => 0,
+                'parent_cid' => $parent_cid,
+              ))->execute();
+            $parent_cid_2 = db_query("SELECT LAST_INSERT_ID();")->fetchField();
+            $share_rows = explode('/', $v2[0]); // third
+            foreach ($share_rows as $k3 => $v3) {
+              db_insert('share_catalog')
+                ->fields(array(
+                  'name' => $k2,
+                  'weight' => 0,
+                  'parent_cid' => $parent_cid_2,
+                ))->execute();
+            }
+          }
+  }*/
+}
+
+/**
+ * Create a UUID column for shares.
+ */
+function share_update_1() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('shares', 'uuid')) {
+    db_change_field('shares', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('shares', 'uuid', $spec, $keys);
+  }
+}
+
+/**
+ * change share_comments's comments field into subject
+ */
+function share_update_2() {
+  $column = array(
+    'type' => 'varchar',
+    'length' => 64,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'The comment title.',
+  );
+  db_change_field('share_comments', 'comments', 'subject', $column);
+}
+
+/**
+ * create share_history table
+ */
+function share_update_3() {
+  db_create_table('share_history', array(
+    'description' => 'A record of which {users} have read which {share}s.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The {users}.uid that read the {share} sid.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sid' => array(
+        'description' => 'The {share}.sid that was read.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid', 'sid'),
+    'indexes' => array(
+      'sid' => array('sid'),
+    ),
+  ));
+}
+
+/**
+ * Add view_count column for share entity
+ */
+function share_update_4() {
+  $spec = array(
+    'description' => 'The total number of times the {shares} has been viewed.',
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('shares', 'view_count', $spec);
+}
+
+/**
+ * 调整分类顺序
+ */
+function share_update_5(){
+    db_update('share_catalog')
+            ->fields(array('weight' => 0))
+            ->condition('name', '服装服饰','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 1))
+            ->condition('name', '鞋子箱包','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 2))
+            ->condition('name', '生活家居','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 3))
+            ->condition('name', '数码家电','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 4))
+            ->condition('name', '母婴亲子','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 5))
+            ->condition('name', '食品饮料','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 6))
+            ->condition('name', '个护化妆','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+    db_update('share_catalog')
+            ->fields(array('weight' => 7))
+            ->condition('name', '珠宝饰品','=')
+            ->condition('parent_cid', 0,'=')
+            ->execute();
+}
+/**
+ * 重新分类
+ */
+function share_update_6() {
+  $catalogs = array(
+    '服装服饰' => array(
+      '女装',
+      '男装',
+      '童装',
+      '运动装',
+      '内衣',
+      '服装配饰',
+    ),
+    '鞋子箱包' => array(
+      '女鞋', '男鞋', '女包', '男包', '功能箱包', '户外运动用品',
+    ),
+    '食品饮料' => array(
+      '休闲零食', '营养品', '茶/饮料', '有机食品',
+    ),
+    '生活家居' => array(
+      '住宅家具', '家居饰品', '家纺布艺', '五金电工', '收纳整理', '居家日用', '餐饮用具', '洗护清洁',
+    ),
+    '数码家电' => array(
+      '手机', '相机/DV', '笔记本', '平板电脑', '电脑周边', '数码配件', '大家电', '厨房电器', '生活电器', '影音电器', '护理按摩',
+    ),
+    '母婴亲子' => array(
+      '孕妇用品', '新生儿', '宝宝食品', '宝宝用品', '儿童玩具',
+    ),
+    '个护化妆' => array(
+      '美容护肤', '彩妆香水', '美发护发',
+    ),
+    '珠宝饰品' => array(
+      '珠宝钻石', '品牌手表', '流行饰品', '其他配饰',
+    ),
+  );
+  db_query('TRUNCATE TABLE share_catalog');
+  foreach ($catalogs as $catalog => $children) {
+    $parent_cid = db_insert('share_catalog')
+      ->fields(array(
+        'name' => $catalog,
+      ))->execute();
+    foreach ($children as $catalog_child) {
+      db_insert('share_catalog')
+      ->fields(array(
+        'name' => $catalog_child,
+        'parent_cid' => $parent_cid,
+      ))->execute();
+    }
+  }
+  share_update_5();
+}
