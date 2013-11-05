@@ -1,0 +1,38 @@
+<?php
+// 本类由系统自动生成，仅供测试用途
+class IndexAction extends Action {
+    public function index() {
+	    $Form = M("Form");
+	    $list = $Form -> order('id desc') -> select();
+	    $this -> list = $list;
+	    $this -> display();
+    }
+    public function update() {
+	    $Form = D("Form");
+	    if($vo = $Form -> create()) {
+		    $list = $Form -> save();
+		    if($list !== false) {
+			    $this -> success("数据更新成功");
+		    }
+		    else {
+			    $this -> error("没有更新数据");
+		    }
+	    }
+    }
+    public function insert(){
+	    $Form = M("Form");
+	    if ($Form -> create()) {
+		    if (false !== $Form -> add()) {
+		      $this -> success('添加成功');
+		    }
+		    else {
+		      $this -> error('添加错误');
+		    }
+	    }
+	    else {
+	      //字段验证错误
+		     $this -> error($Form -> getError());
+	    }
+	    //$this->display();
+    }
+}

@@ -1,0 +1,125 @@
+[ 2013-10-29T15:55:30+08:00 ] 0.0.0.0 /app/
+INFO: [ app_begin ] --START--
+INFO: ReadHtmlCache Behavior ::run [ RunTime:0.027002s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.029002s ]
+INFO: [ view_parse ] --START--
+INFO: ParseTemplate Behavior ::run [ RunTime:0.010000s ]
+INFO: [ view_parse ] --END-- [ RunTime:0.010000s ]
+INFO: [ view_filter ] --START--
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 40 行.
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 47 行.
+INFO: ContentReplace Behavior ::run [ RunTime:0.008001s ]
+INFO: TokenBuild Behavior ::run [ RunTime:0.010001s ]
+INFO: WriteHtmlCache Behavior ::run [ RunTime:0.005000s ]
+INFO: ShowRuntime Behavior ::run [ RunTime:0.005000s ]
+INFO: [ view_filter ] --END-- [ RunTime:0.029002s ]
+INFO: [ view_end ] --START--
+INFO: ShowPageTrace Behavior ::run [ RunTime:0.005000s ]
+INFO: [ view_end ] --END-- [ RunTime:0.005000s ]
+
+[ 2013-10-29T15:56:58+08:00 ] 0.0.0.0 /app/
+INFO: [ app_begin ] --START--
+INFO: ReadHtmlCache Behavior ::run [ RunTime:0.001000s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.001000s ]
+INFO: [ view_parse ] --START--
+INFO: ParseTemplate Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_parse ] --END-- [ RunTime:0.001000s ]
+INFO: [ view_filter ] --START--
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 40 行.
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 47 行.
+INFO: ContentReplace Behavior ::run [ RunTime:0.001000s ]
+INFO: TokenBuild Behavior ::run [ RunTime:0.001000s ]
+INFO: WriteHtmlCache Behavior ::run [ RunTime:0.001000s ]
+INFO: ShowRuntime Behavior ::run [ RunTime:0.000000s ]
+INFO: [ view_filter ] --END-- [ RunTime:0.003000s ]
+INFO: [ view_end ] --START--
+INFO: ShowPageTrace Behavior ::run [ RunTime:0.002000s ]
+INFO: [ view_end ] --END-- [ RunTime:0.002000s ]
+NOTIC: [8] Constant PHP_FILE already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 44 行.
+NOTIC: [8] Constant __INFO__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 137 行.
+NOTIC: [8] Constant __SELF__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 141 行.
+NOTIC: [8] Constant __APP__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 143 行.
+NOTIC: [8] Constant BASE_LIB_PATH already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 153 行.
+NOTIC: [8] Constant MODULE_NAME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 178 行.
+NOTIC: [8] Constant ACTION_NAME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 179 行.
+NOTIC: [8] Constant __URL__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 186 行.
+NOTIC: [8] Constant __ACTION__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 189 行.
+NOTIC: [8] Constant NOW_TIME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 41 行.
+NOTIC: [8] Constant REQUEST_METHOD already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 42 行.
+NOTIC: [8] Constant IS_GET already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 43 行.
+NOTIC: [8] Constant IS_POST already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 44 行.
+NOTIC: [8] Constant IS_PUT already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 45 行.
+NOTIC: [8] Constant IS_DELETE already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 46 行.
+NOTIC: [8] Constant IS_AJAX already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 47 行.
+INFO: [ app_begin ] --START--
+INFO: ReadHtmlCache Behavior ::run [ RunTime:0.000000s ]
+INFO: [ app_begin ] --END-- [ RunTime:-0.007000s ]
+NOTIC: [8] A session had already been started - ignoring session_start() D:\xampp\htdocs\app\ThinkPHP\Common\functions.php 第 566 行.
+INFO: [ view_parse ] --START--
+INFO: ParseTemplate Behavior ::run [ RunTime:0.000000s ]
+INFO: [ view_parse ] --END-- [ RunTime:-0.006001s ]
+INFO: [ view_filter ] --START--
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 40 行.
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 47 行.
+INFO: ContentReplace Behavior ::run [ RunTime:0.000000s ]
+INFO: TokenBuild Behavior ::run [ RunTime:0.000000s ]
+INFO: WriteHtmlCache Behavior ::run [ RunTime:0.000000s ]
+INFO: ShowRuntime Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_filter ] --END-- [ RunTime:-0.003001s ]
+INFO: [ view_end ] --START--
+INFO: ShowPageTrace Behavior ::run [ RunTime:0.000000s ]
+INFO: [ view_end ] --END-- [ RunTime:-0.002001s ]
+
+[ 2013-10-29T15:57:01+08:00 ] 0.0.0.0 /app/
+INFO: [ app_begin ] --START--
+INFO: ReadHtmlCache Behavior ::run [ RunTime:0.001001s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.001001s ]
+INFO: [ view_parse ] --START--
+INFO: ParseTemplate Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_parse ] --END-- [ RunTime:0.001000s ]
+INFO: [ view_filter ] --START--
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 40 行.
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 47 行.
+INFO: ContentReplace Behavior ::run [ RunTime:0.001000s ]
+INFO: TokenBuild Behavior ::run [ RunTime:0.001000s ]
+INFO: WriteHtmlCache Behavior ::run [ RunTime:0.001000s ]
+INFO: ShowRuntime Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_filter ] --END-- [ RunTime:0.004000s ]
+INFO: [ view_end ] --START--
+INFO: ShowPageTrace Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_end ] --END-- [ RunTime:0.001000s ]
+NOTIC: [8] Constant PHP_FILE already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 44 行.
+NOTIC: [8] Constant __INFO__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 137 行.
+NOTIC: [8] Constant __SELF__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 141 行.
+NOTIC: [8] Constant __APP__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 143 行.
+NOTIC: [8] Constant BASE_LIB_PATH already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 153 行.
+NOTIC: [8] Constant MODULE_NAME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 178 行.
+NOTIC: [8] Constant ACTION_NAME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 179 行.
+NOTIC: [8] Constant __URL__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 186 行.
+NOTIC: [8] Constant __ACTION__ already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\Dispatcher.class.php 第 189 行.
+NOTIC: [8] Constant NOW_TIME already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 41 行.
+NOTIC: [8] Constant REQUEST_METHOD already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 42 行.
+NOTIC: [8] Constant IS_GET already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 43 行.
+NOTIC: [8] Constant IS_POST already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 44 行.
+NOTIC: [8] Constant IS_PUT already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 45 行.
+NOTIC: [8] Constant IS_DELETE already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 46 行.
+NOTIC: [8] Constant IS_AJAX already defined D:\xampp\htdocs\app\ThinkPHP\Lib\Core\App.class.php 第 47 行.
+INFO: [ app_begin ] --START--
+INFO: ReadHtmlCache Behavior ::run [ RunTime:0.000000s ]
+INFO: [ app_begin ] --END-- [ RunTime:-0.007000s ]
+NOTIC: [8] A session had already been started - ignoring session_start() D:\xampp\htdocs\app\ThinkPHP\Common\functions.php 第 566 行.
+INFO: [ view_parse ] --START--
+INFO: ParseTemplate Behavior ::run [ RunTime:0.001000s ]
+INFO: [ view_parse ] --END-- [ RunTime:-0.005000s ]
+INFO: [ view_filter ] --START--
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 40 行.
+NOTIC: [8] Use of undefined constant APP_TMPL_PATH - assumed 'APP_TMPL_PATH' D:\xampp\htdocs\app\ThinkPHP\Lib\Behavior\ContentReplaceBehavior.class.php 第 47 行.
+INFO: ContentReplace Behavior ::run [ RunTime:0.000000s ]
+INFO: TokenBuild Behavior ::run [ RunTime:0.000000s ]
+INFO: WriteHtmlCache Behavior ::run [ RunTime:0.000000s ]
+INFO: ShowRuntime Behavior ::run [ RunTime:0.000000s ]
+INFO: [ view_filter ] --END-- [ RunTime:-0.002000s ]
+INFO: [ view_end ] --START--
+INFO: ShowPageTrace Behavior ::run [ RunTime:0.000000s ]
+INFO: [ view_end ] --END-- [ RunTime:-0.001000s ]
+

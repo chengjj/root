@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>dan.ci</title>
+</head>
+
+<body>
+	<form method = 'post' action = "__URL__/update">
+		<volist name = "list" id = "vo">
+		<input type = "hidden" name = "id" value = "{$vo.id}">
+		<input type = "text" name = "words" value = "{$vo.words}">
+		<input type = "text" name = "mean" value = "{$vo.mean}">
+		<br>
+		</volist>
+	</form>
+	<form method = 'post' action = "__URL__/insert">
+		<label>单词</label>
+		<input type = "text" name = "words">
+		<label>解释</label>
+		<input type = "text" name = "mean">
+		<input type = "submit" value = "提交"> 
+		<input type = "reset" value = "清空">
+	</form>
+</body>
+</html>
