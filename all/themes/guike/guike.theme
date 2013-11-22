@@ -1,5 +1,9 @@
 <?php
 
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\entity\Entity\EntityDisplay;
+use Drupal\user\UserInterface;
+
 /**
  * @file
  * Functions to support theming in the Bartik theme.
@@ -89,6 +93,7 @@ function guike_preprocess_page(&$variables) {
 
   $variables['guike_header'] = theme('guike_header');
   $variables['guike_footer'] = theme('guike_footer');
+
 }
 
 /**
@@ -235,13 +240,6 @@ function guike_preprocess_adv_block_adv_turn_picture(&$variables) {
   drupal_add_css(drupal_get_path('theme', 'guike') . '/css/adv_block-adv-turn-picture.css');
 }
 
-function guike_preprocess_user(&$variables) {
-  if ($variables['view_mode'] == 'full') {
-    drupal_add_css(drupal_get_path('theme', 'guike') . '/css/page_homepage.css');
-    drupal_add_js(drupal_get_path('theme', 'guike') . '/js/user.js');
-  }
-}
-
 function guike_preprocess_shares(&$variables) {
   drupal_add_css(drupal_get_path('theme', 'guike') . '/css/page_xwg.css');
 }
@@ -279,13 +277,6 @@ function guike_preprocess_store(&$variables) {
 
 function guike_preprocess_account(&$variables) {
   drupal_add_css(drupal_get_path('theme', 'guike') . '/css/page_homepage.css');
-}
-
-function guike_preprocess_share(&$variables) {
-  if ($variables['view_mode'] == 'full') {
-    drupal_add_css(drupal_get_path('theme', 'guike') . '/css/page_xwg_details.css');
-  }
-   drupal_add_js(drupal_get_path('module', 'share') . '/js/share-comment.js');
 }
 
 function guike_preprocess_account_admin(&$variables) {
@@ -355,3 +346,19 @@ function guike_preprocess_aboutUs_help(&$variables) {
 function guike_preprocess_phone(&$variables) {
     drupal_add_css(drupal_get_path('theme', 'guike') . '/css/phonedown.css');
 }
+
+function guike_user_view_alter(&$build, UserInterface $user, EntityDisplay $display) {
+  if ($build['#view_mode'] == 'full') {
+    $build['#attached']['css'][drupal_get_path('theme', 'guike') . '/css/page_homepage.css'] = array();
+    $build['#attached']['js'][drupal_get_path('theme', 'guike') . '/js/user.js'] = array();
+  }
+}
+
+function guike_share_view_alter(&$build, EntityInterface $share, EntityDisplay $display) {
+  if ($build['#view_mode'] == 'full') {
+    $build['#attached']['css'][drupal_get_path('theme', 'guike') . '/css/page_xwg_details.css'] = array();
+  }
+  $build['#attached']['js'][drupal_get_path('module', 'share') . '/js/share-comment.js'] = array();
+
+}
+

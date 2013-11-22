@@ -7,7 +7,7 @@
 namespace Drupal\store;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -25,7 +25,7 @@ class StoreManager {
   /**
    * Entity manager Service Object.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -40,7 +40,7 @@ class StoreManager {
   /**
    * Constructs a StoreManager object.
    */
-  public function __construct(Connection $database, EntityManager $entityManager, Request $request) {
+  public function __construct(Connection $database, EntityManagerInterface $entityManager, Request $request) {
     $this->database = $database;
     $this->entityManager = $entityManager;
     $this->request = $request;
@@ -49,7 +49,7 @@ class StoreManager {
   /**
    * API user_authenticate httprequest head
    */
-  protected function user_authenticate_by_http() {
+  public function user_authenticate_by_http() {
     $uid = 0;
     $name = isset($_SERVER['PHP_AUTH_USER']) ? trim($_SERVER['PHP_AUTH_USER']) : '';
     $pass = isset($_SERVER['PHP_AUTH_PW']) ? trim($_SERVER['PHP_AUTH_PW']) : '';
@@ -76,25 +76,32 @@ class StoreManager {
   /**
    * search stores by catalog district city_id 
    */
-  public function searchCatalogStores($catalog_cid) {
+  public function searchCatalogStores($catalog_cid, Request $request) {
     //TODO replace $_GET $request->getQuery();
     global $base_url;
 
-    $district = isset($_GET['district']) ? trim($_GET['district']) : 0;
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 100;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
-    $lat = isset($_GET['latitude']) ? $_GET['latitude'] : 0;
-    $lng = isset($_GET['longitude']) ? $_GET['longitude'] : 0;
-    $distance = isset($_GET['distance']) ? $_GET['distance'] : 0;
-    $sort = isset($_GET['orderby']) ? $_GET['orderby'] : '离我最近';
-    $city_id = isset($_GET['cityId']) ? $_GET['cityId'] : 0;
+    $district = $request->query->get('district', 0);
+    $size = $request->query->get('per_page', 100);
+    $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
+    $lat = $request->query->get('latitude');
+    $lng = $request->query->get('longitude');
+    $distance = $request->query->get('distance');
+    $sort = $request->query->get('orderby', '离我最近');
+    $city_id = $request->query->get('cityId', 0);
 
     $query = $this->database->select('stores', 's');
     $query->addExpression('COUNT(s.sid)');
     $query->condition('latitude', '', '<>');
     $query->condition('longitude', '', '<>');
+    $catalog_cids = array();
     if ($catalog_cid) {
-      $query->condition('cid', $catalog_cid);
+      if ($catalog_children = store_catalog_load_children($catalog_cid)) {
+        $catalog_cids = array($catalog_cid);
+        $catalog_cids = array_merge(array_keys($catalog_children), $catalog_cids);
+        $query->condition('cid', $catalog_cids, 'IN');
+      } else {
+        $query->condition('cid', $catalog_cid);
+      }
     }
     if ($district) {
       $query->condition('district_id', $district);
@@ -134,7 +141,12 @@ class StoreManager {
     $order_by_sql = "";
     $limit = " LIMIT $start, $size";
     if ($catalog_cid) {
-      $where_sql .= " AND cid=$catalog_cid";
+      if ($catalog_cids) {
+        $catalog_cids = implode(',', $catalog_cids);
+        $where_sql .= " AND cid IN ($catalog_cids)";
+      } else {
+        $where_sql .= " AND cid=$catalog_cid";
+      }
     }
     if ($district) {
       $where_sql .= " AND district_id=$district";
@@ -161,13 +173,13 @@ class StoreManager {
       $order_by_sql = " ORDER BY update_at DESC, discount ASC";
     } else if (in_array($sort, array('使用最多'))) {
       $order_by_sql = " ORDER BY deal_count DESC, discount ASC";
-    } 
-
-    $result = $this->database->query($select_sql . $where_sql . $order_by_sql . $limit);
-    $sids = array();
-    foreach ($result as $row) {
-      $sids[] = $row->sid;
+    } else if (in_array($sort, array('好评最多'))) {
+      $order_by_sql = " ORDER BY rank_count DESC, discount ASC";
+    } else if (in_array($sort, array('默认排序'))) {
+      $order_by_sql = " ORDER BY discount ASC";
     }
+
+    $sids = $this->database->query($select_sql . $where_sql . $order_by_sql . $limit)->fetchCol();
     if (count($sids)) {
       //TODO $this->entityManager->getStorageController('store')->loadMultiple($sids);
       $stores = store_load_multiple($sids);
@@ -176,30 +188,30 @@ class StoreManager {
     $http_next = "<$base_url/api/taxonomy/$catalog_cid/stores?";
     $http_last = $http_next;
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page', 1);
     
     $http_next .= "per_page=$size&";
     $http_last .= "per_page=$size&";
 
-    if ($_GET['district']) {
-      $http_next .= "district=" .$_GET['district'] . "&";
-      $http_last .= "district=" .$_GET['district'] . "&";
+    if ($request->query->get('district')) {
+      $http_next .= "district=" .$request->query->get('district') . "&";
+      $http_last .= "district=" .$request->query->get('district') . "&";
     }
-    if ($_GET['latitude']) {
-      $http_next .= "latitude=" .$_GET['latitude'] . "&";
-      $http_last .= "latitude=" .$_GET['latitude'] . "&";
+    if ($request->query->get('latitude')) {
+      $http_next .= "latitude=" .$request->query->get('latitude') . "&";
+      $http_last .= "latitude=" .$request->query->get('latitude') . "&";
     }
-    if ($_GET['longitude']) {
-      $http_next .= "longitude=" .$_GET['longitude'] . "&";
-      $http_last .= "longitude=" .$_GET['longitude'] . "&";
+    if ($request->query->get('longitude')) {
+      $http_next .= "longitude=" .$request->query->get('longitude') . "&";
+      $http_last .= "longitude=" .$request->query->get('longitude') . "&";
     }
-    if ($_GET['distance']) {
-      $http_next .= "distance=" .$_GET['distance'] . "&";
-      $http_last .= "distance=" .$_GET['distance'] . "&";
+    if ($request->query->get('distance')) {
+      $http_next .= "distance=" .$request->query->get('distance') . "&";
+      $http_last .= "distance=" .$request->query->get('distance') . "&";
     }
-    if ($_GET['orderby']) {
-      $http_next .= "orderby=" .$_GET['orderby'] . "&";
-      $http_last .= "orderby=" .$_GET['orderby'] . "&";
+    if ($request->query->get('orderby')) {
+      $http_next .= "orderby=" .$request->query->get('orderby') . "&";
+      $http_last .= "orderby=" .$request->query->get('orderby') . "&";
     }
     if ($page >= $pages) {
       $http_next = "";
@@ -357,7 +369,7 @@ class StoreManager {
     if ($store->district_id && !$store->city_id) {
       //TODO update stores city_id
       $city_id = $this->database->query('SELECT cid FROM {districts} WHERE did = :did', array(':did' => $store->district_id->value))->fetchField();
-      $city_id && $store->city_id->value = $city_id;
+      $city_id && $store->city_id->target_id = $city_id;
     }
 
     if ($account->id() == $store->uid->value) {
@@ -467,9 +479,9 @@ class StoreManager {
   /**
    * search stores 
    */
-  public function searchStoresByKeywordCity($keyword, $city_id) {
+  public function searchStoresByKeywordCity($keyword, $city_id, Request $request) {
     global $base_url;
-    $param_cityId = isset($_GET['cityId']) ? $_GET['cityId'] : $city_id;
+    $param_cityId = $request->query->get('cityId', $city_id);
     $word = store_city_keyword_load($keyword);
     if ($word) {
       $this->database->update('city_keyword')
@@ -487,8 +499,8 @@ class StoreManager {
         ->execute();
     }
 
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 100;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
+    $size = $request->query->get('per_page', 100);
+    $start = $request->query->has('page')? ($request->query->get('page') - 1) * $size : 0;
     
     $query = $this->database->select('stores', 's');
     $query->addExpression('COUNT(s.sid)');
@@ -513,7 +525,7 @@ class StoreManager {
     $http_next = "<$base_url/api/stores/$keyword/$param_cityId?cityId=$param_cityId";
     $http_last = $http_next;
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page', 1);
     
     $http_next .= "&per_page=$size&";
     $http_last .= "&per_page=$size&";
@@ -538,9 +550,9 @@ class StoreManager {
   /**
    * search stores 
    */
-  public function searchStores($keyword) {
+  public function searchStores($keyword, $request) {
     //TODO check url params has cid for city_keyword
-    return $this->searchStoresByKeywordCity($keyword, 0);
+    return $this->searchStoresByKeywordCity($keyword, 0, $request);
   }
   
   /**

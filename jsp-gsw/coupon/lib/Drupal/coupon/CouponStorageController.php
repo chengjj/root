@@ -6,7 +6,7 @@
 */
 
 namespace Drupal\coupon;
-
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableDatabaseStorageController;
 
 /**
@@ -21,6 +21,18 @@ class CouponStorageController extends FieldableDatabaseStorageController impleme
     $this->database->delete('coupon_bookmarks')
       ->condition('cid', array_keys($entities))
       ->execute();
+  }
+
+  public function unbookmark(CouponInterface $coupon) {
+    $user = \Drupal::currentUser();
+
+    if($user->isAuthenticated()) {
+      db_delete('coupon_bookmarks')
+        ->condition('uid', $user->id())
+	->condition('cid', $coupon->id())
+	->execute();
+
+    }
   }
 
 }

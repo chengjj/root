@@ -129,7 +129,7 @@ function template_preprocess_guike_header(&$variables) {
 
   if (arg(0) == 'front' || arg(0) == '') {
     $link_class['front'] = 'seclect';
-  } elseif(in_array(arg(0), array('coupon', 'coupons'))) {
+  } elseif(in_array(arg(0), array('coupon', 'coupons', 'store'))) {
     $link_class['coupon'] = 'seclect';
   } elseif (in_array(arg(0), array('share', 'shares'))) {
     $link_class['share'] = 'seclect';
@@ -225,16 +225,16 @@ function template_preprocess_front_page(&$variables) {
   );
   $variables['current_theme_path'] = url(path_to_theme());
   if ($share_catalog = share_catalog_load_by_name('女装')) {
-    $remote_share_catalogs[] = array('title' => '服装', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+    $remote_share_catalogs[] = array('title' => '服装', 'link' => url('share/search', array('query' => array('cid' => $share_catalog->id()))));
   }
   if ($share_catalog = share_catalog_load_by_name('女包')) {
-    $remote_share_catalogs[] = array('title' => '包包', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+    $remote_share_catalogs[] = array('title' => '包包', 'link' => url('share/search', array('query' => array('cid' => $share_catalog->id()))));
   }
   if ($share_catalog = share_catalog_load_by_name('配饰')) {
-    $remote_share_catalogs[] = array('title' => '配饰', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+    $remote_share_catalogs[] = array('title' => '配饰', 'link' => url('share/search', array('query' => array('cid' => $share_catalog->id()))));
   }
   if ($share_catalog = share_catalog_load_by_name('女鞋')) {
-    $remote_share_catalogs[] = array('title' => '鞋子', 'link' => url('share', array('query' => array('cid' => $share_catalog->id()))));
+    $remote_share_catalogs[] = array('title' => '鞋子', 'link' => url('share/search', array('query' => array('cid' => $share_catalog->id()))));
   }
 
   $variables['remote_share_catalogs'] = $remote_share_catalogs;

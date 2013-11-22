@@ -1,5 +1,6 @@
 <?php
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 /** 
  * Access api/statistic
  */
@@ -83,6 +84,7 @@ function statistic_create_page() {
  * Access admin/statistic
  */
 function admin_statistic_form($form, &$form_state) {
+  $request = \Drupal::request();
   drupal_add_js('core/misc/ui/ui/jquery-ui.custom.js', 'file');
   drupal_add_css('core/misc/ui/themes/base/jquery-ui.css', 'file');
   drupal_add_js('core/misc/ui/ui/i18n/jquery.ui.datepicker-zh-CN.js', 'file');
@@ -119,21 +121,21 @@ function admin_statistic_form($form, &$form_state) {
   $form['filter_statistic']['statistic_date_start'] = array(
     '#type' => 'textfield',
     '#title' => '开始日期',
-    '#default_value' => isset($_GET['statistic_date_start']) ? $_GET['statistic_date_start'] : '',
+    '#default_value' => $request->query->get('statistic_date_start', ''),
     '#description' => '时间格式如:2013-07-08, 2013/07/08, 2013/7/8',
   );
   $form['filter_statistic']['statistic_date_expire'] = array(
     '#type' => 'textfield',
     '#title' => '截止日期',
-    '#default_value' => isset($_GET['statistic_date_expire']) ? $_GET['statistic_date_expire'] : '',
+    '#default_value' => $request->query->get('statistic_date_expire', ''),
     '#description' => '时间格式如:2013-07-08, 2013/07/08, 2013/7/8',
   );  
   $form['filter_statistic']['statistic_submit'] = array(
     '#type' => 'submit',
     '#value' => '搜索',
   );  
-  $statistic_date_start = isset($_GET['statistic_date_start']) ? $_GET['statistic_date_start'] : '';
-  $statistic_date_expire = isset($_GET['statistic_date_expire']) ? $_GET['statistic_date_expire'] : '';
+  $statistic_date_start = $request->query->get('statistic_date_start', '');
+  $statistic_date_expire = $request->query->get('statistic_date_expire', '');
 
   $options_statistic = array();
   if (!empty($statistic_date_start)) 
@@ -187,8 +189,9 @@ function admin_statistic_form($form, &$form_state) {
     '#collapsible' => TRUE,
     '#collased' => TRUE,
   );
-  if (isset($_GET['advert_aid'])) {
-    $adv = adv_load($_GET['advert_aid']);
+  $aid = $request->query->get('advert_aid', 0);
+  if ($aid && is_numeric($aid)) {
+    $adv = adv_load($aid);
   }
   $form['filter_advert']['advert_aid'] = array(
     '#type' => 'textfield',
@@ -208,22 +211,22 @@ function admin_statistic_form($form, &$form_state) {
   $form['filter_advert']['advert_date_start'] = array(
     '#type' => 'textfield',
     '#title' => '开始日期',
-    '#default_value' => isset($_GET['advert_date_start']) ? $_GET['advert_date_start'] : '',
+    '#default_value' => $request->query->get('advert_date_start', ''),
     '#description' => '时间格式如:2013-07-08, 2013/07/08, 2013/7/8',
   );  
   $form['filter_advert']['advert_date_expire'] = array(
     '#type' => 'textfield',
     '#title' => '截止日期',
-    '#default_value' => isset($_GET['advert_date_expire']) ? $_GET['advert_date_expire'] : '',
+    '#default_value' => $request->query->get('advert_date_expire', ''),
     '#description' => '时间格式如:2013-07-08, 2013/07/08, 2013/7/8',
   ); 
   $form['filter_advert']['advert_submit'] = array(
     '#type' => 'submit',
     '#value' => '广告过滤',
   );
-  $advert_date_start = isset($_GET['advert_date_start']) ? $_GET['advert_date_start'] : '';
-  $advert_date_expire = isset($_GET['advert_date_expire']) ? $_GET['advert_date_expire'] : '';
-  $advert_aid = isset($_GET['advert_aid']) ? $_GET['advert_aid'] : '';
+  $advert_date_start = $request->query->get('advert_date_start', '');
+  $advert_date_expire = $request->query->get('advert_date_expire', '');
+  $advert_aid = $request->query->get('advert_aid', '');
   if (!empty($advert_date_start)) {
     $query_advert->condition('date', date('Y-m-d', strtotime($advert_date_start)), '>');
   }

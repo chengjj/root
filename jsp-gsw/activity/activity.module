@@ -176,16 +176,12 @@ function template_preprocess_activity(&$variables) {
   $variables['activity'] = $activity;
 
   if ($account = $activity->getAuthor()) {
-    $username = array(
-      '#theme' => 'username',
-      '#account' => $account,
-    );
-    $variables['author'] = drupal_render($username);
+    $variables['author'] = l($account->nickname, 'user/' . $account->id());
     date_default_timezone_set('Asia/Shanghai');//解决日期格式不正确的问题，by：mashh@72e.com
-    $variables['created'] = date_format($activity->created->value); 
+    //$variables['created'] = t('@time ago', array('@time' => format_interval(REQUEST_TIME - $activity->created->value))); 
+    $variables['created'] = activity_format_interval($activity->created->value);
 
     $picture = array('#theme' => 'account_picture', '#account' => $account);
-    //$picture['#title'] = $activity->getLable(); 
     $variables['user_picture'] = drupal_render($picture);
 
     $uri = $activity->uri();
@@ -194,13 +190,15 @@ function template_preprocess_activity(&$variables) {
     switch ($activity->type->value) {
     case ACTIVITY_TYPE_POST_SHARE:
       $action = "分享了商品";
-      $share = share_load($activity->param->value);
-      $content = share_view_multiple(array($share->id() => $share), 'activity');
+      if ($share = entity_load('share', $activity->param->value)) {
+        $content = entity_view($share, 'activity');
+      }
       break;
     case ACTIVITY_TYPE_POST_COUPON:
       $action = "发布了优惠";
-      $coupon = coupon_load($activity->param->value);
-      $content = share_view_multiple(array($coupon->id() => $coupon), 'activity');
+      if ($entity = entity_load('coupon', $activity->param->value)) {
+        $content = entity_view($entity, 'activity');
+      }
       break;
     default:
       $action = "TODO";
@@ -230,3 +228,34 @@ function activity_coupon_insert(EntityInterface $coupon) {
   }
 }
 
+
+function activity_format_interval($time) {
+  $interval = REQUEST_TIME - $time;
+  $output = '';
+  $units = array(
+    '年' => 31536000,
+    '月' => 2592000,
+    '周' => 604800,
+    '天' => 86400,
+    '时' => 3600,
+    '分' => 60,
+    '秒' => 1
+  );
+  $num = '';
+  $unit = '';
+  foreach ($units as $key => $value) {
+    if ($interval >= $value) {
+      $num = floor($interval / $value);
+      $unit = $key;
+      break;
+    }
+  }
+  if ($unit == '天' && $num == 1) {
+    $output = '昨天' . date('H:i', $time);
+  } elseif (in_array($unit, array('时', '分', '秒'))) {
+    $output = date('H:i', $time);
+  } else {
+    $output = $num . $unit . '前'; 
+  }
+  return $output;
+}

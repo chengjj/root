@@ -50,6 +50,12 @@ function feedback_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'created' => array(
         'type' => 'int',
         'not null' => TRUE,
@@ -64,5 +70,22 @@ function feedback_schema() {
   );
 
   return $schema;
+}
+
+
+function feedback_update_1() {
+  $spec = array(
+    'description' => 'feedback title',
+    'type' => 'varchar',
+    'length' => 60,
+    'not null' => TRUE,
+    );
+  // Account for sites having the contributed UUID module installed.
+  if (db_field_exists('feedback', 'body')) {
+    db_change_field('feedback', 'body', 'title', $spec);
+  }
+  else {
+    db_add_field('feedback', 'title', $spec);
+  }
 }
 

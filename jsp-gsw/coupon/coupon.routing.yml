@@ -78,6 +78,40 @@ coupon.history_read_coupon:
   requirements:
     _access: 'TRUE'
 
+coupon.manage:
+  path: '/admin/coupon'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponManage'
+  requirements:
+    _permission: 'administer coupon'
+coupon.admin_pending:
+  path: '/admin/coupons/pending'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::couponAdminPending'
+  requirements:
+    _permission: 'administer coupon'
+
+coupon.add:
+  path: '/coupon/add'
+  defaults:
+    _entity_form: 'coupon.default' 
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+coupon.edit:
+  path: '/coupon/{coupon}/edit'
+  defaults:
+    _entity_form: 'coupon.default'
+  requirements:
+    _permission: 'administer coupon'
+
+coupon.front:
+  path: '/coupons'
+  defaults:
+    _content: '\Drupal\coupon\Controller\CouponController::front'
+  requirements:
+    _access: 'TRUE'
+
 js_coupon_bookmarked:
   path: '/js/coupon/{coupon}/bookmarked'
   defaults:
@@ -97,34 +131,3 @@ js_coupon_unbookmark:
   requirements:
     _user_is_logged_in: 'TRUE'
 
-
-coupon.front:
-  path: 'coupons'
-  defaults:
-    _content: '\Drupal\coupon\Controller\CouponController::front'
-  requirements:
-    _access: 'TRUE'
-coupon.manage:
-  path: 'admin/coupon'
-  defaults:
-    _content: '\Drupal\coupon\Controller\CouponController::couponManage'
-  requirements:
-    _permission: 'admin coupon'
-coupon.add:
-  path: 'coupon/edit'
-  defaults:
-    _content: '\Drupal\coupon\Controller\CouponController::couponAdd'
-  requirements:
-    _permission: 'admin coupon'
-coupon.edit:
-  path: '/coupon/{coupon}/edit'
-  defaults:
-    _content: '\Drupal\coupon\Controller\CouponController::couponEditForm'
-  requirements:
-    _permission: 'admin coupon'
-coupon.admin_pending:
-  path: 'admin/coupons/pending'
-  defaults:
-    _content: '\Drupal\coupon\Controller\CouponController::couponAdminPending'
-  requirements:
-    _permission: 'admin coupon'

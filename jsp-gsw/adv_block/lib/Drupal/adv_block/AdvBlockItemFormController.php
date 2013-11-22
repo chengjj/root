@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityFormController;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\field\FieldInfo;

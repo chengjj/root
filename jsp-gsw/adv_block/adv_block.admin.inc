@@ -4,12 +4,13 @@
  * page callback: admin/adv_block/list
  */
 function admin_adv_block_list_form() {
+  $request = \Drupal::request();
   drupal_add_library('system', 'ui.dialog');
   //drupal_add_js('sites/all/misc/ajax-dialog.js');
   //drupal_add_js(drupal_get_path('module', 'adv') . '/js/admin-adv_blocks-list-form.js');
-
-  $keywords = isset($_GET['keywords']) ? $_GET['keywords'] : '';
-  $type = isset($_GET['type']) ? $_GET['type'] : '';
+  
+  $keywords = $request->query->get('keywords','');
+  $type = $request->query->get('type','');
   
   $form['keywords'] = array(
     '#type' => 'textfield',
@@ -73,8 +74,9 @@ function admin_adv_block_list_form() {
 }
 
 function admin_adv_block_list_form_submit($form, &$form_state) {
+  $request = \Drupal::request();
   $values = $form_state['values'];
-  $page = isset($_GET['page']) ? $_GET['page'] : 0;
+  $page = $request->query->get('page',0);
 	$form_state['redirect'] = array('admin/adv_block', array(
 		'query' => array(
     	'keywords' => $values['keywords'],

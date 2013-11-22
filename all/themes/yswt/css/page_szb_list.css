@@ -406,7 +406,7 @@
 	background:url(../images/xyh.png) no-repeat 40px 0;
 }
 .sale_con .sale_hz p a{
-	display:block;
+	display:none;
 	width:122px;
 	height:28px;
 	line-height:28px;

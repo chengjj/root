@@ -17,17 +17,19 @@ use Drupal\file\Entity\File;
  *
  * @EntityType(
  *   id = "store_catalog",
- *   label = "商家行业分类",
- *   module = "catalog",
+ *   label = "商家分类",
  *   controllers = {
  *     "storage" = "Drupal\catalog\StoreCatalogStorageController",
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder"
+ *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "store_catalog",
  *   entity_keys = {
  *     "id" = "cid",
  *     "label" = "name",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "weight" = "weight"
  *   }
  * )
  */
@@ -89,16 +91,21 @@ class StoreCatalog extends ContentEntityBase implements StoreCatalogInterface {
         'default_value' => 0,
       ),
     );
-    $properties['weight'] = array(
-      'label' => '权重',
-      'type' => 'integer_field',
-    );
     $properties['parent_cid'] = array(
-      'label' => '父类ID',
-      'type' => 'integer_field',
+      'label' => '上级分类',
+      'type' => 'entity_reference_field',
+      // Save new catalogs with no parents by default.
+      'settings' => array(
+        'target_type' => 'store_catalog',
+        'default_value' => 0,
+      ),
     );
     $properties['city_id'] = array(
       'label' => '城市ID',
+      'type' => 'integer_field',
+    );
+    $properties['weight'] = array(
+      'label' => '权重',
       'type' => 'integer_field',
     );
     return $properties;

@@ -17,10 +17,11 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  * @EntityType(
  *   id = "store_comment",
  *   label = "店铺评论",
- *   module = "store",
  *   controllers = {
  *     "storage" = "Drupal\store\StoreCommentStorageController",
  *     "view_builder" = "Drupal\store\StoreCommentRenderController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
  *     "form" = {
  *       "default" = "Drupal\store\StoreCommentFormController",
  *     }
@@ -53,7 +54,7 @@ class StoreComment extends ContentEntityBase implements StoreCommentInterface {
   public function postCreate(EntityStorageControllerInterface $storage_controller) {
     parent::postCreate($storage_controller);
 
-    $storage_controller->updateStoreCommentCount($this->sid->value);
+    $storage_controller->updateStoreStatistics($this->sid->value);
   }
 
   /**
@@ -76,7 +77,7 @@ class StoreComment extends ContentEntityBase implements StoreCommentInterface {
     parent::postDelete($storage_controller, $entities);
 
     foreach ($entities as $entity) {
-      $storage_controller->updateStoreCommentCount($this->sid->value);
+      $storage_controller->updateStoreStatistics($this->sid->value);
     }
   }
 
@@ -107,7 +108,7 @@ class StoreComment extends ContentEntityBase implements StoreCommentInterface {
       'type' => 'uuid_field',
     );
     $properties['sid'] = array(
-      'label' => 'Store ID',
+      'label' => '商家',
       'description' => t('The ID of the store of which this comment is a reply.'),
       'type' => 'entity_reference_field',
       'settings' => array('target_type' => 'store'),
@@ -122,7 +123,7 @@ class StoreComment extends ContentEntityBase implements StoreCommentInterface {
       'type' => 'string_field',
     );
     $properties['uid'] = array(
-      'label' => t('User ID'),
+      'label' => '发布者',
       'description' => t('The user ID of the comment author.'),
       'type' => 'entity_reference_field',
       'settings' => array(
@@ -131,7 +132,7 @@ class StoreComment extends ContentEntityBase implements StoreCommentInterface {
       ),
     );
     $properties['created'] = array(
-      'label' => t('Created'),
+      'label' => '创建时间',
       'description' => t('The time that the comment was created.'),
       'type' => 'integer_field',
     );

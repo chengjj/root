@@ -8,6 +8,7 @@
 namespace Drupal\share\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\share\ShareInterface;
 
 use Drupal\Core\Language\Language;
@@ -19,20 +20,24 @@ use Drupal\file\Entity\File;
  * @EntityType(
  *   id = "share",
  *   label = "商品",
- *   module = "share",
  *   controllers = {
  *     "storage" = "Drupal\share\ShareStorageController",
- *     "view_builder" = "Drupal\share\ShareRenderController"
+ *     "view_builder" = "Drupal\share\ShareViewBuilder",
+ *     "list" = "Drupal\adv_block\AdvBlockEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
+ *     "form" = {
+ *       "default" = "Drupal\share\ShareFormController"
+ *     },
  *   },
  *   base_table = "shares",
- *   render_cache = FALSE,
  *   entity_keys = {
  *     "id" = "sid",
  *     "label" = "title",
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "canonical" = "/share/{share}"
+ *     "canonical" = "share.view",
+ *     "edit-form" = "share.edit"
  *   }
  * )
  */
@@ -71,18 +76,47 @@ class Share extends ContentEntityBase implements ShareInterface {
     return $this->get('uid')->entity;
   }
   
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
+    if (!$this->isNew()) {
+      if ($this->original->picture->entity && (!$this->picture->entity || ($this->picture->entity && $this->original->picture->entity->id() != $this->picture->entity->id()))) {
+        file_usage()->delete($this->original->picture->entity, 'share', 'share', $this->id());
+      }
+      if ($this->picture->entity && (!$this->original->picture->entity || $this->original->picture->entity->id() != $this->picture->entity->id())) {
+        file_usage()->add($this->picture->entity, 'share','share', $this->id());
+      }
+    }
+    if ($this->picture->entity) {
+      file_usage()->add($this->picture->entity, 'share','share', $this->id());
+    }
+
+  }
+
   public static function baseFieldDefinitions($entity_type) {
     $properties['sid'] = array(
-      'label' => 'sid',
+      'label' => 'ID',
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
+    $properties['uuid'] = array(
+      'label' => 'UUID',
+      'type' => 'uuid_field',
+      'read-only' => TRUE,
+    );
     $properties['cid'] = array(
-      'label' => 'cid',
-      'type' => 'integer_field',
+      'label' => '分类',
+      'type' => 'entity_reference_field',
+      'settings' => array(
+        'target_type' => 'share_catalog',
+        'default_value' => 0,
+      ),
     );
     $properties['title'] = array(
-      'label' => 'title',
+      'label' => '标题',
       'type' => 'string_field',
     );
     $properties['source'] = array(
@@ -114,17 +148,12 @@ class Share extends ContentEntityBase implements ShareInterface {
       'type' => 'string_field',
     );
     $properties['created'] = array(
-      'label' => 'created',
+      'label' => '创建时间',
       'type' => 'integer_field',
     );
     $properties['status'] = array(
       'label' => 'status',
       'type' => 'integer_field',
-    );
-    $properties['uuid'] = array(
-      'label' => 'UUID',
-      'type' => 'uuid_field',
-      'read-only' => TRUE,
     );
     $properties['uid'] = array(
       'label' => '用户ID',
@@ -133,6 +162,14 @@ class Share extends ContentEntityBase implements ShareInterface {
         'target_type' => 'user',
         'default_value' => 0,
       ),
+    );
+    $properties['comment_count'] = array(
+      'label' => 'comment_count',
+      'type' => 'integer_field',
+    );
+    $properties['bookmark_count'] = array(
+      'label' => '收藏数量',
+      'type' => 'integer_field',
     );
     $properties['view_count'] = array(
       'label' => 'view_count',

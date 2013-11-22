@@ -78,6 +78,7 @@ class UserLoginForm extends FormBase {
         'spellcheck' => 'false',
         'autofocus' => 'autofocus',
         'class' => array('text', 'r3'),
+        'hint-text' => '手机/注册邮箱',
       ),
     );
     
@@ -178,9 +179,6 @@ class UserLoginForm extends FormBase {
       // We are not limited by flood control, so try to authenticate.
       // Set $form_state['uid'] as a flag for self::validateFinal().
       $form_state['uid'] = user_authenticate($form_state['values']['name'], $password);
-      if (!$form_state['uid'] && $account = user_load_by_phone($form_state['values']['name'])) {
-        $form_state['uid'] = $account->id();
-      }
     }
   }
 

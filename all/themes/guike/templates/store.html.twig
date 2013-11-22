@@ -2,7 +2,16 @@
 <div class="pic"><a target="_blank" href="{{ store_url }}">{{ picture }}</a></div>
   <div class="txt">
     <a target="_blank" href="{{ store_url }}" class="title">{{ label }}</a>
-    <p><em>{{ store.discount.value }}</em>折{% if coupon %}<span>|</span>{{ coupon.label }}{% endif %}</p>
+    <p>
+    {% if  store.discount.value == 10 %}
+    <em>暂无折扣</em>
+
+    {% elseif  store.discount.value == 0 %}
+    <em>免费</em>
+    {% else %}
+    <em>{{ store.discount.value }}折</em>
+    {% endif %}
+    {% if coupon %}<span>|</span>{{ coupon.label }}{% endif %}</p>
     <p class="address"><span class="icon"></span>{{ store.address.value }}</p>
   </div>
 </article>

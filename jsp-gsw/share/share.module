@@ -1,5 +1,6 @@
 <?php
 
+use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Uuid\Uuid;
 
@@ -21,9 +22,6 @@ function share_menu() {
     'title' => '分享商品',
     'route_name' => 'share.add',
   );
-  $items['share/%share'] = array(
-    'title' => '商品信息',
-  );
   $items['user/shares/bookmarks'] = array(
     'title' => '商品收藏',
     'page callback' => 'share_user_bookmarks_page',
@@ -34,9 +32,9 @@ function share_menu() {
     'title' => '分享商品管理',
     'route_name' => 'share.manage',
   );
-  $items['admin/share/edit/%share'] = array(
+  $items['share/%share/edit'] = array(
     'title' => '编辑/删除商品信息',
-    'file' => 'share.admin.inc',
+    'route_name' => 'share.edit',
   );
   $items['admin/share/delete/%share'] = array(
     'title' => '删除商品信息',
@@ -89,6 +87,10 @@ function share_theme() {
     'share_search' => array(
       'variables' => array(),
       'template' => 'share-search',
+    ),
+    'share_search_catalog' => array(
+      'template' => 'share-search-catalog',
+      'description' => '商品搜索区块',
     ),
   );
 }
@@ -361,6 +363,8 @@ function template_preprocess_share_add_link(&$variables) {
     drupal_add_library('ec', 'drupal.ajax-dialog');
     drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
     drupal_add_css(drupal_get_path('module', 'ec') . '/css/ajax-dialog.css');
+    drupal_add_css('core/assets/vendor/jquery.ui/themes/base/jquery.ui.theme.css');
+    drupal_add_css('core/assets/vendor/jquery.ui/themes/base/jquery.ui.core.css');
     drupal_add_js(drupal_get_path('module', 'share') . '/js/share-add.js', 'file');
 
     $variables['url'] = '';
@@ -478,6 +482,7 @@ function waterfall($elements, $cols) {
  */
 function template_preprocess_share(&$variables) {
   $user = \Drupal::currentUser();
+  $variables['login_url'] = url('login');
 
   $variables['view_mode'] = $variables['elements']['#view_mode'];
   // Provide a distinct $teaser boolean.
@@ -497,6 +502,7 @@ function template_preprocess_share(&$variables) {
   $variables['label_short'] = truncate_utf8($share->label(), 18);
 
   if ($file = file_load($share->picture->value)) {
+    //TODO when $variables['view_mode'] == adv #style_name from table adv_blocks -> picture_dimentions
     if ($variables['view_mode'] == 'full') {
       $picture = array('#theme' => 'image');
     }
@@ -513,7 +519,6 @@ function template_preprocess_share(&$variables) {
   }
 
   if ($user->isAuthenticated()) {
-    drupal_add_library('share', 'jsp.share_bookmark');
     $variables['bookmark_url'] = url('');
   }
   else {
@@ -522,20 +527,20 @@ function template_preprocess_share(&$variables) {
 
   $account = $share->getAuthor();
   $variables['author'] = l($account->nickname, 'user/' . $account->id());
-
+  $variables['current_uid'] =$user->id();
+  
+  $variables['uid'] =$account->id(); 
   $variables['price'] = number_format($share->price->value, 2);
   $variables['description'] = $share->description->value;
   $variables['product_url'] = $share->url->value;
+  $variables['view_count'] = $share->view_count->value;
 
   if ($variables['view_mode'] == 'full') {
     // guess_like
     if ($ids = share_select_guess($share, FALSE, 6)) {
       $shares = entity_load_multiple('share', $ids);
-      $variables['guess_like'] = entity_view_multiple($shares, 'image');
+      $variables['guess_like'] = entity_view_multiple($shares,'image');
     }
-    $variables['share_bookmarks'] = get_share_user_favorites($share->id());
-    if (!$variables['share_bookmarks'])
-        $variables['share_bookmarks'] = 0;//by mashh@72ec.com
     // comments
     $variables['comment_form'] = share_comment_add($share);
     if ($cids = share_comment_get_thread($share, variable_get('share_comment_default_per_page', 7))) {
@@ -558,6 +563,10 @@ function template_preprocess_share(&$variables) {
   
    // search
   $variables['search'] = drupal_get_form('store_search_form');
+  //www.gsw100.com   pid = mm_45311238_4290013_14476032
+  //www.vipguike.com pid = mm_45311238_4186065_13696720
+  //$conf['share.settings']['default_taobao_pid'] = 'mm_45311238_4290013_14476032';
+  $variables['pid'] = \Drupal::config('share.settings')->get('default_taobao_pid');
 }
 
 /**
@@ -654,9 +663,9 @@ function template_preprocess_share_comment(&$variables) {
   );
   $variables['current_uid']    = $user->id();
   //print_r($variables['current_user']);exit;
-  $variables['author'] = drupal_render($username);
+  $variables['author'] = l($account->nickname, 'user/' . $account->id());
   $variables['comment_uid'] = $account->id();
-  $variables['comment_username'] = $account->getUsername();
+  $variables['comment_username'] = $account->nickname;
   date_default_timezone_set('Asia/Shanghai');//解决日期格式不正确的问题，by：mashh@72e.com
   $variables['created'] = format_date($comment->created->value, 'custom', 'y-m-d H:i');
   $picture = array('#theme' => 'account_picture', '#account' => $account);
@@ -681,23 +690,16 @@ function share_theme_suggestions_share_comment(array $variables) {
   return array('share_comment__' . $variables['elements']['#view_mode']);
 }
 
-/**
- * APIs get user_favorites
- */
-function get_share_user_favorites($sid) {
-  return db_query('SELECT COUNT(uid) FROM {share_bookmarks} WHERE sid=:sid', array(':sid' => $sid))->fetchField();
-}
-
 function template_preprocess_shares(&$variables) {
-  if (isset($_GET['cid'])) {
-    $current_catalog = share_catalog_load($_GET['cid']);
+  $request = \Drupal::request();
+  if ($request->query->has('cid')) {
+    $current_catalog = share_catalog_load($request->query->get('cid'));
   }
-
   $variables['shares_url'] = url('share');
 
   // share catalogs
   //drupal_add_library('ec', 'drupal.hover_ajax');
-  $catalogs = share_catalog_load_children(0);
+  /*$catalogs = share_catalog_load_children(0);
   $links = array();
   foreach ($catalogs as $catalog) {
     $link = array(
@@ -715,10 +717,11 @@ function template_preprocess_shares(&$variables) {
     }
     $links[] = $link;
   }
-  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);*/
+  $variables['catalogs'] = array('#theme' => 'share_search_catalog');
 
   // sub catalogs
-  if (isset($current_catalog)) {
+  /*if (isset($current_catalog)) {
     $catalogs = share_catalog_load_children($parent_catalog->id());
     $links = array();
     foreach ($catalogs as $catalog) {
@@ -726,7 +729,7 @@ function template_preprocess_shares(&$variables) {
       $links[] = $link;
     }
     $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
-  }
+  }*/
 
   // shares
   $conditions = array();
@@ -744,20 +747,21 @@ function template_preprocess_shares(&$variables) {
 }
 
 function template_preprocess_share_search(&$variables) {
+  $request = \Drupal::request();
   $conditions = array();
   $all_catalog_query = array();
-  if (isset($_GET['cid'])) {
-    $cid = $_GET['cid'];
+  if ($request->query->has('cid')) {
+    $cid = $request->query->get('cid');
     $current_catalog = share_catalog_load($cid);
     $conditions['cid'] = $cid;
   }
-  if (isset($_GET['keywords'])) {
-    $keywords = $_GET['keywords'];
+  if ($request->query->has('keywords')) {
+    $keywords = $request->query->get('keywords');
     $all_catalog_query['keywords'] = $keywords;
     $conditions['keywords'] = $keywords;
   }
 
-  $variables['all_catalog_url'] = url('share/search', array('query' => $all_catalog_query));
+  /*$variables['all_catalog_url'] = url('share/search', array('query' => $all_catalog_query));
 
   // share catalogs
   $catalogs = share_catalog_load_children(0);
@@ -776,10 +780,11 @@ function template_preprocess_share_search(&$variables) {
     }
     $links[] = $link;
   }
-  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+  $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);*/
+  $variables['catalogs'] = array('#theme' => 'share_search_catalog');
 
   // sub catalogs
-  if (isset($current_catalog)) {
+  /*if (isset($current_catalog)) {
     $catalogs = share_catalog_load_children($parent_catalog->id());
     $links = array();
     foreach ($catalogs as $catalog) {
@@ -789,12 +794,12 @@ function template_preprocess_share_search(&$variables) {
       $links[] = $link;
     }
     $variables['sub_catalogs'] = array('#theme' => 'links', '#links' => $links);
-  }
+  }*/
 
   // shares
-  if ($sids = share_select_shares($conditions, TRUE, 12)) {
+  if ($sids = share_select_shares($conditions, TRUE, 120)) {
     $shares = share_load_multiple($sids);
-    $variables['shares'] = waterfall(share_view_multiple($shares), 3);
+    $variables['shares'] = waterfall(share_view_multiple($shares), 4);
     $variables['pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
   }
 
@@ -813,8 +818,10 @@ function template_preprocess_share_search(&$variables) {
 
   // popular shares
   if ($sids = share_select_shares(array(), FALSE, 7, array('s.view_count' => 'DESC'))) {
+    drupal_add_library('jsp', 'drupal.hover-class');
     $shares = share_load_multiple($sids);
     $variables['popular_shares'] = share_view_multiple($shares, 'adv');
+    $variables['popular_shares'][$sids[0]]['#attributes']['class'][] = 'open';
   }
   else {
     $variables['popular_shares'] = '暂无会员分享商品';
@@ -1078,10 +1085,9 @@ function share_select_guess($share, $pager = TRUE, $limit = FALSE) {
   $query->condition('tid', $subquery, 'IN');
   $query->distinct();
 */
-  $catalog = $share->cid->value;
   $query = db_select('shares','s');
-  $query->condition('cid', $catalog);
-
+  $query->condition('s.cid', $share->cid->value);
+  $query->condition('s.sid', $share->id(), '<>');
 
   if ($pager) {
     $count_query = clone $query;
@@ -1157,4 +1163,66 @@ function share_select_editor($share, $pager = TRUE, $limit = FALSE) {
 function share_catalog_load_by_name($name) {
   $share_catalogs = entity_load_multiple_by_properties('share_catalog', array('name' => $name));
   return $share_catalogs ? reset($share_catalogs) : FALSE;
+}
+
+/**
+ * Implement hook_preprocess_HOOK
+ */
+function template_preprocess_share_search_catalog(&$variables) {
+  //TODO 合并 array('#theme' => 'store_search_catalog');
+  $request = \Drupal::request();
+  $p_cid = $request->query->get('cid', 0);
+  $keywords = $request->query->get('keywords', '');
+
+  $variables['catalog_all_class'] = '';
+  if (!$p_cid) {
+    $variables['catalog_all_class'] = 'active';
+  }
+
+  $top_cids = db_query('SELECT cid FROM {share_catalog} WHERE parent_cid=0 ORDER BY weight DESC')->fetchCol();
+  $current_catalog_parent_cids = $current_catalog_children_cids = array();
+  if ($p_cid) {
+    if (in_array($p_cid, $top_cids)) {
+      $current_catalog_children_cids = db_query('SELECT cid FROM {share_catalog} WHERE parent_cid=:parent_cid', array(':parent_cid' => $p_cid))->fetchCol();
+      $current_catalog_parent_cids = array($p_cid);
+    } else {
+      $current_catalog_parent_cids = db_query('SELECT parent_cid FROM {share_catalog} WHERE cid=:cid', array(':cid' => $p_cid))->fetchCol();
+    }
+  }
+
+  $catalog_parents = array();
+  foreach (share_catalog_load_multiple($top_cids) as $share_catalog) {
+    $catalog_parents[] = array(
+      'cid' => $share_catalog->id(),
+      'name' => $share_catalog->label(),
+      'search_link' => url('share/search', array('query' => array('cid' => $share_catalog->id(), 'keywords' => $keywords))),
+      'active' => in_array($share_catalog->id(), $current_catalog_parent_cids) ? 'seclect' : '',
+    );
+  }
+
+  $catalog_childrens = array();
+  foreach ($top_cids as $cid) {
+    $catalog_children_cids = db_query('SELECT cid FROM {share_catalog} WHERE parent_cid=:parent_cid', array(':parent_cid' => $cid))->fetchCol();
+    $items = array();
+    foreach (share_catalog_load_multiple($catalog_children_cids) as $share_catalog) {
+      $items[] = array(
+        'cid' => $share_catalog->id(),
+        'name' => $share_catalog->label(),
+        'search_link' => url('share/search', array('query' => array('cid' => $share_catalog->id(), 'keywords' => $keywords))),
+        'active' => ($share_catalog->id() == $p_cid ) ? 'active' : '',
+      );
+    }
+    $catalog_childrens[$cid] = array(
+      'open' => in_array($cid, $current_catalog_parent_cids) ? 'open' : '',
+      'items' => $items,
+    );
+  }
+
+  $variables['catalogs'] = $catalog_parents;
+  $variables['catalog_childrens'] = $catalog_childrens;
+  $variables['links'] = array(
+    'catalog_all' => url('share/search', array('query' => array('keywords' => $keywords))),
+  );
+  drupal_add_js(drupal_get_path('module', 'share') . '/js/share-search-catalog.js');
+
 }

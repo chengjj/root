@@ -2006,6 +2006,7 @@ article.share-comment-teaser .username {
 	font-size:14px;
 	color:#666666;
 	float:left;
+        line-height:normal;
 }
 .followlist article.activity .follow_right .follow_name p a{
 	color:#ff77a3;
@@ -2213,7 +2214,7 @@ article.share-comment-user article.share-comment .txt p.user span.collect{
 	color:#ff6699;
 	line-height:22px;
 }
-article.share-comment-user article.share-comment .txt p.user span.collect a.bookmark{
+article.share-comment-user article.share-comment .txt p.user span.collect a.like{
 	display:inline-block;
 	width:30px;
 	height:22px;
@@ -2223,7 +2224,16 @@ article.share-comment-user article.share-comment .txt p.user span.collect a.book
 	background:url(../images/base_bg.png) no-repeat -180px -135px transparent;
 	margin-right:5px;
 }
-
+article.share-comment-user article.share-comment .txt p.user span.collect a{
+	display:inline-block;
+	width:30px;
+	height:22px;
+	color:#ffffff;
+	padding-left:22px;
+	line-height:22px;
+	background:url(../images/base_bg.png) no-repeat -245px -135px transparent;
+	margin-right:5px;
+}
 .browse_splist { display: none; }
 
 .browse_splist article{
@@ -2494,7 +2504,6 @@ article.store-comment-user .yhbox .txt p.user span strong{
     text-align: center;
 }
 .waterfall .col .comm_box{
-    box-shadow: 1px 2px #E8D7D7;
     height: auto;
     overflow: hidden;
     width: 100%;
@@ -2582,6 +2591,13 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	background:url(../images/base_bg.png) no-repeat -180px -135px transparent;
 	margin-right:5px;
 }
+.waterfall .col .comm_box span.view_count{
+	margin-left:5px;
+        color:#99cc66;
+	float:left;
+	line-height:22px;
+	color:#FF6699;
+}
 
 /* ----------------- page_index ----------------- */
 
@@ -2623,6 +2639,9 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	color:#ff3366;
 	font-weight:normal;
 	padding-right:10px;
+}
+.buylist article img {
+  width: 60px;
 }
 
 .newsale article.coupon-new{
@@ -2702,6 +2721,9 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	cursor:pointer;
 	overflow:hidden;
 }
+.newsale article.coupon-new a img{
+        width:200px;
+}
 
 .relist h3 { margin-bottom: 5px; }
 
@@ -2747,6 +2769,9 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	font-weight:normal;
 	padding-right:10px;
 }
+.relist article img{
+  width: 60px;
+}
 
 .toplist article{
 	border-bottom:1px dotted #eaeaea;
@@ -2791,6 +2816,11 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	color:#ff3366;
 	font-weight:normal;
 	padding-right:10px;
+}
+
+.toplist article img{
+	width:60px;
+	height:60px;
 }
 
 .groupbuy div.share-list{
@@ -3009,14 +3039,14 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	color:#666666;
 	overflow:hidden;
 }
-.hotlist article:hover{
+.hotlist article:hover, .hotlist article.open {
 	border-bottom:none;
 	cursor:pointer;
 	height:auto;
 	line-height:36px;
 	color:#666666;
 }
-.hotlist article:hover .teaser { display: none; }
+.hotlist article:hover .teaser, .hotlist article.open .teaser { display: none; }
 .hotlist article.open p{
 	height:36px;
 	overflow:hidden;
@@ -3042,6 +3072,7 @@ article.store-comment-user .yhbox .txt p.user span strong{
 	font-weight:normal;
 	padding-right:10px;
 }
+.hotlist article.store-hot img { width: 60px;}
 
 /* ----------------- page_xwg_search ----------------- */
 
@@ -3354,19 +3385,138 @@ article.store-comment-user .yhbox .txt p.user span strong{
 }
 
 /* ----------------- 个人中心 男女图标 ----------------- */
-.male{
-    background: url("../images/icon_male.png") no-repeat scroll 0 0 rgba(0, 0, 0, 0);
-}
-.female {
-    background: url("../images/icon_female.png") no-repeat scroll 0 0 rgba(0, 0, 0, 0);
-}
-span.female, span.male {
+img.female, img.male {
     display: inline-block;
-    height: 0;
+    height: 12px;
     margin-right: 8px;
     overflow: hidden;
-    padding-top: 15px;
     vertical-align: middle;
     width: 12px;
 }
+/*****表情输入框*************************/
+.ke-toolbar .ke-outline{
+    border: 1px solid #F0F0EE;
+    cursor: pointer;
+    display: block;
+    float: right;
+    font-size: 0;
+    line-height: 0;
+    margin: 1px;
+    overflow: hidden;
+    padding: 1px 2px;
+}
+
+
+/* ----------------- 个人中心 推荐用户 ----------------- */
+.sug_user_box {
+    float: left;
+    height: auto;
+}
+.sug_user_box .form-item {
+    text-align: center;
+}
+.sug_user_box .edit-submit {
+    background: url("../images/base_bg.png") no-repeat scroll 0 -680px rgba(0, 0, 0, 0);
+    color: #FFFFFF;
+
+}
+/**************个人中心收藏的商品**************************/
+.comm_box span.share {
+    color: #99CC66;
+    float: left;
+    line-height: 22px;
+}
+.comm_box span.collect {
+    color: #FF6699;
+    float: left;
+    line-height: 22px;
+    margin-left: 5px;
+}
+.comm_box span.collect a.like {
+     background: url("../images/base_bg.png") no-repeat scroll -180px -135px rgba(0, 0, 0, 0);
+     color: #FFFFFF;
+     display: inline-block;
+     height: 22px;
+     line-height: 22px;
+     margin-right: 5px;
+     padding-left: 22px;
+     width: 30px;
+}
+div.share_bookmark_form {
+     float: left;
+     width: 220px;
+     margin-left:5px;
+}
+
+div.share_bookmark_form .form-checkbox {
+     margin-top: 20px;
+}
+div.share_bookmark_form .img_box {
+     position: relative;	
+}
+div.coupon_bookmark_form {
+     float:left;
+     margin-left:10px;
+}
+
+#account-follow-users-form #edit-submit {
+    background: url("../images/base_bg.png") no-repeat scroll 0 -680px rgba(0, 0, 0, 0);
+    color: #FFFFFF;
+    height: 37px;
+    width: 107px;
+}
+#account-follow-users-form #edit-skip {
+    height: 37px;
+    width: 107px;
+}
+/*************************page_scb_list.css**********************************************/
+.sjxx_attention a.store_follow {
+    background: none repeat scroll 0 0 #FF7FAA;
+    border-radius: 3px;
+    color: #FFFFFF;
+    display: inline-block;
+    float: right;
+    height: 22px;
+    line-height: 22px;
+    margin: 5px 10px 0;
+    text-align: center;
+    width: 52px;
+}
+
+
+div.follow_search {
+    float: right;
+    height: 24px;
+    margin-top: 9px;
+    padding-right: 20px;
+    width:350px;
+}
+div.follow_search div.form-item {
+    clear: both;
+    margin-bottom: 1em;
+    margin-top: 1em;
+
+}
+div.follow_search input#edit-keyword {
+    border: 1px solid #F2ADC6;
+    border-radius: 3px;
+    box-shadow: 2px 2px 2px #F9DDE7 inset;
+    color: #919191;
+    float: left;
+    height: 22px;
+    line-height: 22px;
+    margin-right: 10px;
+    width: 250px;
+}
+div.follow_search input#edit-submit {
+    background: none repeat scroll 0 0 #FF6699;
+    border: medium none;
+    border-radius: 3px;
+    color: #FFFFFF;
+    font-weight: bold;
+    height: 26px;
+    width: 60px;
+    float: right;
+}
+
 /* @end */

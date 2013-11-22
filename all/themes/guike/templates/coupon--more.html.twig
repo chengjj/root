@@ -1,10 +1,10 @@
 <article{{ attributes }}>
   <div class="more_title">
     <div class="title">{{ label }}</div>
-    {% if number > 2 %}
-    <div class="annew"><a href="" class="down">详情</a></div>
-    {% else %}
+    {% if number < 2 %}
     <div class="annew"><a href="" class="up">收起</a></div>
+    {% else %}
+    <div class="annew"><a href="" class="down">详情</a></div>
     {% endif %}
   </div>
   <div class="sale_con">

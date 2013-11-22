@@ -18,10 +18,11 @@ use Drupal\file\Entity\File;
  * @EntityType(
  *   id = "store",
  *   label = "商家",
- *   module = "store",
  *   controllers = {
  *     "storage" = "Drupal\store\StoreStorageController",
  *     "view_builder" = "Drupal\store\StoreRenderController",
+ *     "list" = "Drupal\adv_block\AdvBlockEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
  *     "form" = {
  *       "default" = "Drupal\store\StoreFormController"
  *     },
@@ -34,8 +35,8 @@ use Drupal\file\Entity\File;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "canonical" = "/store/{store}",
- *     "edit-form" = "/store/{store}/edit"
+ *     "canonical" = "store.view",
+ *     "edit-form" = "store.edit"
  *   }
  * )
  */
@@ -99,6 +100,14 @@ class Store extends ContentEntityBase implements StoreInterface {
       'type' => 'uuid_field',
       'read-only' => TRUE,
     );
+    $properties['cid'] = array(
+      'label' => '分类',
+      'type' => 'entity_reference_field',
+      'settings' => array(
+        'target_type' => 'store_catalog',
+        'default_value' => 0,
+      ),
+    );
     $properties['name'] = array(
       'label' => '名称',
       'type' => 'string_field',
@@ -136,7 +145,7 @@ class Store extends ContentEntityBase implements StoreInterface {
       'type' => 'string_field',
     );
     $properties['uid'] = array(
-      'label' => '用户ID',
+      'label' => '会员',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'user',
@@ -155,22 +164,25 @@ class Store extends ContentEntityBase implements StoreInterface {
       'label' => '促销数量',
       'type' => 'integer_field',
     );
-    $properties['cid'] = array(
-      'label' => '分类ID',
-      'type' => 'entity_reference_field',
-      'settings' => array(
-        'target_type' => 'store_catalog',
-        'default_value' => 0,
-      ),
-    );
     $properties['deal_count'] = array(
       'label' => '消费总数',
       'type' => 'integer_field',
     );
-    //TODO district
+    $properties['city_id'] = array(
+      'label' => '城市',
+      'type' => 'entity_reference_field',
+      'settings' => array(
+        'target_type' => 'city',
+        'default_value' => 0,
+      ),
+    );
     $properties['district_id'] = array(
-      'label' => '区域ID',
-      'type' => 'integer_field',
+      'label' => '所在区域',
+      'type' => 'entity_reference_field',
+      'settings' => array(
+        'target_type' => 'district',
+        'default_value' => 0,
+      ),
     );
     $properties['follow_count'] = array(
       'label' => '关注总数',
@@ -178,10 +190,6 @@ class Store extends ContentEntityBase implements StoreInterface {
     );
     $properties['user_num'] = array(
       'label' => '会员总数',
-      'type' => 'integer_field',
-    );
-    $properties['city_id'] = array(
-      'label' => '城市ID',
       'type' => 'integer_field',
     );
     $properties['photo1'] = array(
@@ -204,9 +212,36 @@ class Store extends ContentEntityBase implements StoreInterface {
       'label' => '评论数量',
       'type' => 'integer_field',
     );
+    $properties['rank_count'] = array(
+      'label' => '好评数量',
+      'type' => 'integer_field',
+    );
 
     return $properties;
   }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
+    if (!$this->isNew()) {
+      if ($this->original->image_url->entity && (!$this->image_url->entity || ($this->image_url->entity && $this->original->image_url->entity->id() != $this->image_url->entity->id()))) {
+        file_usage()->delete($this->original->image_url->entity, 'store', 'store', $this->id());
+      }
+      if ($this->image_url->entity && (!$this->original->image_url->entity || $this->original->image_url->entity->id() != $this->image_url->entity->id())) {
+        file_usage()->add($this->image_url->entity, 'store','store', $this->id());
+      }
+    } else { 
+      if ($this->image_url->entity) {
+        file_usage()->add($this->image_url->entity, 'store','store', $this->id());
+      }
+    }
+
+  }
+
 }
 
 ?>

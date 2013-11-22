@@ -16,11 +16,12 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *
  * @EntityType(
  *   id = "activity",
- *   label = "Activity",
- *   module = "activity",
+ *   label = "动态",
  *   controllers = {
  *     "storage" = "Drupal\activity\ActivityStorageController",
- *     "view_builder" = "Drupal\activity\ActivityRenderController"
+ *     "view_builder" = "Drupal\activity\ActivityRenderController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "activity",
  *   render_cache = FALSE,
@@ -28,9 +29,6 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *     "id" = "aid",
  *     "label" = "param2",
  *     "uuid" = "uuid"
- *   },
- *   links = {
- *     "canonical" = "/activity/{activity}"
  *   }
  * )
  */
@@ -47,12 +45,6 @@ class Activity extends ContentEntityBase implements ActivityInterface {
    * {@inheritdoc}
    */
   public function getAuthor() {
-    return $this->get('nickname')->entity; //修正：uid --> nickname 确保输出评价信息时显示的是用户的昵称 by:Chengjj@72ec.com
-  }
-  /**
-   * {@inheritdoc}
-   */
-  public function getLable() {
     return $this->get('uid')->entity;
   }
   /**
@@ -73,7 +65,7 @@ class Activity extends ContentEntityBase implements ActivityInterface {
    */
   public static function baseFieldDefinitions($entity_type) {
     $properties['aid'] = array(
-      'label' => t('ID'),
+      'label' => 'ID',
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
@@ -83,7 +75,7 @@ class Activity extends ContentEntityBase implements ActivityInterface {
       'type' => 'uuid_field',
     );
     $properties['uid'] = array(
-      'label' => t('User ID'),
+      'label' => '会员',
       'description' => t('The user ID of the activity author.'),
       'type' => 'entity_reference_field',
       'settings' => array(
@@ -92,7 +84,7 @@ class Activity extends ContentEntityBase implements ActivityInterface {
       ),
     );
     $properties['sid'] = array(
-      'label' => 'Store ID',
+      'label' => '店铺',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'store',

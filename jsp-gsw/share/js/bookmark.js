@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -17,7 +17,7 @@ Drupal.bookmark = function($a) {
   var bookmark = this;
   this.a = $a;
 
-  var uri = '/js/share/' + $a.attr('sid') + '/bookmarked';
+  var uri = drupalSettings.basePath + 'js/share/' + $a.attr('sid') + '/bookmarked';
   $.ajax({
     type: 'GET',
     url: uri,
@@ -27,7 +27,7 @@ Drupal.bookmark = function($a) {
     }
   });
 
-  $a.click(function () { return bookmark.click(); });
+  $a.click(function () { return bookmark.click($(this)); });
 };
 
 Drupal.bookmark.prototype.setBookmarked = function (bookmarked) {
@@ -42,14 +42,14 @@ Drupal.bookmark.prototype.setBookmarked = function (bookmarked) {
   }
 };
 
-Drupal.bookmark.prototype.click = function () {
+Drupal.bookmark.prototype.click = function ($a) {
   var bookmark = this;
 
   if (this.bookmarked) {
-    var uri = '/js/share/' + this.a.attr('sid') + '/unbookmark';
+    var uri = drupalSettings.basePath + 'js/share/' + this.a.attr('sid') + '/unbookmark';
   }
   else {
-    var uri = '/js/share/' + this.a.attr('sid') + '/bookmark';
+    var uri = drupalSettings.basePath + 'js/share/' + this.a.attr('sid') + '/bookmark';
   }
   $.ajax({
     type: 'GET',
@@ -59,20 +59,21 @@ Drupal.bookmark.prototype.click = function () {
       bookmark.setBookmarked(data.bookmarked);
 
       var offset = bookmark.a.offset();
-      var bookmarks=$('#share-like-bookmark').find('span').text();
+      var bookmarks = $a.parents('article.share').find('span.view_count');
+      var bookmark_count = bookmarks.text();
       if (data.bookmarked) {
-        bookmarks++; 
+        bookmark_count++; 
         Drupal.popup_message('<div style="display:block;" class="collect_ok"><span>收藏成功</span></div>', offset.left, offset.top - 40);
       }
       else {
-        bookmarks--;
+        bookmark_count--;
         Drupal.popup_message('<div style="display:block;" class="collect_del"><span>取消收藏</span></div>', offset.left, offset.top - 40);
       }
-      $('#share-like-bookmark').find('span').html(bookmarks);
+      bookmarks.html(bookmark_count);
     }
   });
 
   return false;
 };
 
-})(jQuery);
+})(jQuery, Drupal, drupalSettings);

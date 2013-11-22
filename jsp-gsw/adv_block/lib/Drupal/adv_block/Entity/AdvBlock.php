@@ -17,15 +17,17 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  * @EntityType(
  *   id = "adv_block",
  *   label = "广告位",
- *   module = "adv_block",
  *   controllers = {
- *     "storage" = "Drupal\adv_block\AdvBlockStorageController"
+ *     "storage" = "Drupal\adv_block\AdvBlockStorageController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "adv_blocks",
  *   render_cache = FALSE,
  *   entity_keys = {
  *     "id" = "bid",
- *     "label" = "title"
+ *     "label" = "title",
+ *     "uuid" = "uuid"
  *   }
  * )
  */
@@ -48,12 +50,17 @@ class AdvBlock extends ContentEntityBase implements AdvBlockInterface {
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
+    $properties['uuid'] = array(
+      'label' => t('UUID'),
+      'description' => t('The UUID.'),
+      'type' => 'uuid_field',
+    );
     $properties['type'] = array(
       'label' => 'Type',
       'type' => 'string_field',
     );
     $properties['title'] = array(
-      'label' => 'Title',
+      'label' => '名称',
       'type' => 'string_field',
     );
     return $properties;

@@ -19,18 +19,30 @@
       <div class="sjxx wrap_border space">
         <h1>{{ label }}</h1>
         <div class="sjxx_attention">
-          <p>商家已受到关注：<em>{{ store.follow_count.value }}</em>商家累计优惠信息：<em>{{ store.coupon_count.value }}</em>总评价数：<em>{{ store.comment_count.value }}</em>好评数：<em>50</em></p>
+          <p>商家已受到关注：<em>{{ store.follow_count.value }}</em>商家累计优惠信息：<em>{{ store.coupon_count.value }}</em>总评价数：<em>{{ store.comment_count.value }}</em>好评数：<em>{{ store.rank_count.value }}</em></p>
           <a href="{{ follow_url }}" class="store_follow" sid="{{ store.id }}">+ 关注</a>
         </div>
         <div class="sjxx_info">
           <p>门店地址：<span>{{ store.address.value }}</span></p>
           <p>门店电话：<span>{{ store.phone.value }}</span></p>
           <p>营业时间：<span>{{ store.hours.value }}</span></p>
-          <p>基础折扣：<span>{{ store.discount.value }}</span></p>
+          <p>基础折扣：<span>
+          {% if  store.discount.value == 10 %}
+          <em>暂无折扣</em>
+          {% elseif  store.discount.value == 0 %}
+          <em>免费</em>
+          {% else %}
+          <em>{{ store.discount.value }}折</em>
+           {% endif %}
+          </span></p>
         </div>
         <div style="display:none;" class="sjpic_big"><img data-pinit="registered" src="" id="defaultImg"></div>
         <div class="sjpic">
+          {% if pictures %}
           {{ pictures }}
+          {% else %}
+          <img src="../themes/guike/images/default-store.png">
+          {% endif %}
         </div>
       </div>
 

@@ -19,4 +19,11 @@ use Drupal\Component\Uuid\Uuid;
  */
 class ShareCatalogStorageController extends FieldableDatabaseStorageController implements ShareCatalogStorageControllerInterface {
 
+  /**
+   * {@inheritdoc}
+   */
+  public function loadChildKeyed($parent_id = 0) {
+    return $this->database->query('SELECT c.cid, c.name FROM {share_catalog} c WHERE c.parent_cid=:parent_id ORDER BY weight', array(':parent_id' => $parent_id))->fetchAllKeyed();
+  }
+
 }

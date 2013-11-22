@@ -18,10 +18,11 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  * @EntityType(
  *   id = "feedback",
  *   label = "意见反馈",
- *   module = "feedback",
  *   controllers = {
  *     "storage" = "Drupal\feedback\FeedbackStorageController",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
  *     "form" = {
  *       "default" = "Drupal\feedback\FeedbackFormController",
  *       "delete" = "Drupal\feedback\Form\DeleteForm"
@@ -31,7 +32,7 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *   render_cache = FALSE,
  *   entity_keys = {
  *     "id" = "fid",
- *     "label" = "body",
+ *     "label" = "title",
  *     "uuid" = "uuid"
  *   },
  *   links = {
@@ -61,7 +62,7 @@ class Feedback extends ContentEntityBase implements FeedbackInterface {
       'type' => 'uuid_field',
     );
     $properties['uid'] = array(
-      'label' => t('User ID'),
+      'label' => '会员',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'user',
@@ -83,8 +84,8 @@ class Feedback extends ContentEntityBase implements FeedbackInterface {
       'description' => t("The feedback author's e-mail address."),
       'type' => 'string_field',
     );
-    $properties['body'] = array(
-      'label' => 'body',
+    $properties['title'] = array(
+      'label' => '内容',
       'type' => 'string_field',
     );
     $properties['created'] = array(

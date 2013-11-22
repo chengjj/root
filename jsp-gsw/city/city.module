@@ -22,31 +22,6 @@ function city_load_by_name($name) {
   return $cities ? reset($cities) : FALSE;
 }
 
-/**
- * Implements hook_entity_info().
- */
-function city_entity_info(&$entity_info) {
-  /*$entity_info['city'] = array(
-    'id' => 'city',
-    'label' => t('City'),
-    'base_table' => 'cities',
-    'module' => 'city',
-    'entity_keys' => array(
-      'id' => 'cid',
-      'label' => 'name',
-    ),
-    'fieldable' => FALSE,
-    'controllers' => array(
-      'storage' => 'Drupal\city\CityStorageController',
-      'list' => 'Drupal\city\CityListController',
-      'add' => 'Drupal\city\CityFormController',
-      'edit' => 'Drupal\city\CityFormtController',
-      'delete' => 'Drupal\city\CityDeleteForm',
-    ),
-    'class' => 'Drupal\city\Plugin\Core\Entity\City',
-  );*/
-}
-
 function city_load_districts($cid) {
   $children = &drupal_static(__FUNCTION__, array());
 

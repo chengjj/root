@@ -11,7 +11,6 @@ use Drupal\account\AccountInterface;
  * @EntityType(
  *   id = "account",
  *   label = "用户信息",
- *   module = "account",
  *   controllers = {
  *     "storage" = "Drupal\account\AccountStorageController",
  *     "form" = {
@@ -25,7 +24,7 @@ use Drupal\account\AccountInterface;
  *     "label" = "nickname"
  *   },
  *   links = {
- *     "edit-form" = "/account/{account}/edit"
+ *     "edit-form" = "account.edit"
  *   }
  * )
  */

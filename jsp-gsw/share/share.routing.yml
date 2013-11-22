@@ -16,6 +16,18 @@ bookmark_shares:
     _controller: '\Drupal\share\Controller\ShareController::userBookmarkShares'
   requirements:
     _access: 'TRUE'
+app.adv_block.shares:
+  path: '/api/share/editor/list'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::advBlockShares'
+  requirements:
+    _access: 'TRUE'
+app.share_catalog.list:
+  path: '/api/share_catalog/list'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::appShareCatalogList'
+  requirements:
+    _access: 'TRUE'
 
 share_js_bookmarked:
   path: '/js/share/{share}/bookmarked'
@@ -69,14 +81,20 @@ share.editorshare:
 share.view:
   path: '/share/{share}'
   defaults:
+    _title_callback: '\Drupal\share\Controller\ShareController::shareTitle'
     _entity_view: 'share.full'
   requirements:
     _access: 'TRUE'
-
-share.add:
-  path: 'share/add'
+share.edit:
+  path: '/share/{share}/edit'
   defaults:
-    _content: '\Drupal\share\Controller\ShareController::shareAdd'
+    _entity_form: 'share'
+  requirements:
+    _permission: 'edit share'
+share.add:
+  path: '/share/add'
+  defaults:
+    _entity_form: 'share'
   requirements:
     _user_is_logged_in: 'TRUE'
 share.js:
@@ -86,15 +104,9 @@ share.js:
   requirements:
     _user_is_logged_in: 'TRUE'
 share.manage:
-  path: 'admin/share'
+  path: '/admin/share'
   defaults:
     _content: '\Drupal\share\Controller\ShareController::shareManage'
-  requirements:
-    _permission: 'administer share'
-share.admin_edit:
-  path: '/admin/share/edit/{share}'
-  defaults:
-    _content: '\Drupal\share\Controller\ShareController::shareAdminEdit'
   requirements:
     _permission: 'administer share'
 share.admin_delete:
@@ -111,4 +123,10 @@ share.search:
     _content: '\Drupal\share\Controller\ShareController::shareSearch'
   requirements:
     _access: 'TRUE'
+share.get_shares_from_taobao:
+  path: '/admin/taobao/shares'
+  defaults:
+    _controller: '\Drupal\share\Controller\ShareController::shareFromTaobao'
+  requirements:
+    _permission: 'administer share'
 

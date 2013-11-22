@@ -2,6 +2,7 @@
 
 use Drupal\share\Entity\Share;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * page callback: share/add
@@ -27,20 +28,26 @@ function share_js($option) {
 function share_edit_form($form, &$form_state, $share = NULL) {
 
 }
+
 /**
  * share link view
  */
 function share_js_link_view() {
+  $request = \Drupal::request();
   $url = $_POST['link'];
   if (!preg_match('/http:\/\//i', $url)) {
     $url = 'http://' . $url;
   }
 
+  return new JsonResponse(_share_js_link_view($url));
+}
+
+function _share_js_link_view($url) {
   if (preg_match('/http:\/\/(www\.)?([^\/]*)/i', $url, $matches)) {
     $source = $matches[2];
   }
   if (!in_array($source , array('item.taobao.com', 'detail.tmall.com'))) {
-    return new JsonResponse(array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '对不起!目前只能支持淘宝', 'link_image' => '')); 
+    return array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '对不起!目前只能支持淘宝', 'link_image' => ''); 
   }
 
   if ($content = @file_get_contents($url)) {
@@ -87,7 +94,18 @@ function share_js_link_view() {
       //调用taobao接口
       $has_load_item = FALSE;
       $pattern = '/id=(\d+)*/is';
+      $num_iid = 0;
       if (preg_match_all($pattern, $url, $matches)) {
+        if (isset($matches[1][0])) {
+          $num_iid = $matches[1][0];
+        }
+      }
+      $current_user = \Drupal::currentUser();
+      if (db_query('SELECT COUNT(sid) FROM {shares} WHERE item_id=:item_id AND uid = :uid', array(':item_id' => $num_iid, ':uid' => $current_user->id()))->fetchField()) {
+        return array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '对不起!同一个商品只能分享一次', 'link_image' => ''); 
+      }
+      //$pattern = '/id=(\d+)*/is';
+      /*if (preg_match_all($pattern, $url, $matches)) {
         if (isset($matches[1][0])) {
           $num_iid = $matches[1][0];
           if ($item = share_get_taobao_item($num_iid)) {
@@ -96,13 +114,10 @@ function share_js_link_view() {
             $response = array('link' => $item['detail_url'], 'source' => $source, 'type' => $type, 'title' => $item['title'], 'description' => '', 'link_image' => $item['pic_url'], 'price' => $item['price'], 'item_id' => $item['num_iid'], 'sold_count' => 0);
           }
         } 
-      }
+      }*/
 
-      if (!$has_load_item) {
-        $response = array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '对不起!您输入的url不正确,请重新输入', 'link_image' => '');
-      }
       //字符串解析
-      /*if (preg_match('/charset="?gb2312"?/i', $content)) {
+      if (preg_match('/charset="?gb2312"?/i', $content)) {
         $content = iconv("GB2312", "UTF-8//IGNORE", $content);
       }
       else if (preg_match('/charset="?gbk"?/i', $content)) {
@@ -118,9 +133,9 @@ function share_js_link_view() {
         if (preg_match('/content="([^"]*)"/', $meta, $matches)) {
           $description = $matches[1];
         }
-      }*/
+      }
       
-      /*if ($source == 'item.taobao.com') {
+      if ($source == 'item.taobao.com') {
         $link_image = array();
         $pattern = '/<img[^>]*id="J_ImgBooth"[^>]*src="([^"]*)"/is';
         $count = 0;
@@ -154,6 +169,9 @@ function share_js_link_view() {
         //    $sold_count = $matches[1][0];
         //  }
         //}
+
+        $has_load_item = TRUE;
+        $response = array('link' => $url, 'source' => $source, 'type' => $type, 'title' => $title, 'description' => '', 'link_image' => $link_image[0], 'price' => $price, 'item_id' => $num_iid, 'sold_count' => 0);
       } else if ($source == 'detail.tmall.com') {
         //去掉后缀 -tmall.com 天猫
         $title_array = explode('-tmall.com', $title); 
@@ -186,7 +204,8 @@ function share_js_link_view() {
           }
         } 
         if (!$price) {
-          $pattern = '/"skuMap"/is';
+          //$pattern = '/"skuMap"/is';
+          $pattern = '/<strong[^>]*class="J_originalPrice"*>[^\d]*(\d+\.\d{2}).*\/strong>/is';
           if (preg_match_all($pattern, $content, $matches)) {
             if (isset($matches[1][0])) {
               $price = $matches[1][0];
@@ -195,9 +214,15 @@ function share_js_link_view() {
         }
 
         $sold_count = 0;
-      }*/
-      
-      return new JsonResponse($response); 
+        $has_load_item = TRUE;
+        $response = array('link' => $url, 'source' => $source, 'type' => $type, 'title' => $title, 'description' => '', 'link_image' => $link_image[0], 'price' => $price, 'item_id' => $num_iid, 'sold_count' => 0);
+      }
+
+      if (!$has_load_item) {
+        $response = array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '对不起!您输入的url不正确,请重新输入', 'link_image' => '');
+      } else {
+        return $response; 
+      }
     }
     else if ($type == SHARE_DATA_TYPE_IMAGE) {
       /*
@@ -205,11 +230,11 @@ function share_js_link_view() {
       return drupal_json(array('link' => $url, 'source' => $source, 'type' => $type, 'image_height' => $size[1], 'image_width' => $size[0])); */
     }
     else {
-      return new JsonResponse(array('link' => $url, 'source' => $source, 'type' => $type)); 
+      return array('link' => $url, 'source' => $source, 'type' => $type); 
     }
   }
   else {
-    return new JsonResponse(array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '不能访问该网址，请确认网址是否正确。', 'link_image' => '')); 
+    return array('link' => $url, 'source' => $source, 'type' => 'none', 'title' => '', 'description' => '不能访问该网址，请确认网址是否正确。', 'link_image' => ''); 
   }
 }
 /**
@@ -296,8 +321,31 @@ function share_get_taobao_item($num_iid) {
   $c = new TopClient;
   $c->appkey = variable_get('taobao_appkey', '21611094');
   $c->secretKey = variable_get('taobao_secret', 'f6d6055607fc0f8f18ac5ef781ad53b7'); 
-  $req = new ItemGetRequest;
+  $req = new ItemGetRequest();
   $req->setFields("num_iid,title,price,pic_url,detail_url");
   $req->setNumIid($num_iid);
   return $c->execute($req, $sessionKey);
+}
+/**
+ * get taobao item 
+ */
+function share_get_taobao_traderates($num_iid) {
+  include_once(drupal_get_path('module', 'share') . '/lib/Taobao/TopSdk.php'); 
+  $c = new TopClient;
+  $c->appkey = variable_get('taobao_appkey', '21611094');
+  $c->secretKey = variable_get('taobao_secret', 'f6d6055607fc0f8f18ac5ef781ad53b7'); 
+  $req = new TraderatesGetRequest;
+  $req->setFields("tid,oid,role,nick,result,created,rated_nick,item_title,item_price,content,reply,num_iid");
+  $req->setRateType("get");
+  $req->setRole("seller");
+  $req->setResult("good");
+  $req->setPageNo(1);
+  $req->setPageSize(100);
+  $req->setStartDate("2013-11-01 00:00:00");
+  $req->setEndDate("2013-11-19 00:00:00");
+  $req->setUseHasNext("true");
+  $req->setNumIid($num_iid);
+  $resp = $c->execute($req, $sessionKey);
+  return $resp;
+
 }

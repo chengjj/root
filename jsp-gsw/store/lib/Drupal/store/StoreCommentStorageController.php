@@ -22,13 +22,22 @@ class StoreCommentStorageController extends FieldableDatabaseStorageController i
   /**
    * {@inheritdoc}
    */
-  public function updateStoreCommentCount($sid) {
-    $count = db_query('SELECT COUNT(sid) FROM {store_comment} WHERE sid = :sid', array(
+  public function updateStoreStatistics($sid) {
+    $comment_count = db_query('SELECT COUNT(sid) FROM {store_comment} WHERE sid = :sid', array(
       ':sid' => $sid,
     ))->fetchField();
-    $store = store_load($sid);
-    $store->comment_count->value = $count;
-    $store->save();
+    $rank_count = db_query('SELECT COUNT(sid) FROM {store_comment} WHERE rank = 1 AND sid = :sid', array(
+      ':sid' => $sid,
+    ))->fetchField();
+    $coupon_count = db_query('SELECT COUNT(cid) FROM { coupons } WHERE status = 1 AND sid = :sid',array(':sid' =>$sid,))->fetchField();
+  
+    $store = entity_load('store', $sid);
+    if ($store->comment_count->value != $comment_count || $store->rank_count->value != $rank_count || $store->coupon_count->value != $coupon_count) {
+      $store->comment_count->value = $comment_count;
+      $store->rank_count->value = $rank_count;
+      $store->coupon_count->value = $coupon_count;
+      $store->save();
+    }
   }
 
 }

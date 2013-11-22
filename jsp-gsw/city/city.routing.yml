@@ -22,3 +22,18 @@ district_detail:
     _controller: '\Drupal\city\Controller\CityController::districtDetail'
   requirements:
     _access: 'TRUE'
+client_city_list:
+  path: '/api/client/cities'
+  defaults:
+    _controller: '\Drupal\city\Controller\CityController::clientCityList'
+  requirements:
+    _access: 'TRUE'
+city.city_list:
+  path: '/admin/city'
+  defaults:
+    _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
+    entity_type: 'city'
+  requirements:
+    _permission: 'administer city'
+
+    

@@ -6,7 +6,6 @@
  */
 namespace Drupal\store\Controller;
 
-use Drupal;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -44,8 +43,8 @@ class StoreController implements ContainerInjectionInterface {
   /**
    * page callback for:api/taxonomy/{catalog_cid}/stores
    */
-  public function searchCatalogStores($catalog_cid) {
-    $return = $this->storeManager->searchCatalogStores($catalog_cid);
+  public function searchCatalogStores($catalog_cid, Request $request) {
+    $return = $this->storeManager->searchCatalogStores($catalog_cid, $request);
     $stores = array();
     foreach ($return['stores'] as $store) {
       $stores[] = $this->get_store_response($store);
@@ -80,6 +79,7 @@ class StoreController implements ContainerInjectionInterface {
       'user_count' => $store->user_num->value,
       'follow_count' => $store->follow_count->value,
       'coupon_title' => $coupon_title,
+      'comment_count' => $store->comment_count->value,
     );
   }
 
@@ -147,8 +147,8 @@ class StoreController implements ContainerInjectionInterface {
   /**
    * page callback for:api/stores/{keyword}
    */
-  public function searchStoresByKeyword($keyword) {
-    $return = $this->storeManager->searchStores($keyword);
+  public function searchStoresByKeyword($keyword, Request $request) {
+    $return = $this->storeManager->searchStores($keyword, $request);
     $stores = array();
     foreach ($return['stores'] as $store) {
       $stores[] = $this->get_store_response($store);
@@ -159,8 +159,8 @@ class StoreController implements ContainerInjectionInterface {
   /**
    * page callback for:api/stores/{keyword}/{city_id}
    */
-  public function searchStoresByKeywordCity($keyword, $city_id) {
-    $return = $this->storeManager->searchStoresByKeywordCity($keyword, $city_id);
+  public function searchStoresByKeywordCity($keyword, $city_id, Request $request) {
+    $return = $this->storeManager->searchStoresByKeywordCity($keyword, $city_id, $request);
     $stores = array();
     foreach ($return['stores'] as $store) {
       $stores[] = $this->get_store_response($store);
@@ -204,8 +204,39 @@ class StoreController implements ContainerInjectionInterface {
     }
   }
 
+  /**
+   * page callback: api/adv_block/stores/{city_id}
+   */
+  public function advBlockStores(Request $request, $city_id) {
+    $response = array();
+    $adv_block_name = '手机客户端精选推荐位商家(640x390)';
+    if ($bid = db_query('SELECT bid FROM {adv_blocks} WHERE type=:type AND title=:title', array(':type' => 'store', ':title' => $adv_block_name))->fetchField()) {
+      //TODO use adv_block_items.city_id AND stores.city_id
+      $result = db_query('SELECT a.iid, a.entity_id, a.title, a.picture FROM {adv_block_items} a INNER JOIN {stores} s ON a.entity_id = s.sid WHERE s.city_id = :city_id AND a.bid = :bid ORDER BY a.weight', array(':city_id' => $city_id, ':bid' => $bid));
+      foreach ($result as $row) {
+        if ($row->entity_id && $store = store_load($row->entity_id)) {
+          $picture = FALSE;
+          if ($row->picture) {
+            $picture = file_load($row->picture);
+          }
+          if (!$picture) {
+            $picture = $store->getPicture();
+          }
+          $response[] = array(
+            'id' => $row->iid,
+            'title' => $row->title ? $row->title : $store->label(),
+            'image_url' => $picture ? get_uri_by_image_style(array('style_name' => '640x390', 'uri' => $picture->getFileUri())) : '', 
+            'city_id' => $city_id,
+            'store_id' => $store->id(),
+          );
+        }
+      }
+    }
+    return new JsonResponse($response);
+  }
+
   public function followed(Request $request, StoreInterface $store) {
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     $followed = false;
     if ($user->isAuthenticated()) {
       $query = db_select('store_follow', 'f');
@@ -221,7 +252,7 @@ class StoreController implements ContainerInjectionInterface {
 
   public function follow(Request $request, StoreInterface $store) {
       
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     
     db_insert('store_follow')
       ->fields(array(
@@ -241,7 +272,7 @@ class StoreController implements ContainerInjectionInterface {
   }
 
   public function unfollow(Request $request, StoreInterface $store) {
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     
     db_delete('store_follow')
       ->condition('uid', $user->id())
@@ -311,15 +342,7 @@ class StoreController implements ContainerInjectionInterface {
    */
   public function storeAdd() {
     $store = entity_create('store', array());
-    return Drupal::entityManager()->getForm($store);
-  }
-
-  /**
-   * page callback: store/{store}/edit
-   */
-  public function storeEditForm(StoreInterface $store) {
-    module_load_include('pages.inc', 'store');
-    return drupal_get_form('admin_store_edit_form', $store);
+    return \Drupal::entityManager()->getForm($store);
   }
 
   /**
@@ -351,6 +374,190 @@ class StoreController implements ContainerInjectionInterface {
   public function ajax(Request $request, $action) {
     module_load_include('pages.inc', 'store');
     return store_js($action);
+  }
+
+  public function storeTitle(StoreInterface $store) {
+    return $store->label();
+  }
+
+  /**
+   * page callback: /api/store/{store_id}/comment
+   */
+  public function storeComment(Request $request, $store_id) {
+    $method = $request->getMethod();
+    if ($method == 'GET') {
+      global $base_url;
+      $size = $request->query->get('per_page', 10);
+      $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
+
+      $num_rows = db_query('SELECT COUNT(cid) FROM {store_comment} WHERE sid=:sid', array(':sid' => $store_id))->fetchField();
+      if ($num_rows % $size) {
+        $pages = (int)($num_rows / $size) + 1;
+      } else {
+        $pages = $num_rows / $size;
+      }
+
+      $cids = db_query("SELECT cid FROM {store_comment} WHERE sid = $store_id LIMIT $start, $size")->fetchCol();
+      $response = array();
+      foreach (store_comment_load_multiple($cids) as $store_comment) {
+        $nickname = '匿名';
+        if ($account = $store_comment->getAuthor()) {
+          $nickname = (isset($account->nickname) && $account->nickname) ? $account->nickname : $account->getUsername();
+        }
+        $response[] = array(
+          'id' => $store_comment->id(),
+          'sid' => $store_comment->sid->value,
+          'owner_id' => $store_comment->uid->value,
+          'owner_name' => $nickname,
+          'rank' => $store_comment->rank->value,
+          'subject' => $store_comment->label(),
+          'created' => date('Y-m-d H:i:s', $store_comment->created->value),
+        );
+      }
+
+      $http_next = "<$base_url/api/store/$store_id/comment?";
+      $http_last = $http_next;
+
+      $page = $request->query->get('page', 1);
+      
+      $http_next .= "per_page=$size&";
+      $http_last .= "per_page=$size&";
+
+      if ($page >= $pages) {
+        $http_next = "";
+      } else {
+        $http_next .= 'page=' . ($page + 1) . '>;rel="next",';
+      }
+      $http_last .= 'page=' . $pages . '>;rel="last"';
+
+      $header = array('Link' => $http_next . $http_last);
+
+      return new JsonResponse($response, 200, $header);
+    } else if ($method == 'POST') {
+      $account = $this->storeManager->user_authenticate_by_http();
+      if ($account && $account->id()) {
+        $json_data = file_get_contents('php://input');
+        if (isset($json_data) && $json_data) {
+          $array = json_decode($json_data, TRUE);
+          if (!is_array($array)) {
+            $array = json_decode($array, TRUE);
+          }
+          if (isset($array['subject']) && $array['subject']) {
+            $store_comment = array(
+              'subject' => $array['subject'],
+              'rank' => $array['rank'] ? 1 : 0,
+              'uid' => $account->id(),
+              'sid' => $store_id,
+              'status' => COMMENT_PUBLISHED,
+              'created' => REQUEST_TIME,
+            );
+            $store_comment = entity_create('store_comment', $store_comment);
+            $store_comment->save();
+
+            $nickname = (isset($account->nickname) && $account->nickname) ? $account->nickname : $account->getUsername();
+            $response = array(
+              'id' => $store_comment->id(),
+              'sid' => $store_comment->sid->value,
+              'owner_id' => $store_comment->uid->value,
+              'owner_name' => $nickname,
+              'rank' => $store_comment->rank->value,
+              'subject' => $store_comment->label(),
+              'created' => date('Y-m-d H:i:s', $store_comment->created->value),
+            );
+
+            return new JsonResponse($response); 
+          }
+        }
+
+      } else {
+        return new JsonResponse(array('message' => '对不起你没有权限操作!'),  422);
+      }
+    }
+  }
+
+  /**
+   * page callback: /api/user/store/comments
+   */
+  public function userComments(Request $request) {
+    $account = $this->storeManager->user_authenticate_by_http();
+    if ($account && $account->id()) {
+      global $base_url;
+      $size = $request->query->get('per_page', 10);
+      $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
+      if ($request->query->has('rank')) {
+        $rank = $request->query->get('rank');
+      }
+      $sid = $request->query->get('sid', 0);
+      
+      $query = db_select('store_comment', 's');
+      $query->addExpression('COUNT(s.cid)');
+      isset($rank) && $query->condition('rank', $rank);
+      $sid && $query->condition('sid', $sid);
+      $num_rows = $query->condition('uid', $account->id())
+        ->execute()
+        ->fetchField();
+
+      if ($num_rows % $size) {
+        $pages = (int)($num_rows / $size) + 1;
+      } else {
+        $pages = $num_rows / $size;
+      }
+
+      $query = db_select('store_comment', 's')
+        ->fields('s', array('cid'))
+        ->condition('uid', $account->id()); 
+
+      if ($size) {
+        $query->range($start, $size);
+      }
+      isset($rank) && $query->condition('rank', $rank);
+      $sid && $query->condition('sid', $sid);
+
+      $cids = $query->execute()->fetchCol();
+
+      $response = array();
+      foreach (store_comment_load_multiple($cids, TRUE) as $store_comment) {
+        $response[] = array(
+          'id' => $store_comment->id(),
+          'sid' => $store_comment->sid->value,
+          'store_name' => $store_comment->sid->entity->label(),
+          'owner_id' => $store_comment->uid->value,
+          'rank' => $store_comment->rank->value,
+          'subject' => $store_comment->label(),
+          'created' => date('Y-m-d H:i:s', $store_comment->created->value),
+        );
+      }
+
+      $http_next = "<$base_url/api/user/store/comments?";
+      $http_last = $http_next;
+
+      $page = $request->query->get('page', 1);
+      
+      $http_next .= "per_page=$size&";
+      $http_last .= "per_page=$size&";
+      
+      if (isset($rank)) {
+        $http_next .= "rank=$rank&";
+        $http_last .= "rank=$rank&";
+      }
+
+      if ($sid) {
+        $http_next .= "sid=$sid&";
+        $http_last .= "sid=$sid&";
+      }
+
+      if ($page >= $pages) {
+        $http_next = "";
+      } else {
+        $http_next .= 'page=' . ($page + 1) . '>;rel="next",';
+      }
+      $http_last .= 'page=' . $pages . '>;rel="last"';
+
+      $header = array('Link' => $http_next . $http_last);
+      return new JsonResponse($response, 200, $header);
+    } else {
+      return new JsonResponse(array('message' => '对不起你没有权限操作!'),  422);
+    }
   }
 
 }

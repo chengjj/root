@@ -12,16 +12,46 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityFormController;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\field\FieldInfo;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\store\CityStorageControllerInterface;
+
 
 /**
- * Base for controller for store forms.
+ * From controller for the store edit forms.
  */
 class StoreFormController extends ContentEntityFormController {
+
+  /**
+   * The city storage.
+   *
+   * @var \Drupal\city\CityStorageControllerInterface
+   */
+  protected $cityStorage;
+
+  /**
+   * Constructs a new StoreForm object.
+   *
+   * @param \Drupal\city\CityStorageControllerInterface $city_storage
+   *   The city storage.
+   */
+  public function __construct(EntityManagerInterface $entity_manager, CityStorageControllerInterface $city_storage) {
+    parent::__construct($entity_manager);
+    $this->cityStorage = $city_storage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity.manager'),
+      $container->get('entity.manager')->getStorageController('city')
+    );
+  }
 
   /**
    * Overrides Drupal\Core\Entity\EntityFormController::form().
@@ -29,8 +59,10 @@ class StoreFormController extends ContentEntityFormController {
   public function form(array $form, array &$form_state) {
     $store = $this->entity;
 
+    $form['#title'] = '编辑商家';
+
     if ($store->isNew()) {
-      $store->city_id->value = $default_city_id;
+      $store->city_id->target_id = city_get_current_city_id();
     }
 
     $form['name'] = array(
@@ -87,8 +119,9 @@ class StoreFormController extends ContentEntityFormController {
       $parent_cid = $form_state['values']['parent_cid'];
     }
     else if (isset($store->cid) && $store->cid->value) {
-      $parent_catalog = store_catalog_get_top($store->cid->value);
-      $parent_cid = $parent_catalog->id();
+      if ($parent_catalog = store_catalog_get_top($store->cid->value)) {
+        $parent_cid = $parent_catalog->id();
+      }
     }
     $parent_catalogs = store_catalog_names(0);
     if (!$parent_cid) {
@@ -118,12 +151,12 @@ class StoreFormController extends ContentEntityFormController {
       $city_id = $form_state['values']['city_id'];
     }
     else if ($store->city_id->value) {
-      $city_id = $store->city_id->value;
+      $city_id = $store->city_id->target_id;
     }
     $form['city_id'] = array(
       '#title' => '城市',
       '#type' => 'select',
-      '#options' => city_names(),
+      '#options' => $this->cityStorage->loadAllKeyed(),
       '#default_value' => $city_id,
       '#ajax' => array(
         'callback' => array($this, 'citySwitch'),

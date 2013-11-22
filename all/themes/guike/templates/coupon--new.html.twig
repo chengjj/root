@@ -4,6 +4,15 @@
     <a target="_blank" href="{{ coupon_url }}" title="{{ picture.alt }}">{{ coupon.label }}</a>
     <p>{{ coupon.body.value|truncate(70) }}</p>
     <p class="name">{{ store.label }}</p>
-    <p><span class="first"><strong>{{ store.deal_count.value }}</strong>人已享受优惠</span><span><strong>{{ store.follow_count.value }}</strong>人已关注</span><span>基础折扣率：<strong>{{ store.discount.value }}</strong>折</span><a class="collect coupon_bookmark" cid="{{ coupon.id }}" href="{{ bookmark_url }}" >收藏</a></p>
+    <p><span class="first"><strong>{{ store.deal_count.value }}</strong>人已享受优惠</span><span><strong>{{ store.follow_count.value }}</strong>人已关注</span><span>基础折扣率：
+    {% if  store.discount.value == 10 %}
+    <em>暂无折扣</em>
+    {% elseif  store.discount.value == 0 %}
+    <em>免费</em>
+    {% else %}
+    <em>{{ store.discount.value }}折</em>
+    {% endif %}
+    </span>
+    <a class="collect coupon_bookmark" cid="{{ coupon.id }}" href="{{ bookmark_url }}" >收藏</a></p>
   </div>
 </article>

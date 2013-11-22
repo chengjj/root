@@ -10,10 +10,11 @@ use Drupal\city\CityInterface;
  *
  * @EntityType(
  *   id = "city",
- *   label = "用户信息",
- *   module = "city",
+ *   label = "城市",
  *   controllers = {
- *     "storage" = "Drupal\city\CityStorageController"
+ *     "storage" = "Drupal\city\CityStorageController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "cities",
  *   entity_keys = {

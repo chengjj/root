@@ -21,7 +21,7 @@ Drupal.behaviors.guike_user = {
 
       $(context).find('div.user_pj_con').once('user_pj_con', function() {
         var error = '暂时还无用户评价';
-	if($(this).text().indexOf(error)) {
+	if($(this).text().indexOf(error) >= 0) {
 	  $(this).addClass('p14h100');
 	}
       });
@@ -106,6 +106,14 @@ Drupal.behaviors.guike_user = {
         return false;
       });
     });
+
+    //周边热点排行第一名默认展开  by chengjj@72ec.com
+    $(context).find('div.hotlist').once('hotlist', function() {
+	  var $first = $(this).children('article.store:first');
+	  $first.children('p.highlight').hide();
+	  $first.children('div.openbox').show();
+    });
+    //********************************************************//
 
     /*$(context).find('.store-picture').once('store-picture', function() {
       $(this).hover(

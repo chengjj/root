@@ -1,23 +1,9 @@
-<div class="search_assort wrap_border">
-  <div class="assortlist">
-    <label>分类</label>
-    <a class="all" href="{{ all_catalog_url }}">全部</a>
-    {{ catalogs }}
-  </div>
-  {% if sub_catalogs %}
-  <div class="open">
-    {{ sub_catalogs }}
-  </div>
-  {% endif %}
-  <div class="assortlist">
-    <label>区域</label>
-    <a class="all" href="{{ all_district_url }}">全部</a>
-    {{ districts }}
-  </div>
+<div class="search_assort wrap_border {% if keywords is empty %}no-keywords{% endif %}">
+  {{ catalogs }}
 </div>
 
 {% if keywords %}
-<div class="szbsstext">与“{{ keywords }}”相关的信息</div>
+<div class="szbsstext">与“{{ keywords }}”相关的信息{{ stores_count }}个</div>
 {% endif %}
 
 <div class="szbconbox space">

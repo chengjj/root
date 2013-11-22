@@ -192,35 +192,37 @@
 	color:#999999;
 	padding-left:5px;
 }
-/*
 
-.share{
+#pop_up .share{
 	width:300px;
 	height:90px;
 	margin:70px auto 140px;
 	background:url(../images/base_bg.png) no-repeat -400px -720px;
 }
-.share p{
+#pop_up .share p{
 	font-size:12px;
 	color:#3333ff;
 	line-height:50px;
 	padding-left:100px;
 }
-.share p.note{
+#pop_up .share p.note{
 	font-size:36px;
 	color:#ff6699;
 	line-height:30px;
 }
-.share p a{
+#pop_up .share p a{
 	font-size:12px;
 	color:#3333ff;
 	padding-left:5px;
 }
-.share p a:hover{
+#pop_up .share p a:hover{
 	color:#ff6699;
 	text-decoration:underline;
 }
-*/
+
 .r3 {
     border-radius: 3px 3px 3px 3px;
+}
+div.ui-front {
+  z-index: 1000;
 }

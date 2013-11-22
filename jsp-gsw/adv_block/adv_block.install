@@ -11,6 +11,12 @@ function adv_block_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
       'type' => array(
         'type' => 'varchar',
         'length' => 255,
@@ -53,6 +59,9 @@ function adv_block_schema() {
       ),
     ),
     'primary key' => array('bid'),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
   );
   $schema['adv_block_items'] = array(
     'fields' => array(
@@ -60,6 +69,12 @@ function adv_block_schema() {
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
+      ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
       ),
       'bid' => array(
         'type' => 'int',
@@ -115,6 +130,9 @@ function adv_block_schema() {
       ),
     ),
     'primary key' => array('iid'),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
   );
 
   return $schema;
@@ -279,7 +297,7 @@ function adv_block_update_4() {
     variable_set('adv_block_' . $type . '_templates', $templates);
   }
   
-  $bid = db_query('SELECT MAX(bid)+1 FROM {adv_blocks}')->fetchField();
+  $bid = db_query('SELECT MAX(bid) FROM {adv_blocks}')->fetchField();
   $blocks = array(
     array('bid' => ++$bid, 'type' => 'adv', 'title' => '搜周边左侧banner1(732x92)', 'template' => 'adv_block_adv_banner_732x92', 'picture_dimentions' => '732x92'),/*$bid=11*/
     array('bid' => ++$bid, 'type' => 'adv', 'title' => '搜周边左侧banner2(732x92)', 'template' => 'adv_block_adv_banner_732x92', 'picture_dimentions' => '732x92'),/*$bid=12*/
@@ -343,5 +361,50 @@ function adv_block_update_10() {
     ->execute();
 }
 
-//TODO add config
+/**
+ * 增加手机广告位 推荐商户
+ */
+function adv_block_update_11() {
+  $bid = db_query('SELECT MAX(bid) FROM {adv_blocks}')->fetchField();
+  $blocks = array(
+    array('bid' => ++$bid, 'type' => 'store', 'title' => '手机客户端精选推荐位商家(640x390)', 'template' => 'adv_block_adv_banner_640x390', 'picture_dimentions' => '640x390'),/*$bid=18*/
+  );
+
+  $query = db_insert('adv_blocks')
+    ->fields(array('bid', 'type', 'title', 'template', 'picture_dimentions'));
+  foreach($blocks as $block) {
+    $query->values($block);
+  }
+  $query->execute();
+}
+
+/**
+ * Create UUID column for adv_block and adv_block_item.
+ */
+function adv_block_update_12() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  if (db_field_exists('adv_blocks', 'uuid')) {
+    db_change_field('adv_blocks', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('adv_blocks', 'uuid', $spec, $keys);
+  }
+  if (db_field_exists('adv_block_items', 'uuid')) {
+    db_change_field('adv_block_items', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('adv_block_items', 'uuid', $spec, $keys);
+  }
+
+}
 

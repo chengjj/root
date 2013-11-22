@@ -18,33 +18,24 @@
 <div class="szbconbox">
   <div class="con_left">
     <div class="assort wrap_border space">
-      <div class="assortlist">
-        <label>分类</label>
-        <a class="all" href="周边优惠.html">全部</a>
-        {{ catalogs }}
-      </div>
-      <div class="assortlist">
-        <label>区域</label>
-        <a class="all" href="周边优惠.html">全部</a>
-        {{ districts }}
-      </div>
+     {{ catalogs }}
     </div> <!-- catalog -->
     <div class="szbconlist wrap_border space">
-     <h2>餐饮美食</h2>
+     <h2><a href="{{ links.food_more }}" >餐饮美食</a><a class="more" href="{{ links.food_more }}">更多</a></h2>
      {{ ad_foods }}
     </div> <!-- 餐饮美食 -->
     <div class="ad_smallbanner space">
      {{ ad_banner_1 }}
     </div> <!-- banner1 -->
     <div class="szbconlist wrap_border space">
-     <h2>生活服务</h2>
+     <h2><a href="{{ links.live_more }}">生活服务</a><a class="more" href="{{ links.live_more }}">更多</a></h2>
      {{ ad_live }}
     </div><!-- 生活服务 -->
     <div class="ad_smallbanner space">
      {{ ad_banner_2 }}
     </div> <!-- banner2 -->
     <div class="szbconlist wrap_border space">
-     <h2>休闲娱乐</h2>
+     <h2><a href="{{ links.play_more }}">休闲娱乐</a><a class="more" href="{{ links.play_more }}">更多</a></h2>
       {{ ad_play }}
     </div> <!-- 休闲娱乐 -->
   </div>

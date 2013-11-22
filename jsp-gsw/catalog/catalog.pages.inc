@@ -1,13 +1,14 @@
 <?php
 
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 /**
  * page callback for: catalog/js/%
  */
-function catalog_js($option) {
+function catalog_js($option, Request $request) {
   switch ($option) {
     case 'get_share_catalog_children':
-      $parent_cid = $_GET['cid'];
+      $parent_cid = $request->query->get('cid');
       return catalog_get_share_catalog_children($parent_cid);
       break;
     default:

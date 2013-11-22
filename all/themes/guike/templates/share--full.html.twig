@@ -29,7 +29,9 @@
     </section>
     <div class="details_share">
       <span>由{{ author }}分享</span>
-      <span class="like" id="share-like-bookmark"><a target="_blank" href="{{ bookmark_url }}" class="bookmark" sid="{{ share.sid.value }}">喜欢</a><span> {{ share_bookmarks }} </span></span>
+
+      <span class="like"><a target="_blank" href="{{ bookmark_url }}" class="bookmark" sid="{{ share.sid.value }}">喜欢</a><span class="view_count"> {{ share.bookmark_count.value }} </span></span>
+
       <!-- JiaThis Button BEGIN -->
         <div class="jiathis_style share"><span class="jiathis_txt">分享到：</span>
         <a class="jiathis_button_tsina"></a>
@@ -69,7 +71,7 @@ doc.getElementsByTagName("head")[0];
             h.insertBefore(s, h.firstChild);
         };
         var o = {
-pid: "mm_45311238_4186065_13696720",
+pid: "{{ pid }}",
 appkey: "",
 unid: ""
         };

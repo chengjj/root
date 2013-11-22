@@ -4,6 +4,7 @@
  * page callback for: admin/share
  */
 function share_admin_share_list($form, &$form_state) {
+  $request=\Drupal::request();
   //TODO add share_catalog
   drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
   drupal_add_css(drupal_get_path('module', 'ec') . '/css/jquery-ui.css', 'file');
@@ -12,9 +13,9 @@ function share_admin_share_list($form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'share') . '/js/admin-share-list.js');
   global $base_url;
 
-  $keyword = isset($_GET['keyword']) ? check_plain($_GET['keyword']) : '';
-  $start = isset($_GET['start']) ? check_plain($_GET['start']) : '';
-  $expire = isset($_GET['expire']) ? check_plain($_GET['expire']) : '';
+  $keyword = check_plain($request->query->get('keyword',''));
+  $start = check_plain($request->query->get('start',''));
+  $expire = check_plain($request->query->get('expire',''));
 
   $header = array(
     'title' => array('data' => '商品名称', 'field' => 'title'),
@@ -65,13 +66,13 @@ function share_admin_share_list($form, &$form_state) {
       'user_name' => $user_name,
       'created' => date('Y-m-d', $share->created->value),
       'status' => $share->status->value ? '已发布' : '未发布',
-      'operations' => l('编辑', 'admin/share/edit/' .$share->id()) . ' | ' . l('删除', 'admin/share/delete/' . $share->id()),
+      'operations' => l('编辑', 'share/' .$share->id() . '/edit') . ' | ' . l('删除', 'admin/share/delete/' . $share->id()),
     ); 
   }
    $form['filter']['keyword'] = array(
     '#title' => '关键字',
     '#type' => 'textfield',
-    '#default_value' => isset($_GET['keyword']) ? $_GET['keyword'] : '',
+    '#default_value' => $request->query->get('keyword',''),
   );
   $form['filter']['start'] = array(
     '#title' => '开始时间',
@@ -181,124 +182,6 @@ function share_admin_share_list_submit($form, &$form_state) {
   }
 }
 
-/**
- * page callback for: admin/share/edit/%share
- */
-function share_admin_edit_form($form, &$form_state, $share = NULL) {
-  $user = \Drupal::currentUser();
-  $form['share'] = array(
-    '#type' => 'value',
-    '#value' => $share->id(),
-  );
-  $form['uid'] = array(
-    '#type' => 'value',
-    '#value' => $user->id(),
-  );
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => '标题',
-    '#required' => TRUE,
-    '#default_value' => $share->label(),
-  );
-  $result = db_query('SELECT * FROM {share_catalog} WHERE parent_cid=0 ORDER BY weight');
-  $share_catalog_parents = array();
-  $share_catalogs = array();
-
-  foreach ($result as $row) {
-    $share_catalog_parents[$row->cid] = $row->name;
-  }
-  $catalog_parent = db_query('SELECT parent_cid FROM {share_catalog} WHERE cid=:cid ', array(':cid' => $share->cid->value))->fetchField();
-  $form['catalog_parent'] = array(
-    '#type' => 'select',
-    '#title' => '分类',
-    '#options' => $share_catalog_parents,
-    '#default_value' => $catalog_parent,
-    '#required' => TRUE,
-    '#ajax' => array(
-      'callback' => 'share_admin_edit_form_catalog_js',
-      'wrapper' => 'template-wrapper',
-      'effect' => 'fade',
-    ),
-  );
-  $form['template_wrapper'] = array(
-    '#prefix' => '<div id="template-wrapper">',
-    '#suffix' => '</div>',
-  );
-  if ($catalog_parent || isset($form_state['values']['catalog_parent'])) {
-    $default_cid = isset($form_state['values']['catalog_parent']) ? $form_state['values']['catalog_parent'] : $catalog_parent;
-    $result = db_query('SELECT * FROM {share_catalog} WHERE parent_cid=:parent_cid ORDER BY weight', array(':parent_cid' => $default_cid));
-    foreach ($result as $row) {
-      $share_catalogs[$row->cid] = $row->name;
-    }
-    $form['template_wrapper']['cid'] = array(
-      '#type' => 'select',
-      '#options' => $share_catalogs,
-      '#default_value' => $share->cid->value ? $share->cid->value : '',
-      '#required' => TRUE,
-    );
-  }
-  $form['picture'] = array(
-    '#type' => 'fieldset',
-    '#title' => '图片',
-  );
-  $picture = $share->getPicture();
-  $form['picture']['picture'] = array(
-    '#type' => 'value',
-    '#value' => $picture ? $picture->id() : NULL,
-  );
-  $form['picture']['picture_current'] = array(
-    '#markup' => $picture ? theme('image', array('uri' => $picture->getFileUri())) : '',
-  );
-  $form['picture']['picture_upload'] = array(
-    '#type' => 'file',
-    '#title' => '上传图片',
-    '#size' => '20',
-  );
-  $form['description'] = array(
-    '#type' => 'textarea',
-    '#title' => '发布者描述信息',
-    '#default_value' => $share->description->value,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => '保存',
-  );
-  $form['delete'] = array(
-      '#type' => 'submit',
-      '#value' => '删除',
-    );
- return $form; 
-}
-
-function share_admin_edit_form_validate($form, &$form_state) {
-  $validators = array(
-    'file_validate_is_image' => array(),
-    'file_validate_image_resolution' => array(variable_get('user_picture_dimentions', '85x85')),
-    'file_validate_size' => array(variable_get('account_picture_file_size', '300') * 1024),
-  ); 
-
-  $file = file_save_upload('picture_upload', $validators);
-  if ($file === FALSE) {
-    form_set_error('picture_upload', '保存图片失败。');
-  }
-  elseif ($file !== NULL) {
-    $form_state['values']['picture_upload'] = $file[0];
-  }
-}
-function share_admin_edit_form_submit($form, &$form_state) {
-  $sid = $form_state['values']['share'];
-  $op = $form_state['values']['op'];
-  switch ($op) {
-    case '保存':
-      //share_save(share_load($sid), $form_state['values']);
-      drupal_set_message('商品信息已保存。');
-      break;
-    case '删除':
-      $form_state['redirect'] = 'admin/share/delete/' . $sid;
-      break;
-  }
-}
-
 function share_admin_edit_form_catalog_js($form, &$form_state) {
   return $form['template_wrapper'];
 }
@@ -311,7 +194,7 @@ function share_admin_delete_form($form, &$form_state, $share) {
   $form['title'] = array('#type' => 'value', '#value' => $share->label());
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $share->label())),
-    'admin/share/edit/' . $share->id(),
+    'share/' . $share->id() . '/edit',
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
@@ -324,4 +207,202 @@ function share_admin_delete_form_submit($form, &$form_state) {
     drupal_set_message(t('商品 %title has been deleted.', array('%title' => $form_state['values']['title'])));
   }
   $form_state['redirect'] = 'admin/share/list';
+}
+
+/**
+ * page callback: admin/taobao/shares
+ */
+function share_admin_get_form_taobao_form($form, &$form_state) {
+  $form['title'] = array('#markup' => '<p>按分类抓取淘宝商品</p>');
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => '抓取',
+    '#suffix' => '<span style="color:red">抓取过程比较缓慢，请耐心等待，不要重复点击抓取按钮!</span>',
+  );
+  return $form;
+}
+
+function share_admin_get_form_taobao_form_submit($form, &$form_state) {
+  //TODO 获取抓取清单
+  share_get_shares_from_taobao();
+  drupal_set_message('数据抓取成功!');
+}
+
+/**
+ * get shares from taobao by share_catalog
+ */
+function share_get_shares_from_taobao() {
+  set_time_limit(0);
+  $user = \Drupal::currentUser();
+  $pSize = 1000;
+  //_input_charset=utf-8&json=on&callback=json
+  $catalogs = array(
+    '服装服饰' => array(
+      '女装' => 'http://list.taobao.com/itemlist/nvzhuang2011a.htm?cat=16',
+      '男装' => 'http://list.taobao.com/itemlist/nanzhuang2011a.htm?cat=30',
+      '童装' => 'http://list.taobao.com/itemlist/market/sport2011a.htm?cat=50016756',
+      '运动装' => 'http://list.taobao.com/itemlist/market/sport2011a.htm?cat=50016756',
+      '内衣' => 'http://list.taobao.com/itemlist/market/neiyi2011a.htm?cat=1625',
+      '服装配饰' => 'http://list.taobao.com/itemlist/market/peishi2011a.htm?cat=50010404',
+    ),
+    '鞋子箱包' => array(
+      '女鞋' => 'http://list.taobao.com/itemlist/nvxieshichang2011a.htm?cat=50006843',
+      '男鞋' => 'http://list.taobao.com/itemlist/nanxie2011a.htm?cat=50016853',
+      '女包' => 'http://list.taobao.com/itemlist/market/nvbao2011a.htm?cat=50006842',
+      '男包' => 'http://list.taobao.com/itemlist/market/nanbao2011a.htm?cat=50072686',
+      '功能箱包' => 'http://list.taobao.com/itemlist/market/nvbao2011a.htm?cat=50072688', 
+      '户外运动用品' => 'http://list.taobao.com/itemlist/market/sport2011a.htm?cat=2203',
+    ),
+    '食品饮料' => array(
+      '休闲零食' => 'http://list.taobao.com/itemlist/market/food2011.htm?cat=50002766',
+      '营养品' => 'http://list.taobao.com/itemlist/market/food2011.htm?cat=50008825', 
+      '茶/饮料' => 'http://list.taobao.com/itemlist/market/food2011.htm?cat=50103359',
+      '有机食品' => 'http://list.taobao.com/itemlist/market/nongye1.htm?cat=50107919&at=4673%2C11138',
+    ),
+    '生活家居' => array(
+      '住宅家具' => 'http://list.taobao.com/itemlist/jiaju.htm?cat=50008164',
+      '家居饰品' => 'http://list.taobao.com/itemlist/jiaju.htm?cat=50065206',
+      '家纺布艺' => 'http://list.taobao.com/itemlist/jiaju.htm?cat=50065205',
+      '五金电工' => 'http://list.taobao.com/itemlist/jiaju.htm?cat=50065355',
+      '收纳整理' => 'http://list.taobao.com/itemlist/market/baihuoshichang.htm?cat=50051688',
+      '居家日用' => 'http://list.taobao.com/itemlist/market/baihuoshichang.htm?cat=21', 
+      '餐饮用具' => 'http://list.taobao.com/itemlist/market/baihuoshichang.htm?cat=50035867', 
+      '洗护清洁' => 'http://list.taobao.com/itemlist/market/baihuoshichang.htm?cat=50035458',
+    ),
+    '数码家电' => array(
+      '手机' => 'http://list.taobao.com/itemlist/shuma.htm?cat=1512',
+      '相机/DV' => 'http://list.taobao.com/itemlist/shuma.htm?cat=14',
+      '笔记本' => 'http://list.taobao.com/itemlist/shuma.htm?cat=1101',
+      '平板电脑' => 'http://list.taobao.com/itemlist/shuma.htm?cat=50047310', 
+      '电脑周边' => 'http://list.taobao.com/itemlist/shuma.htm?cat=11',
+      '数码配件' => 'http://list.taobao.com/itemlist/shuma.htm?cat=50008090',
+      '大家电' => 'http://list.taobao.com/itemlist/market/jiadiano.htm?cat=50035182', 
+      '厨房电器' => 'http://list.taobao.com/itemlist/market/jiadiano.htm?cat=50018930',
+      '生活电器' => 'http://list.taobao.com/itemlist/market/jiadiano.htm?cat=50018957',
+      '影音电器' => 'http://list.taobao.com/itemlist/market/jiadiano.htm?cat=50018908',
+      '护理按摩' => 'http://list.taobao.com/itemlist/market/jiadiano.htm?cat=50049318',
+    ),
+    '母婴亲子' => array(
+      '孕妇用品' => 'http://list.taobao.com/itemlist/market/baby.htm?cat=50067081', 
+      '新生儿' => 'http://list.taobao.com/itemlist/market/baby.htm?cat=50097448', 
+      '宝宝食品' => 'http://list.taobao.com/itemlist/market/baby.htm?cat=35', 
+      '宝宝用品' => 'http://list.taobao.com/itemlist/market/baby.htm?cat=50006004',
+      '儿童玩具' => 'http://list.taobao.com/itemlist/market/baby.htm?cat=50005998',
+    ),
+    '个护化妆' => array(
+      '美容护肤' => 'http://list.taobao.com/itemlist/beauty.htm?cat=1801',
+      '彩妆香水' => 'http://list.taobao.com/itemlist/beauty.htm?cat=50010788', 
+      '美发护发' => 'http://list.taobao.com/itemlist/beauty.htm?cat=50071436',
+    ),
+    '珠宝饰品' => array(
+      '珠宝钻石' => 'http://list.taobao.com/itemlist/market/sp.htm?cat=50015926',
+      '品牌手表' => 'http://list.taobao.com/itemlist/market/sp.htm?cat=50005700', 
+      '流行饰品' => 'http://list.taobao.com/itemlist/market/sp.htm?cat=1075', 
+      '其他配饰' => 'http://list.taobao.com/itemlist/market/sp.htm?cat=28',
+    ),
+  );
+  //$pSize = 1000;
+  //_input_charset=utf-8&json=on&callback=json
+  $share_items = array();
+  $item_ids = db_query('SELECT item_id FROM {shares}')->fetchCol();
+  foreach ($catalogs as $key => $taobao_catalogs) {
+    foreach ($taobao_catalogs as $catalog => $url) {
+      $cid = db_query('SELECT cid FROM {share_catalog} WHERE name=:name', array(':name' => $catalog))->fetchField();
+      $share_items[$cid] = array();
+      $url .= '&pSize=300&_input_charset=utf-8&json=on&callback=json';
+      if ($json_data = file_get_contents($url)) {
+        $json_data = iconv('gbk', 'utf-8', $json_data);
+        $json_data = trim($json_data);
+        $json_data = substr($json_data, 4, strlen($json_data));//去除首位 json
+        $json_data = substr($json_data, 0, strlen($json_data) - 1); //去除首位 )
+        $json_data = trim($json_data);
+        $json_data = str_replace('(', '', $json_data); //去除首位 (
+        $json_data = trim($json_data);
+        if ($array = json_decode($json_data, TRUE)) {
+          //tmall
+          foreach ($array['mallItemList'] as $item) {
+            //TODO 判断评论数量 店铺信用 
+            if (!array_key_exists($item['itemId'], $share_items[$cid]) && $item['commend'] > 30) {
+              if (count($share_items[$cid]) < 100 && !in_array($item['itemId'], $item_ids)) {
+                $share_items[$cid][$item['itemId']] = array(
+                  'image' => $item['image'],
+                  'title' => $item['title'],
+                  'price' => $item['price'],
+                  'item_id' => $item['itemId'],
+                  'url' => $item['href'],
+                );
+                $item_ids[] = $item['itemId'];
+              } else {
+                break;
+              }
+            }
+          }
+
+          foreach ($array['itemList'] as $item) {
+            //TODO 判断评论数量 店铺信用 
+            if (!array_key_exists($item['itemId'], $share_items[$cid]) && $item['commend'] > 30) {
+              if (count($share_items[$cid]) < 100 && !in_array($item['itemId'], $item_ids)) {
+                $share_items[$cid][$item['itemId']] = array(
+                  'image' => $item['image'],
+                  'title' => $item['title'],
+                  'price' => $item['price'],
+                  'item_id' => $item['itemId'],
+                  'url' => $item['href'],
+                );
+                $item_ids[] = $item['itemId'];
+              } else {
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  $uid = \Drupal::config('share.settings')->get('default_taobao_share_uid');
+  if (!$uid) {
+    $uid = 1;
+  }
+  foreach ($share_items as $cid => $items) {
+    foreach ($items as $item_id => $item) {
+      $picture = 0;
+      if ($item['image']) {
+        if ($img_data = @file_get_contents($item['image'])) {
+          $file = file_save_data($img_data);
+          $file->setTemporary();
+          $file->save();
+
+          $picture = $file->id();
+        }
+      }
+      $source = '';
+      if (preg_match('/http:\/\/(www\.)?([^\/]*)/i', $item['url'], $matches)) {
+        $source = $matches[2];
+      }
+      $array = array(
+        'cid' => $cid,
+        'title' => $item['title'],
+        'price' => $item['price'],
+        'description' => '',
+        'sold_count' => 0,
+        'url' => $item['url'],
+        'item_id' => $item['item_id'],
+        'source' => $source,
+        'uid' => $uid,
+        'created' => time(),
+        'status' => 1,
+      );
+
+      $share = entity_create('share', $array);
+      $share->enforceIsNew();
+      $share->save();
+      
+      if ($picture) {
+        $share->setPicture($file);
+        $share->save();
+      }
+
+    }
+  }
+
 }

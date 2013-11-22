@@ -1,4 +1,4 @@
-adv_block.edit_adv_block_item_page:
+adv_block.edit:
   path: '/admin/adv_block_item/{adv_block_item}/edit'
   defaults:
     _entity_form: 'adv_block_item.default'
@@ -26,4 +26,9 @@ adv_block.admin_adv_block_sort:
     _content: '\Drupal\adv_block\Controller\AdvBlockController::admin_adv_block_sort'
   requirements:
     _permission: 'administer adv blocks'
-
+adv_block.admin_add:
+  path: '/admin/adv_block/{adv_block}/add/{entity_id}'
+  defaults:
+    _controller: '\Drupal\adv_block\Controller\AdvBlockController::addItem'
+  requirements:
+    _permission: 'administer adv blocks'

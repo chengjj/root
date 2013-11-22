@@ -4,6 +4,7 @@ namespace Drupal\ec\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class EcController extends ControllerBase {
 
@@ -16,7 +17,10 @@ class EcController extends ControllerBase {
    */
   public function verifyCodeImage(Request $request) {
     module_load_include('pages.inc', 'ec');
-    return ec_verify_code_page();
+
+    $check_number = ec_generate_code();
+    $_SESSION['user_register_check_number'] = $check_number;
+    return new Response();
   }
 
 
@@ -25,7 +29,12 @@ class EcController extends ControllerBase {
    */
   public function emailVerifyCodeImage(Request $request) {
     module_load_include('pages.inc', 'ec');
-    return ec_verify_code_email_page();
+
+    $check_number = ec_generate_code();
+
+    $_SESSION['user_register_email_check_number'] = $check_number;
+
+    return new Response();
   }
 
   /**

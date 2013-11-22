@@ -11,16 +11,18 @@ use Drupal\city\DistrictInterface;
  * @EntityType(
  *   id = "district",
  *   label = "区域",
- *   module = "city",
  *   controllers = {
  *     "storage" = "Drupal\city\DistrictStorageController",
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder"
+ *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "districts",
  *   entity_keys = {
  *     "id" = "did",
  *     "label" = "name",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "weight" = "weight"
  *   }
  * )
  */
@@ -50,7 +52,6 @@ class District extends ContentEntityBase implements DistrictInterface {
     );
     $properties['cid'] = array(
       'label' => '城市',
-      'type' => 'integer_field',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'city',

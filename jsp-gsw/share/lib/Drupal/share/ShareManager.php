@@ -7,9 +7,9 @@
 namespace Drupal\share;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
+use Symfony\Component\HttpFoundation\Request;
 /**
  * Share Manager Service.
  */
@@ -24,14 +24,14 @@ class ShareManager {
   /**
    * Entity manager Service Object.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
   /**
    * Constructs a ShareManager object.
    */
-  public function __construct(Connection $database, EntityManager $entityManager) {
+  public function __construct(Connection $database, EntityManagerInterface $entityManager) {
     $this->database = $database;
     $this->entityManager = $entityManager;
   }
@@ -39,11 +39,12 @@ class ShareManager {
   /**
    * load shares
    */
-  public function getShares() {
+  public function getShares(Request $request) {
     global $base_url;
 
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
+    $size = $request->query->get('per_page', 10);
+    $cid = $request->query->get('cid', 0);
+    $start = ($request->query->get('page', 1) - 1) * $size;
 
     if (!is_numeric($size) || !is_numeric($start)) {
       return array('message' => array('message' => '参数错误!'), 'status' => 422);
@@ -51,6 +52,14 @@ class ShareManager {
     $query = $this->database->select('shares', 's');
     $query->addExpression('COUNT(s.sid)');
     $query->condition('status', 1);
+    
+    if ($cid) {
+      $cids = array($cid);
+      if ($catalog_children = share_catalog_load_children($cid)) {
+        $cids = array_merge(array_keys($catalog_children), $cids);
+      }
+      $query->condition('cid', $cids, 'IN');
+    }
     $num_rows = $query->execute()->fetchField();
 
     if ($num_rows % $size) {
@@ -67,6 +76,9 @@ class ShareManager {
     if ($size) {
       $query->range($start, $size);
     }
+    if ($cid && count($cids)) {
+      $query->condition('cid', $cids, 'IN');
+    }
     $sids = $query->execute()
       ->fetchCol();
     if (count($sids)) {
@@ -75,11 +87,14 @@ class ShareManager {
 
     $http_next = $http_last = "<$base_url/api/share/list?";
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page',1);
     
     $http_next .= "per_page=$size&";
     $http_last .= "per_page=$size&";
-
+    if ($cid) {
+      $http_next .= "cid=$cid&";
+      $http_last .= "cid=$cid&";
+    }
     if ($page >= $pages) {
       $http_next = "";
     } else {
@@ -128,10 +143,10 @@ class ShareManager {
   /**
    * get user bookmark shares
    */
-  public function getUserBookmarkShares() {
+  public function getUserBookmarkShares(Request $request) {
     global $base_url;
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
+    $size = $request->query->get('per_page',10);
+    $start = ($request->query->get('page',1) - 1) * $size;
     if (!is_numeric($size) || !is_numeric($start)) {
       return array('message' => array('message' => '参数错误!'), 'status' => 422);
     }
@@ -158,7 +173,7 @@ class ShareManager {
     }
     $http_next = $http_last = "<$base_url/api/bookmark/shares?";
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page',1);
     
     $http_next .= "per_page=$size&";
     $http_last .= "per_page=$size&";

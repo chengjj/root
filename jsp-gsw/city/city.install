@@ -153,3 +153,12 @@ function city_update_2() {
   }
 }
 
+/**
+ * Update city.settings overview_district_class
+ */
+function city_update_3() {
+  $config = \Drupal::config('city.settings');
+  $config->set('overview_district_class', '\Drupal\city\Form\OverviewDistricts');
+  $config->save();
+}
+

@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, Drupal, drupalSettings) {
 
 "use strict";
 
@@ -20,7 +20,7 @@ Drupal.follow = function($a) {
   var follow = this;
   this.a = $a;
 
-  var uri = '/js/user/' + $a.attr('uid') + '/followed/';
+  var uri = drupalSettings.basePath + 'js/user/' + $a.attr('uid') + '/followed/';
   $.ajax({
     type: 'GET',
     url: uri,
@@ -49,10 +49,10 @@ Drupal.follow.prototype.click = function () {
   var follow = this;
 
   if (this.followed) {
-    var uri = '/js/user/' + this.a.attr('uid') + '/unfollow';
+    var uri = drupalSettings.basePath + 'js/user/' + this.a.attr('uid') + '/unfollow';
   }
   else {
-    var uri = '/js/user/' + this.a.attr('uid') + '/follow';
+    var uri = drupalSettings.basePath + 'js/user/' + this.a.attr('uid') + '/follow';
   }
   $.ajax({
     type: 'GET',
@@ -66,4 +66,4 @@ Drupal.follow.prototype.click = function () {
   return false;
 };
 
-})(jQuery);
+})(jQuery, Drupal, drupalSettings);

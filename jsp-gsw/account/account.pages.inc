@@ -175,21 +175,21 @@ function account_comment_store($user) {
  * 邮件找回密码 一次性链接地址
  */
 function account_pass_reset($form, &$form_state, $uid, $timestamp, $hashed_pass, $action = NULL) {
-  $user = \Drupal::currentUser();
+  $current_user = \Drupal::currentUser();
 
   // When processing the one-time login link, we have to make sure that a user
   // isn't already logged in.
-  if ($user->isAuthenticated()) {
+  if ($current_user->isAuthenticated()) {
     // The existing user is already logged in.
-    if ($user->id() == $uid) {
-      drupal_set_message(t('You are logged in as %user. <a href="!user_edit">Change your password.</a>', array('%user' => $user->getUsername(), '!user_edit' => url("user/" . $user->id() . "/edit"))));
+    if ($current_user->id() == $uid) {
+      drupal_set_message(t('You are logged in as %user. <a href="!user_edit">Change your password.</a>', array('%user' => $current_user->getUsername(), '!user_edit' => url("user/" . $current_user->id() . "/edit"))));
     }
     // A different user is already logged in on the computer.
     else {
       $reset_link_account = user_load($uid);
       if (!empty($reset_link_account)) {
         drupal_set_message(t('Another user (%other_user) is already logged into the site on this computer, but you tried to use a one-time link for user %resetting_user. Please <a href="!logout">logout</a> and try using the link again.',
-          array('%other_user' => $user->getUsername(), '%resetting_user' => $reset_link_account->getUsername(), '!logout' => url('user/logout'))));
+          array('%other_user' => $current_user->getUsername(), '%resetting_user' => $reset_link_account->getUsername(), '!logout' => url('user/logout'))));
       } else {
         // Invalid one-time link specifies an unknown user.
         drupal_set_message(t('The one-time login link you clicked is invalid.'));
@@ -214,13 +214,15 @@ function account_pass_reset($form, &$form_state, $uid, $timestamp, $hashed_pass,
           // Set the new user.
           // user_login_finalize() also updates the login timestamp of the
           // user, which invalidates further use of the one-time login link.
-          user_login_finalize($account);
+          //user_login_finalize($account);
+          global $user;
+          $user = $account;
           watchdog('user', 'User %name used one-time login link at time %timestamp.', array('%name' => $account->getUsername(), '%timestamp' => $timestamp));
           //drupal_set_message(t('You have just used your one-time login link. It is no longer necessary to use this link to log in. Please change your password.'));
           // Let the user's password be changed without the current password check.
           $token = Crypt::randomStringHashed(55);
-          $_SESSION['pass_reset_' . $user->id()] = $token;
-          return new RedirectResponse(url('account/' . $user->id() . '/edit/password', array(
+          $_SESSION['pass_reset_' . $account->id()] = $token;
+          return new RedirectResponse(url('account/' . $account->id() . '/edit/password', array(
             'query' => array('pass-reset-token' => $token),
             'absolute' => TRUE,
           )));

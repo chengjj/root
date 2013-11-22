@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 //use Drupal\Core\Controller\ControllerInterface;
 use Drupal\catalog\CatalogManager;
-use Drupal;
 /**
  * Controller routines for catalog routes.
  */
@@ -93,8 +92,8 @@ class StoreCatalogController implements ContainerInjectionInterface {
   /**
    * page callback: catalog/js/{option}
    */
-  public function storeCatalogJs($option) {
+  public function storeCatalogJs(Request $request, $option) {
     module_load_include('pages.inc', 'catalog');
-    return catalog_js($option);
+    return catalog_js($option, $request);
   }
 }

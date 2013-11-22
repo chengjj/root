@@ -51,16 +51,19 @@ function coupon_schema() {
         'default' => '',
       ),
       'start' => array(
+        'description' => '开始日期',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'expire' => array(
+        'description' => '结束日期',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'status' => array(
+        'description' => '状态: 0=未审核, 1=已发布, -1=已过期 -2=已撤销',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
@@ -233,5 +236,14 @@ function coupon_update_2() {
  */
 function coupon_update_3() {
   db_query("DELETE FROM {coupons} WHERE sid NOT IN (SELECT sid FROM {stores})");
+}
+
+/**
+ * Update coupon.settings overview_coupon_class
+ */
+function coupon_update_4() {
+  $config = \Drupal::config('coupon.settings');
+  $config->set('overview_coupon_class', '\Drupal\coupon\Form\OverviewCoupons');
+  $config->save();
 }
 

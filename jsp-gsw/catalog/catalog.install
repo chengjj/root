@@ -45,8 +45,8 @@ function catalog_schema() {
       ),
     ),
     'unique keys' => array(
-      'uuid' => array('uuid'),
-      'name' => array('name')
+      'uuid' => array('uuid')
+
     ),
     'primary key' => array('cid'),
   );

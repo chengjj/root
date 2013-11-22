@@ -124,12 +124,15 @@
 	padding:0 2px;
 	cursor:pointer;
 }
-.szbconbox .assortlist ul li a:hover{
+.szbconbox .assortlist ul li a span{
+	color:#999999;
+}
+.szbconbox .assortlist ul li a:hover,.szbconbox .assortlist ul li a:hover span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
 }
-.szbconbox .assortlist ul li a.seclect{
+.szbconbox .assortlist ul li a.seclect,.szbconbox .assortlist ul li a.seclect span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
@@ -148,7 +151,13 @@
 	line-height:24px;
 	float:left;
 }
-.szbconbox .assort .open a.c{
+.szbconbox .assort .open a span{
+	color:#999999;
+}
+.szbconbox .assort .open a:hover,.szbconbox .assort .open a:hover span{
+	color:#ff6699;
+}
+.szbconbox .assort .open a.c,.szbconbox .assort .open a.c span{
 	color:#ff6699;
 	font-weight:bold;
 }
@@ -264,7 +273,7 @@
 	font-weight:bold;
 	margin-right:15px;
 }
-.sjxx_attention a{
+.sjxx_attention a.btn,.sjxx_attention a.btn_01{
 	float:right;
 	display:inline-block;
 	width:52px;
@@ -278,7 +287,10 @@
 }
 .sjxx_attention a:hover{
 	text-decoration:none;
-	color:#ffffff;
+}
+.sjxx_attention a.btn_01{
+	background:#ffe7ef;
+	color:#F4296F;
 }
 .sjxx_info{
 	margin:0 15px;
@@ -308,7 +320,7 @@
 	float:left;
 	margin-right:8px;
 }
-.sjpic img{
+.sjpic li img{
 	width:130px;
 	height:86px;
 	overflow:hidden;
@@ -318,6 +330,7 @@
 	margin-top:-200px;
 	margin-left:200px;
 	width:300px;
+	height:200px;
 	padding:10px;
 	background:#ffffff;
 	border:1px solid #dddddd;
@@ -326,6 +339,7 @@
 }
 .sjpic_big img{
 	width:300px;
+	height:198px;
 }
 
 

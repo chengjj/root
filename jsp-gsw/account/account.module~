@@ -3,6 +3,8 @@
 use Drupal\account\AccountInterface;
 use Drupal\account\Form\UserLoginForm;
 use Drupal\Core\Template\Attribute;
+use Drupal\user\UserInterface;
+use Drupal\entity\Entity\EntityDisplay;
 
 /*
  * hook_form_alter
@@ -70,7 +72,7 @@ function account_menu_alter(&$items) {
 function account_theme() {
   $hooks = array(
     'account' => array(
-      'variables' => array('user' => NULL, 'links' => NULL, 'contents' => NULL, 'pager' => NULL),
+      'variables' => array('user' => NULL, 'links' => NULL, 'contents' => NULL, 'search_form' => NULL, 'pager' => NULL),
       'template' => 'account',
     ),
     'account_header' => array(
@@ -91,20 +93,6 @@ function account_theme() {
       'template' => 'account-admin',
       'description' => '会员管理后台',
     ),
-    'account_photo_setting_form' => array(
-      'render element' => 'form',
-      'template' => 'account-photo-setting-form',
-      'description' => '会员头像',
-    ),
-    'account_bind_phone_form' => array(
-      'render element' => 'form',
-      'template' => 'account-bind-phone-form',
-      'description' => '绑定手机',
-    ),
-    'account_bind_account' => array(
-      'template' => 'account-bind-account',
-      'description' => '绑定帐号',
-    ),
     'account_picture' => array(
       'variables' => array('account' => NULL, 'style_name' => NULL, 'attributes' => array()),
     ),
@@ -117,15 +105,15 @@ function account_theme() {
       'template' => 'account-edit-password',
     ),
     'account_login' => array(
-      'variables' => array(),
+      'variables' => array('user_login_form' => NULL),
       'template' => 'account-login'
     ),
     'account_register' => array(
-      'variables' => array('mode' => NULL),
+      'variables' => array('mode' => NULL, 'user_register_form' => NULL),
       'template' => 'account-register'
     ),
      'account_reset_passwd' => array(
-      'variables' => array(),
+      'variables' => array('account_reset_passwd_phone_form' => NULL, 'account_reset_passwd_email_form' => NULL),
       'template' => 'account-reset-passwd'
     ),
      'account_reset_passwd_msg' => array(
@@ -143,6 +131,14 @@ function account_theme() {
       'variables' => array('login_form' => NULL),
       'template' => 'account-reset-passwd-login-for-email'
     ),
+    'follow_users_form' => array(
+      'render element' => 'form',
+      'template' => 'follow-users-form'
+    ),
+    'account_coupon_bookmark_form' => array(
+      'render element' => 'form',
+      'template' => 'account-coupon-bookmark-form'
+    ),
   );
 
   return $hooks;
@@ -153,7 +149,7 @@ function account_theme() {
  */
 function account_user_load($users) {
   //TODO guike_update module 安装升级之后再开启该函数
-  $result = db_query('SELECT uid, `nickname`, `type`, `picture`, `sex`, `phone`, follow_count, fans_count FROM {accounts} WHERE uid IN (:uids)', array(':uids' => array_keys($users)));
+  $result = db_query('SELECT uid, `nickname`, `type`, `picture`, `sex`, `phone`, follow_count, fans_count,store_follow_count FROM {accounts} WHERE uid IN (:uids)', array(':uids' => array_keys($users)));
   foreach ($result as $record) {
     if ($record->picture) {
       $users[$record->uid]->picture = file_load($record->picture);
@@ -167,6 +163,7 @@ function account_user_load($users) {
     $users[$record->uid]->uid = $record->uid; //扩增uid兼容老代码
     $users[$record->uid]->follow_count = $record->follow_count;
     $users[$record->uid]->fans_count = $record->fans_count;
+    $users[$record->uid]->store_follow_count = $record->store_follow_count;
   }
   $result = db_query('SELECT uid, `name`, `type` FROM {account_tripartite_login} WHERE uid IN (:uids)', array(':uids' => array_keys($users)));
   foreach ($result as $record) {
@@ -236,7 +233,7 @@ function account_get_consumer_qrcode($uid) {
  */
 function account_send_msg($msg, $to) {
   require_once drupal_get_path('module', 'account') . '/lib/nusoap.php';
-  $client = new soapclient(variable_get('msg_service_uri', 'http://ws.iems.net.cn/GeneralSMS/ws/SmsInterface?wsdl'), TRUE);
+  $client = new nusoap_client(variable_get('msg_service_uri', 'http://ws.iems.net.cn/GeneralSMS/ws/SmsInterface?wsdl'), TRUE);
 	$client->soap_defencoding = 'utf-8'; 
 	$client->decode_utf8 = false;
 	$client->xml_encoding = 'utf-8';
@@ -244,7 +241,6 @@ function account_send_msg($msg, $to) {
   $username = variable_get('msg_user_name', '66787:jsp667');
 	$password = variable_get('msg_user_passwd', '11826125');
 	$from = variable_get('msg_from', '13212345678');
-
   $params	= array($username, $password, $from, $to, $msg);
   $result = $client->call('clusterSend', $params);
 	if ($err = $client->getError()) {
@@ -397,9 +393,17 @@ function account_save($account, $type = 2) {
 /**
  * APIs check nickname repeat
  */
-function account_nickname_repeat($nickname) {
-  return db_query('SELECT uid FROM {accounts} WHERE nickname=:nickname', array(':nickname' => $nickname))->fetchField();
+function account_nickname_repeat($nickname,$islike=false) {
+    $result=array();
+    if($islike){
+        $result=db_query("SELECT uid FROM {accounts} WHERE nickname like '%:nickname%'", array(':nickname' => $nickname))->fetchField();
+    }else{
+        $result=db_query('SELECT uid FROM {accounts} WHERE nickname=:nickname', array(':nickname' => $nickname))->fetchField();
+    }
+    return $result;
 }
+
+
 
 /**
  * generate account code for send msg
@@ -433,7 +437,6 @@ function account_generate_code($str) {
  */
 function account_preprocess_user(&$variables) {
   $user = \Drupal::currentUser();
-
   $variables['view_mode'] = $variables['elements']['#view_mode'];
   $account = $variables['elements']['#user'];
   $variables['account'] = $account;
@@ -446,7 +449,6 @@ function account_preprocess_user(&$variables) {
 
   if ($user->isAuthenticated()) {
     $variables['follow_url'] = url('');
-    drupal_add_library('account', 'drupal.account.follow');
   }
   else {
     $variables['follow_url'] = url('user/login');
@@ -457,9 +459,7 @@ function account_preprocess_user(&$variables) {
 
   $a = account_load($account->id());
   if ($a->district->value) {
-    $district = district_load($a->district->value);
-    //$variables['city'] = $district->cid->entity;
-    $variables['city'] = city_load($district->cid->value);
+    $variables['city'] = entity_load('city', $a->district->entity->cid->value);
   }
 
   if ($account->id() == $user->id()) {
@@ -470,13 +470,18 @@ function account_preprocess_user(&$variables) {
     $variables['header'] = array('#theme' => 'account_header', '#user' => $account);
 
     if (isset($variables['itsme'])) {
-      if ($aids = account_select_activities($account->id())) {
+<<<<<<< HEAD
+      if ($aids = account_select_activities($account->id(), TRUE, 6)) {
+=======
+      if ($aids = account_select_activities($account->id(),TRUE,6)) {
+>>>>>>> dadd8e5dfa9c3a7d4c712be862f7a90a4a006ba9
+        
         $activities = activity_load_multiple($aids);
         $variables['activities'] = activity_view_multiple($activities);
         $variables['pager'] = array('#theme' => 'pager', '#weight' => 5);
       }
       else {
-        $variables['activities'] = "需要先关注会员后才能看到会员动态";
+        $variables['activities'] = "关注了会员才有动态";
       }
     }
 
@@ -529,18 +534,27 @@ function account_theme_suggestions_user_alter(array &$suggestions, array $variab
 function account_select_activities($uid, $pager = TRUE, $limit = FALSE, $order = array('a.created' => 'DESC')) {
   $users = db_select('account_follows', 'f')
     ->fields('f', array('follow_uid'))
-    ->condition('f.uid', $uid);
+    ->condition('f.uid', $uid)
+    ->execute()
+    ->fetchCol();
   $stores = db_select('store_follow', 'f')
     ->fields('f', array('sid'))
-    ->condition('f.uid', $uid);
-  $or = db_or();
-  $or->condition('uid', $users, 'IN');
-  $or->condition('sid', $stores, 'IN');
-  $promotes = db_select('accounts', 'f')
-    ->fields('f', array('uid'))
-    ->condition('f.uid', $uid);
+    ->condition('f.uid', $uid)
+    ->execute()
+    ->fetchCol();
 
   $query = db_select('activity', 'a');
+  
+  $or = db_or();
+  if (!count($users)) {
+    $users = array('-1');
+  }
+  $or->condition('uid', $users, 'IN');
+  if (!count($stores)) {
+	  $stores = array('-1');
+  }
+  $or->condition('sid', $stores, 'IN');
+  
   $query->condition($or);
   if ($pager) {
     $count_query = clone $query;
@@ -605,7 +619,7 @@ function account_library_info() {
 
 function template_preprocess_account_header(&$variables) {
   $user = \Drupal::currentUser();
-
+  $variables['theme_path'] = '/sites/all/themes/guike';
   $account = $variables['user'];
   $variables['account'] = $account;
 
@@ -618,13 +632,12 @@ function template_preprocess_account_header(&$variables) {
     '#account' => $account
   );
   $variables['picture'] = drupal_render($picture);
-
   $variables['follows_url'] = check_plain(url('user/' . $account->id() . '/follows'));
   $variables['fans_url'] = check_plain(url('user/' . $account->id() . '/fans'));
-
+  
   $links = array();
   if (isset($variables['itsme'])) {
-    $links[] = array('title' => '关注的动态', 'href' => 'user/' . $account->id().'/follow/user');
+    $links[] = array('title' => '关注的动态', 'href' => 'user/' . $account->id());
     $links[] = array('title' => '收藏的', 'href' => 'user/' . $account->id() . '/bookmark/share');
     $links[] = array('title' => '我晒的', 'href' => 'user/' . $account->id() . '/share');
     $links[] = array('title' => '我评价的', 'href' => 'user/' . $account->id() . '/comment/share');
@@ -782,7 +795,8 @@ function account_select_bookmark_coupons($uid, $pager = TRUE, $limit = FALSE, $o
 
 function template_preprocess_account(&$variables) {
   $account = $variables['user'];
-
+  $variables['searchform'] = $account->searchform;
+  $variables['form_url'] =url('user/'.$account->id()."/follows");
   $variables['header'] = array('#theme' => 'account_header', '#user' => $account);
 }
 
@@ -880,6 +894,7 @@ function template_preprocess_account_picture(&$variables) {
 }
 
 function template_preprocess_account_admin(&$variables) {
+  drupal_add_library('account', 'drupal.account.register');
   $user = \Drupal::currentUser();
   $account = user_load($user->id());
   $variables['user'] = $account;
@@ -898,7 +913,25 @@ function template_preprocess_account_admin(&$variables) {
     array('title' => '绑定手机', 'href' => 'account/bind/phone'),
     array('title' => '绑定其他帐号', 'href' => 'account/bind/account'),
   );
-  $variables['sync_links'] = array('#theme' => 'links', '#links' => $links);
+  if ($stores = \Drupal::entityManager()->getStorageController('store')->loadUserStores($user->id())) {
+    $store = array_pop($stores);
+    $variables['sync_links'] = array('#theme' => 'links', '#links' => $links);
+    $links = array(
+      array('title' => '基本资料', 'href' => 'account/store/edit'),
+      array('title' => '店铺形象', 'href' => 'account/store/image'),
+    );
+    $variables['store_links'] = array('#theme' => 'links', '#links' => $links);//商家管理
+    $links = array(
+      array('title' => '发布促销', 'href' => 'coupon/add'),
+      array('title' => '管理促销', 'href' => 'account/coupon/list'),
+    );
+    $variables['conpou_links'] = array('#theme' => 'links', '#links' => $links);//促销管理
+    $links = array(
+      array('title' => '关注数', 'href' => 'account/store/follows'),
+      array('title' => '交易数', 'href' => 'account/store/deals'),
+    );
+    $variables['run_links'] = array('#theme' => 'links', '#links' => $links);//运营管理
+  }
 
   $variables['title'] = $variables['form']['#title'];
 }
@@ -908,10 +941,6 @@ function template_preprocess_account_admin(&$variables) {
  */
 function template_preprocess_account_login(&$variables) {
   drupal_add_library('jsp', 'drupal.input-text-hint');
-  $user_login_form = drupal_get_form(UserLoginForm::create(Drupal::getContainer()));
-  $user_login_form['name']['#attributes']['hint-text'] = '手机/注册邮箱';
-  //unset($user_login_form['name']['#attributes']['autofocus']);
-  $variables['user_login_form'] = $user_login_form;
   $variables['links'] = array(
     'register' => url('register'),
     'sina_login' => url('sina/redirect'),
@@ -922,13 +951,6 @@ function template_preprocess_account_login(&$variables) {
  */
 function template_preprocess_account_register(&$variables) {
   drupal_add_library('account', 'drupal.account.register');
-  $mode = $variables['mode'];
-  if ($mode == 'email') {
-    $user_register_form = drupal_get_form('account_register_email_form');
-  } else {
-    $user_register_form = drupal_get_form('account_register_form');
-  }
-  $variables['user_register_form'] = $user_register_form;
   $variables['links'] = array(
     'register' => url('register'),
     'register_email' => url('register/email'),
@@ -1233,9 +1255,15 @@ function user_load_by_phone($phone) {
  * @return
  *   An array of follow_uids matching the query.
  */
-function account_follow_select_users($uid, $pager = TRUE, $limit = FALSE, $order = array('f.created' => 'DESC')) {
+function account_follow_select_users($uid, $keyword, $pager = TRUE, $limit = FALSE, $order = array('f.created' => 'DESC')) {
   $query = db_select('account_follows', 'f');
   $query->condition('uid', $uid);
+  if (!empty($keyword)) {
+    $subquery = db_select('accounts', 'a')
+      ->condition('nickname', '%' . db_like($keyword) . '%', 'LIKE');
+    $subquery->addField('a', 'uid');
+    $query->condition('follow_uid', $subquery, 'IN');
+  }
 
   if ($pager) {
     $count_query = clone $query;
@@ -1315,17 +1343,6 @@ function account_follow_select_fans($uid, $pager = TRUE, $limit = FALSE, $order 
   return $query->execute()->fetchCol();
 }
 
-/**
- * Preprocesses variables for theme_account_reset_passwd().
- */
-function template_preprocess_account_reset_passwd(&$variables) {
-  $account_reset_passwd_phone_form = drupal_get_form('account_reset_passwd_phone_form');
-  $account_reset_passwd_email_form = drupal_get_form('account_reset_passwd_email_form');
-
-  $variables['account_reset_passwd_phone_form'] = $account_reset_passwd_phone_form;
-  $variables['account_reset_passwd_email_form'] = $account_reset_passwd_email_form;
-}
-
 function theme_account_avatar_upload($variables) {
   $element = $variables['element'];
   $element['upload']['#access'] = TRUE;
@@ -1394,7 +1411,7 @@ function account_reset_passwd_phone_form($form, &$form_state) {
     '#attributes' => array(
       'class' => array('text', 'r3', 'yz'),
     ),
-    '#field_suffix' => '<span class="yzm"><img style="cursor:pointer" title="刷新验证码" id="refresh" border="0" src=' . url('verify/code') . ' onclick="document.getElementById(\'refresh\').src=\'' . url('verify/code') . '?t=\'+Math.random()"/></span><a href="javascript:void();" class="cf" onclick="document.getElementById(\'refresh\').src=\'' . url('verify/code') . '?t=\'+Math.random();return false;">换一张</a>',
+    '#field_suffix' => '<span class="yzm"><img style="cursor:pointer" title="刷新验证码" id="refresh" border="0" src=' . url('verify/code', array('query' => array(rand()))) . ' onclick="document.getElementById(\'refresh\').src=\'' . url('verify/code') . '?t=\'+Math.random()"/></span><a href="javascript:void();" class="cf" onclick="document.getElementById(\'refresh\').src=\'' . url('verify/code') . '?t=\'+Math.random();return false;">换一张</a>',
     '#prefix' => '<div class="line">',
     '#suffix' => '</div>',
   );
@@ -1411,21 +1428,20 @@ function account_reset_passwd_phone_form($form, &$form_state) {
 }
 
 function account_reset_passwd_phone_form_validate($form, &$form_state) {
+  $request = \Drupal::request();
   $phone = $form_state['values']['phone'];
   if (strlen($phone) != 11 || !preg_match('/^13[0-9]{1}[0-9]{8}$|15[0189]{1}[0-9]{8}$|189[0-9]{8}$/', $phone)) {
     form_set_error('phone', '手机号码存在问题!');
     return;
   }
   $check_code = strtolower($form_state['values']['check_code']);
-  $session_code = isset($_SESSION['check_number']) ? strtolower($_SESSION['check_number']) : '';
+  $session_code = isset($_SESSION['user_register_check_number']) ? $_SESSION['user_register_check_number'] : '';
   if (strlen($check_code) != 4 || $check_code != $session_code) {
     form_set_error('check_code', '验证码输入有误！');
     return;
   }
-  $account = user_load_by_name($phone);
-  if (!$account) {
-    $account = user_load_by_phone($phone);
-  }
+
+  $account = user_load_by_phone($phone);
 
   if ($account && $account->id()) {
     $form_state['values']['account'] = $account;
@@ -1436,12 +1452,15 @@ function account_reset_passwd_phone_form_validate($form, &$form_state) {
 }
 
 function account_reset_passwd_phone_form_submit($form, &$form_state) {
+  $request = \Drupal::request();
   $account = $form_state['values']['account'];
   $phone = $form_state['values']['phone'];
   $pass = account_generate_code($phone);
   $content = '您在贵商网申请的验证码为:' . $pass . ',该验证码今日内有效,凭此验证码可用于找回密码,谢谢![贵商网]';
   account_send_msg($content, $phone);
+
   $_SESSION['reset_passwd_uid'] = $account->id();
+
   $form_state['redirect'] = array('resetpwd/' . $account->id() . '/login');
 }
 
@@ -1471,7 +1490,7 @@ function account_reset_passwd_email_form($form, &$form_state) {
     '#attributes' => array(
       'class' => array('text', 'r3', 'yz'),
     ),
-    '#field_suffix' => '<span class="yzm"><img style="cursor:pointer" title="刷新验证码" id="refresh_email" border="0" src=' . url('verify/code/email') . ' onclick="document.getElementById(\'refresh_email\').src=\'' . url('verify/code/email') . '?t=\'+Math.random()"/></span><a href="javascript:void();" class="cf" onclick="document.getElementById(\'refresh_email\').src=\'' . url('verify/code/email') . '?t=\'+Math.random();return false;">换一张</a>',
+    '#field_suffix' => '<span class="yzm"><img style="cursor:pointer" title="刷新验证码" id="refresh_email" border="0" src=' . url('verify/code/email', array('query' => array(rand()))) . ' onclick="document.getElementById(\'refresh_email\').src=\'' . url('verify/code/email') . '?t=\'+Math.random()"/></span><a href="javascript:void();" class="cf" onclick="document.getElementById(\'refresh_email\').src=\'' . url('verify/code/email') . '?t=\'+Math.random();return false;">换一张</a>',
     '#prefix' => '<div class="line">',
     '#suffix' => '</div>',
   );
@@ -1488,13 +1507,15 @@ function account_reset_passwd_email_form($form, &$form_state) {
 }
 
 function account_reset_passwd_email_form_validate($form, &$form_state) {
+  $request = \Drupal::request();
   $name = strtolower($form_state['values']['name']);
   if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $name)) {
     form_set_error('name', '请输入正确点邮箱地址!');
     return;
   }
   $check_code = strtolower($form_state['values']['check_code']);
-  $session_code = isset($_SESSION['email_check_number']) ? strtolower($_SESSION['email_check_number']) : '';
+  $session_code = isset($_SESSION['user_register_email_check_number']) ? $_SESSION['user_register_email_check_number'] : '';
+
   if (strlen($check_code) != 4 || $check_code != $session_code) {
     form_set_error('check_code', '验证码输入有误！');
     return;
@@ -1678,4 +1699,11 @@ function account_pass_reset_url($account, $options = array()) {
   $langcode = isset($options['langcode']) ? $options['langcode'] : $account->getPreferredLangcode();
   $url_options = array('absolute' => TRUE, 'language' => language_load($langcode));
   return url("account/reset/" . $account->id() . "/$timestamp/" . user_pass_rehash($account->getPassword(), $timestamp, $account->getLastLoginTime()), $url_options);
+}
+
+function account_user_view_alter(&$build, UserInterface $user, EntityDisplay $display) {
+  $currentUser = \Drupal::currentUser();
+  if ($currentUser->isAuthenticated()) {
+    $build['#attached']['library'][] = array('account', 'drupal.account.follow');
+  }
 }

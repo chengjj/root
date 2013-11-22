@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 //use Drupal\Core\Controller\ControllerInterface;
 use Drupal\statistic\StatisticManager;
-use Drupal;
 
 /**
  * Controller routines for statistic routes.

@@ -2,6 +2,7 @@
 
 namespace Drupal\coupon;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 
 /**
@@ -19,6 +20,8 @@ interface CouponStorageControllerInterface extends EntityStorageControllerInterf
    */
   public function deleteBookmarks(array $entities);
 
-}
 
+  public function unbookmark(CouponInterface $coupon);
+
+}
 ?>

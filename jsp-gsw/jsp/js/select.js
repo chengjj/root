@@ -36,11 +36,53 @@ Drupal.behaviors.select = {
     /*******************about us help中about_help_menu的浮动***********************************************/
     $(context).find('ul.about_help_menu').once('about_help_menu', function() {
       var $this = $(this);
-      console.log('fuck you');
       $(window).scroll(function() { 
         var offsetTop = $(window).scrollTop() + 350 +"px";
 	//$(this).css("top", top + "px");
 	$this.animate({top : offsetTop },{ duration:300 , queue:false });
+      });
+    });
+    /*******************find password中edit-check-code的清空***********************************************/
+    $(context).find('input#edit-check-code').once('edit-check-code', function() {
+      $(this).val("");
+    });
+    /*******************个人中心的商品收藏中全选按钮***********************************************/
+    $(context).find('input#edit-all').once('edit-all', function() {
+      var $group = $(this).parent().siblings('div.waterfall').find('input.form-checkbox');
+      $(this).click(function() {
+        if($(this).is(':checked')) {
+	  $group.each(function() {
+	    this.checked = true;
+	  })
+	}
+	else {
+	  $group.each(function() {
+	    this.checked = false;
+	  });
+	}
+      });
+    });
+
+   $(context).find('div.waterfall').find('input.form-checkbox').once('form-checkbox', function() {
+     $(this).click(function() {
+       var $all = $(this).parents().find('input#edit-all');
+       if($('div.waterfall input.form-checkbox').filter(':checked').length === 6) {
+	 $all.each(function() {
+	   this.checked = true;
+	 });
+       }
+       else {
+         $all.each(function() {
+	   this.checked = false;
+	 })
+       }
+     })
+   });
+    /****************回顶部按钮************************************************/
+    $(context).find('div#floating').once('floating', function() {
+      $(this).click(function() {
+        $('body,html').animate({scrollTop:0},1000);
+	return false;
       });
     });
   }

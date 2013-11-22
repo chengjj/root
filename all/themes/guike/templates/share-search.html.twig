@@ -1,14 +1,5 @@
 <div class="assort wrap_border space">
-  <div class="assortlist">
-    <label>分类</label>
-    <a class="all" href="{{ all_catalog_url }}">全部</a>
-    {{ catalogs }}
-  </div>
-  {% if sub_catalogs %}
-  <div class="open">
-    {{ sub_catalogs }}
-  </div>
-  {% endif %}
+  {{ catalogs }}
 </div>
 
 {% if keywords %}

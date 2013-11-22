@@ -16,15 +16,18 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *
  * @EntityType(
  *   id = "share_catalog",
- *   label = "ShareCatalog",
- *   module = "share",
+ *   label = "商品分类",
  *   controllers = {
- *     "storage" = "Drupal\share\ShareCatalogStorageController"
+ *     "storage" = "Drupal\share\ShareCatalogStorageController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController"
  *   },
  *   base_table = "share_catalog",
  *   entity_keys = {
  *     "id" = "cid",
- *     "label" = "name"
+ *     "label" = "name",
+ *     "uuid" = "uuid",
+ *     "weight" = "weight"
  *   }
  * )
  */
@@ -46,18 +49,28 @@ class ShareCatalog extends ContentEntityBase implements ShareCatalogInterface {
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
+    $properties['uuid'] = array(
+      'label' => t('UUID'),
+      'description' => t('The share_catalog UUID.'),
+      'type' => 'uuid_field',
+      'read-only' => TRUE,
+    );
     $properties['parent_cid'] = array(
-      'label' => t('Parent ID'),
+      'label' => '上级分类',
       'type' => 'entity_reference_field',
-      'settings' => array('target_type' => 'share_catalog'),
+      // Save new catalogs with no parents by default.
+      'settings' => array(
+        'target_type' => 'share_catalog',
+        'default_value' => 0
+      ),
     );
     $properties['name'] = array(
-      'label' => t('Name'),
+      'label' => '名称',
       'type' => 'string_field',
       'settings' => array('default_value' => ''),
     );
     $properties['weight'] = array(
-      'label' => t('Weight'),
+      'label' => '排列顺序',
       'type' => 'integer_field',
     );
     return $properties;

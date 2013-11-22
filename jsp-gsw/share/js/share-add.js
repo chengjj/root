@@ -99,6 +99,18 @@
           $('#add-goods-url').focus();
         }
       });
+      $("#goods-description").keyup(function(){
+          //获取文本框数量
+          var count = $(this).val().length;
+          if (201 > count) {
+            var html='还可以输入' + (200-count) + '个字';
+            $(".field .left-char").html(html); 
+          } else {
+              var html = $(this).val();
+              html = html.substring(0,200);
+              $(this).val(html);
+          }
+      });
     }
   };
 

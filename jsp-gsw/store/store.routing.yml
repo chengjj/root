@@ -64,13 +64,50 @@ store_photos:
     _controller: '\Drupal\store\Controller\StoreController::storePhotos'
   requirements:
     _access: 'TRUE'
+app.adv_block.stores:
+  path: '/api/adv_block/stores/{city_id}'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::advBlockStores'
+  requirements:
+    _access: 'TRUE'
+app.store.comment:
+  path: '/api/store/{store_id}/comment'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::storeComment'
+  requirements:
+    _access: 'TRUE'
+app.current_user.comments:
+  path: '/api/user/store/comments'
+  defaults:
+    _controller: '\Drupal\store\Controller\StoreController::userComments'
+  requirements:
+    _access: 'TRUE'
 
 store.view:
   path: '/store/{store}'
   defaults:
+    _title_callback: '\Drupal\store\Controller\StoreController::storeTitle'
     _entity_view: 'store.full'
   requirements:
     _access: 'TRUE'
+store.edit:
+  path: '/store/{store}/edit'
+  defaults:
+    _entity_form: 'store'
+  requirements:
+    _permission: 'administer store'
+store.delete_form:
+  path: '/store/{store}/delete'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeDeleteForm'
+  requirements:
+    _permission: 'administer store'
+store.register_user:
+  path: '/store/{store}/register'
+  defaults:
+    _content: '\Drupal\store\Controller\StoreController::storeRegisterUser'
+  requirements:
+    _permission: 'administer store'
 
 store.history_read_store:
   path: '/store/history/{store}/read'
@@ -149,24 +186,6 @@ store.add:
   path: 'store/add'
   defaults:
     _content: '\Drupal\store\Controller\StoreController::storeAdd'
-  requirements:
-    _permission: 'administer store'
-store.edit_form:
-  path: '/store/{store}/edit'
-  defaults:
-    _entity_form: 'store'
-  requirements:
-    _permission: 'administer store'
-store.delete_form:
-  path: '/store/{store}/delete'
-  defaults:
-    _content: '\Drupal\store\Controller\StoreController::storeDeleteForm'
-  requirements:
-    _permission: 'administer store'
-store.register_user:
-  path: '/store/{store}/register'
-  defaults:
-    _content: '\Drupal\store\Controller\StoreController::storeRegisterUser'
   requirements:
     _permission: 'administer store'
 store.search:

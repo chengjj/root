@@ -16,7 +16,7 @@
        <li><a target="_blank">生活服务</a></li>
        <li><a target="_blank">购物</a></li>
        <li><a target="_blank">运动健身</a></li>
-       <li><a class="seclect" target="_blank">餐饮美食</a></li>
+       <li><a class="active" target="_blank">餐饮美食</a></li>
        <li><a target="_blank">休闲娱乐</a></li>
       </ul>
      </div>
@@ -39,26 +39,26 @@
 #}
 <div class="assortlist">
   <label>分类</label>
-  <a class="all" href="{{ links.catalog_all }}" data-cid="0">全部</a>
+  <a class="all {{ catalog_all_class }}" href="{{ links.catalog_all }}" data-cid="0">全部</a>
   <ul class="store-catalog">
   {% for catalog in catalogs %}
-    <li><a data-cid="{{ catalog.cid }}" href="{{ catalog.search_link }}" class="{{ catalog.seclect }}" >{{ catalog.name }}</a></li>
+    <li><a data-cid="{{ catalog.cid }}" href="{{ catalog.search_link }}" class="{{ catalog.active }}" >{{ catalog.name }}{% if catalog.store_count %}<span>({{ catalog.store_count }})</span>{% endif %}</a></li>
   {% endfor %}
   </ul>
 </div>
 {% for cid, catalogs in catalog_childrens %}
-<div data-cid="{{ cid }}" style="display:none;">
-  {% for catalog in catalogs %}
-    <a href="{{ catalog.search_link }}" data-cid="{{ catalog.cid }}">{{ catalog.name }}</a>
+<div data-cid="{{ cid }}" {% if catalogs.open is empty %} style="display:none;" {% else %} data-expand="open" class="{{ catalogs.open }}" {% endif %}>
+  {% for catalog in catalogs.items %}
+    <a href="{{ catalog.search_link }}" data-cid="{{ catalog.cid }}" {% if catalog.active %} class="{{ catalog.active }}" {% endif %}>{{ catalog.name }}{% if catalog.store_count %}<span>({{ catalog.store_count }})</span>{% endif %}</a>
   {% endfor %}
 </div>
 {% endfor %}
 <div class="assortlist">
   <label>区域</label>
-  <a class="all" href="{{ links.district_all }}" data-did="0">全部</a>
+  <a class="all {{ district_all_class }}" href="{{ links.district_all }}" data-did="0">全部</a>
   <ul>
   {% for district in districts %}
-    <li><a href="{{ district.search_link }}" data-did="{{ district.did }}" >{{ district.name }}</a></li>
+    <li><a href="{{ district.search_link }}" data-did="{{ district.did }}" class="{{ district.active }}" >{{ district.name }}{% if district.store_count %}<span>({{ district.store_count }})</span>{% endif %}</a></li>
   {% endfor %}
   </ul>
 </div>

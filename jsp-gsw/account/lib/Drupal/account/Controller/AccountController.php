@@ -20,6 +20,7 @@ use Drupal\user\Plugin\Core\Entity\User;
 use Drupal\user\UserInterface;
 
 use Drupal\account\AccountInterface;
+use Drupal\account\Form\UserLoginForm;
 
 /**
  * Controller routines for account routes.
@@ -144,12 +145,19 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
    */
   protected function get_login_response($account) {
     $avatar_url = $account->picture ? file_create_url($account->picture->getFileUri()) : variable_get('user_default_picture', 'http://api.gsw100.com/sites/default/files/user_default_picture.png');
+    $coupon_bookmark_count = db_query('SELECT COUNT(cid) FROM {coupon_bookmarks} WHERE uid=:uid', array(':uid' => $account->id()))->fetchField();
+    $share_bookmark_count = db_query('SELECT COUNT(sid) FROM {share_bookmarks} WHERE uid=:uid', array(':uid' => $account->id()))->fetchField();
     return array(
       'id' => $account->id(), 
       'avatar_url' => $avatar_url, 
       'login' => $account->getUsername(),
       'name' => (isset($account->nickname) && $account->nickname) ? $account->nickname : $account->getUsername(),
       'type' => isset($account->tripartite_login_type) ? $account->tripartite_login_type : '',
+      'follow_count' => isset($account->follow_count) ? $account->follow_count : 0,
+      'fans_count' => isset($account->fans_count) ? $account->fans_count : 0,
+      'store_follow_count' => isset($account->store_follow_count) ? $account->store_follow_count : 0,
+      'coupon_bookmark_count' => $coupon_bookmark_count,
+      'share_bookmark_count' => $share_bookmark_count,
     ); 
   }
   /**
@@ -180,6 +188,7 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
       'user_count' => $store->user_num->value,
       'follow_count' => $store->follow_count->value,
       'coupon_title' => $coupon_title,
+      'comment_count' => $store->comment_count->value,
     );
   }
 
@@ -274,9 +283,9 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   /**
    * page callback for: api/follows
    */
-  public function userFollowStoresList() {
+  public function userFollowStoresList(Request $request) {
     $responses = array();
-    $return = $this->accountManager->followStoresList();
+    $return = $this->accountManager->followStoresList($request);
     foreach ($return['stores'] as $store) {
       $responses[] = $this->get_store_response($store);
     }
@@ -341,47 +350,26 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   }
 
   public function follow(Request $request, UserInterface $user) {
-    $currentUser = \Drupal::currentUser();
-    db_insert('account_follows')
-      ->fields(array(
-        'uid' => $currentUser->id(),
-        'follow_uid' => $user->id(),
-        'created' => REQUEST_TIME,
-      ))
-      ->execute();
-
-    if ($account = account_load($currentUser->id())) {
-      $account->follow_count->value ++;
-      $account->save();
-    }
-    else {
-      db_insert('accounts')
-        ->fields(array(
-          'uid' => $currentUser->id(),
-          'follow_count' => 1,
-        ))
-        ->execute();
-    }
-    if($account = account_load($user->id())) {
-      $account->fans_count->value ++;
-      $account->save();
-    }
-    else {
-      db_insert('accounts')
-        ->fields(array(
-          'uid' => $user->id(),
-          'fans_count' => 1,
-        ))
-        ->execute();
-    }
-
+    $this->accountManager->follow($user);
     return new JsonResponse(array('followed' => true));
   }
+
   public function storefollows(){
-      $build = array('#theme' => 'account_admin', '#form' => array('text'=>array('#title'=>'111111111222')));
-      $build['#title']='关注数';
-      return $build;
+    $currentUser = \Drupal::currentUser();
+    $query = db_select('stores', 's');
+    $query->addField('s', 'follow_count');
+    $query->condition('s.uid', $currentUser->id());
+
+    $follow_count = $query->execute()->fetchField();
+    //$build['#contents'] = $follow_count;
+    $build = array('#theme'=>'account_admin',
+      '#title' => '关注数',
+      'form' => array('#markup' => '<h3 class="gzs">关注数</h3>
+        <p class="data_con">您在贵客受到的关注数量为：<em>' . $follow_count . '</em></p>'),
+    );
+    return $build;
   }
+
   public function unfollow(Request $request, UserInterface $user) {
     $currentUser = \Drupal::currentUser();
     db_delete('account_follows')
@@ -430,9 +418,9 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   public function accountLogin() {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
-    return array('#theme' => 'account_login');
+    return array('#theme' => 'account_login', '#user_login_form' => drupal_get_form(UserLoginForm::create(\Drupal::getContainer())));
   }
 
   /**
@@ -441,9 +429,9 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   public function accountRegister() {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
-    return array('#theme' => 'account_register', '#mode' => 'phone');
+    return array('#theme' => 'account_register', '#mode' => 'phone', '#user_register_form' => drupal_get_form('account_register_form'));
   }
 
   /**
@@ -452,20 +440,20 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   public function accountEmailRegister() {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
-    return array('#theme' => 'account_register', '#mode' => 'email');
+    return array('#theme' => 'account_register', '#mode' => 'email', '#user_register_form' => drupal_get_form('account_register_email_form'));
   }
 
   /**
    * callback for: resetpwd
    */
-  public function accountResetpwd() {
+  public function accountResetpwd(Request $request) {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
-    return array('#theme' => 'account_reset_passwd', '#mode' => 'email');
+    return array('#theme' => 'account_reset_passwd', '#account_reset_passwd_phone_form' => drupal_get_form('account_reset_passwd_phone_form'), '#account_reset_passwd_email_form' => drupal_get_form('account_reset_passwd_email_form'));
   }
 
   /**
@@ -474,7 +462,7 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   public function accountResetpwdMsg(Request $request, UserInterface $user) {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
     return array('#theme' => 'account_reset_passwd_msg');
   }
@@ -485,11 +473,11 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   public function accountResetpwdLogin(Request $request, UserInterface $user) {
     $currentUser = \Drupal::currentUser();
     if ($currentUser->id()) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
     $reset_passwd_uid = isset($_SESSION['reset_passwd_uid']) ? $_SESSION['reset_passwd_uid'] : '';
     if ($user->id() != $reset_passwd_uid) {
-      return new RedirectResponse(url('user', array('absolute' => TRUE)));
+      return new RedirectResponse(url('user/' . $currentUser->id(), array('absolute' => TRUE)));
     }
     return array('#theme' => 'account_reset_passwd_login', '#login_form' => drupal_get_form('account_reset_passwd_login_form', $user));
   }
@@ -497,24 +485,24 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   /**
    * callback for: user/{user}/follows
    */
-  public function userFollows(UserInterface $user) {
+  public function userFollows(UserInterface $user,Request $request) {
+    $user->searchform=1;
     $build = array('#theme' => 'account', '#user' => $user);
-
     $links = array(
       array('title' => '我的关注', 'href' => 'user/' . $user->id() . '/follows'),
       array('title' => '我关注的商家', 'href' => 'user/' . $user->id() . '/stores'),
       array('title' => '我的粉丝', 'href' => 'user/' . $user->id() . '/fans'),
     );
     $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
-
-    if ($ids = account_follow_select_users($user->id(), TRUE, 12)) {
+    
+    if ($ids = account_follow_select_users($user->id(), $request->query->get('keyword', ''), TRUE, 12)) {
       $users = user_load_multiple($ids);
       $build['#contents'] = entity_view_multiple($users, 'teaser');
-
+      $build['#search_form'] = drupal_get_form('Drupal\account\Form\UserSearchForm');
       $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
     }
     else {
-      $build['#contents'] = '<div class="follow_note">您还没有关注其他朋友，现在就去关注吧！</div>';
+      $build['#contents'] = drupal_get_form('\Drupal\account\Form\FollowUsers');
     }
 
     return $build;
@@ -528,7 +516,7 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
       array('title' => '我的粉丝', 'href' => 'user/' . $user->id() . '/fans'),
     );
     $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
-    if ($sids = account_select_follow_stores($user->id())) {
+    if ($sids = account_select_follow_stores($user->id(),TRUE,12)) {
       $stores = store_load_multiple($sids);
       $build['#contents'] = store_view_multiple($stores,'follow');
       $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
@@ -565,7 +553,18 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
     return $build;
   }
 
+  function userBookmarkShareTitle(UserInterface $user) {
+    $currentUser = \Drupal::currentUser();
+    if ($currentUser->id() == $user->id()) {
+      return '我收藏的商品';
+    } else {
+      $nickname = $user->nickname ? $user->nickname : $user->getUsername();
+      return $nickname . '收藏的商品';
+    }
+  }
   function userBookmarkShare(UserInterface $user) {
+    $currentUser = \Drupal::currentUser();
+
     $build = array('#theme' => 'account', '#user' => $user);
 
     $links = array(
@@ -575,9 +574,14 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
     $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
 
     if ($sids = account_select_bookmark_shares($user->id())) {
-      $shares = share_load_multiple($sids);
-      $build['#contents'] = waterfall(share_view_multiple($shares), 4);
-      $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+      if ($user->id() == $currentUser->id()) {
+        $build['#contents'] = drupal_get_form('\Drupal\account\Form\ShareHistoryForm');
+      }
+      else {
+        $shares = share_load_multiple($sids);
+        $build['#contents'] = waterfall(share_view_multiple($shares), 4);
+        $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+      }
     }
     else {
       $build['#contents'] = '<div class="note_box">
@@ -591,6 +595,7 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
   
   
   function userBookmarkCoupon(UserInterface $user) {
+    $currentUser = \Drupal::currentUser();
     $build = array('#theme' => 'account', '#user' => $user);
 
     $links = array(
@@ -598,13 +603,17 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
       array('title' => '收藏的优惠', 'href' => 'user/' . $user->id() . '/bookmark/coupon'),
     );
     $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
-
-    if ($ids = account_select_bookmark_coupons($user->id())) {
-      $coupons = entity_load_multiple('coupon', $ids);
-      $build['#contents'] = entity_view_multiple($coupons, 'bookmark');
-      $build['#contents']['#prefix'] = '<div class="salelist">';
-      $build['#contents']['#suffix'] = '</div>';
-      $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+    if ($cids = account_select_bookmark_coupons($user->id())) {
+      if ($user->id() == $currentUser->id()) {
+        $build['#contents'] = drupal_get_form('\Drupal\account\Form\CouponBookmarkForm');
+      }
+      else{
+        $coupons = entity_load_multiple('coupon', $cids);
+        $build['#contents'] = entity_view_multiple($coupons, 'bookmark');
+        $build['#contents']['#prefix'] = '<div class="salelist">';
+        $build['#contents']['#suffix'] = '</div>';
+        $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+      }
     }
     else {
       $build['#contents'] = '还没有收藏任何优惠。';
@@ -612,7 +621,20 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
 
     return $build;
   }
+  function userunBookmarkCoupon(UserInterface $user) {
+    $currentUser = \Drupal::currentUser();
+    db_delete('account_follows')
+      ->condition('uid', $currentUser->id())
+      ->condition('follow_uid', $user->id())
+      ->execute();
 
+    if($account = account_load($user->id())) {
+      $account->fans_count->value --;
+      $account->save();
+    }
+
+    return new JsonResponse(array('followed' => false));
+  }
   function userShare(UserInterface $user){
 	  $build = array('#theme' => 'account', '#user' => $user);
 
@@ -639,12 +661,13 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
 	  $build = array('#theme' => 'account', '#user' => $user);
 
 	  $links = array(
-        array('title' => '我评价的', 'href' => 'user/' . $user->id() . '/comment/share'),
+            array('title' => '我评价的商品', 'href' => 'user/' . $user->id() . '/comment/share'),
+            array('title' => '我评价的优惠', 'href' => 'user/' . $user->id() . '/comment/coupon'),
  	  );
 
 	  $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
 
- 	  if ($cids = account_select_share_comments($user->id())) {
+ 	  if ($cids = account_select_share_comments($user->id(),TRUE,3)) {
         $comments = share_comment_load_multiple($cids);
         $build['#contents'] = share_comment_view_multiple($comments, 'user');
         $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
@@ -652,7 +675,26 @@ class AccountController extends ControllerBase implements ContainerInjectionInte
         else {
         $build['#contents'] = '还未评价任何商品。';
         }
+    return $build;
+  }
+  function userCommentCoupon(UserInterface $user){
+	  $build = array('#theme' => 'account', '#user' => $user);
 
+	  $links = array(
+            array('title' => '我评价的商品', 'href' => 'user/' . $user->id() . '/comment/share'),
+            array('title' => '我评价的优惠', 'href' => 'user/' . $user->id() . '/comment/coupon'),
+ 	  );
+
+	  $build['#links'] = array('#theme' => 'links', '#links' => $links, '#attributes' => array('class' => array('action-links')));
+
+ 	  if ($cids = account_select_store_comments($user->id())) {
+        $comments = store_comment_load_multiple($cids);
+        $build['#contents'] = store_comment_view_multiple($comments, 'user');
+        $build['#pager'] = array('#theme' => 'pager', '#tags' => array('最前', '<上一页', '', '下一页>', '最后'));
+        }
+        else {
+        $build['#contents'] = '还未评价任何优惠信息。';
+        }
     return $build;
   }
   

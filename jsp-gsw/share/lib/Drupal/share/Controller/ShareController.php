@@ -13,15 +13,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 //use Drupal\Core\Controller\ControllerInterface;
 use Drupal\share\ShareManager;
-use Drupal;
 
 use Drupal\share\ShareInterface;
 use Drupal\share\ShareCatalogInterface;
+use Drupal\share\ShareStorageController;
 
 /**
  * Controller routines for share routes.
  */
 class ShareController implements ContainerInjectionInterface {
+  protected $shareStorageController;
+
   /**
    * Share Manager Service.
    *
@@ -33,13 +35,17 @@ class ShareController implements ContainerInjectionInterface {
    * Injects ShareManager Service.
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('share.manager'));
+    return new static(
+      $container->get('entity.manager')->getStorageController('share'),
+      $container->get('share.manager')
+    );
   }
 
   /**
    * Constructs a ShareController object.
    */
-  public function __construct(ShareManager $shareManager) {
+  public function __construct(ShareStorageController $shareStorageController, ShareManager $shareManager) {
+    $this->shareStorageController = $shareStorageController;
     $this->shareManager = $shareManager;
   }
 
@@ -58,7 +64,7 @@ class ShareController implements ContainerInjectionInterface {
     //1:1.5 200x300
     $picture = $share->getPicture();
     if (is_object($picture)) {
-      $image_factory = Drupal::service('image.factory');
+      $image_factory = \Drupal::service('image.factory');
       $image = $image_factory->get($picture->getFileUri());
       $width = $image->getWidth();
       $height = $image->getHeight();
@@ -96,7 +102,7 @@ class ShareController implements ContainerInjectionInterface {
       'large_image_url' => $large_variables ? get_uri_by_image_style($large_variables) : '',
       'url' => $url,
       'item_id' => $item_id,
-      'user_favorites' => get_share_user_favorites($share->id()),
+      'user_favorites' => $share->bookmark_count->value,
       'sold_count' => 0,
       'description' => $share->description->value,
     );
@@ -106,8 +112,8 @@ class ShareController implements ContainerInjectionInterface {
    * Get share list
    * page callback for: api/share/list
    */
-  public function shareList() {
-    $return = $this->shareManager->getShares();
+  public function shareList(Request $request) {
+    $return = $this->shareManager->getShares($request);
     if (isset($return['message'])) {
       return new JsonResponse($return['message'], $return['status']);
     } else {
@@ -138,8 +144,8 @@ class ShareController implements ContainerInjectionInterface {
    * user bookmark shares
    * page callback for: api/bookmark/shares
    */
-  public function userBookmarkShares() {
-    $return = $this->shareManager->getUserBookmarkShares();
+  public function userBookmarkShares(Request $request) {
+    $return = $this->shareManager->getUserBookmarkShares($request);
     if (isset($return['message'])) {
       return new JsonResponse($return['message'], $return['status']);
     } else {
@@ -166,23 +172,14 @@ class ShareController implements ContainerInjectionInterface {
   }
 
   public function bookmark(Request $request, ShareInterface $share) {
-    if ($GLOBALS['user']->isAuthenticated()) {
-      db_insert('share_bookmarks')
-        ->fields(array(
-          'uid' => $GLOBALS['user']->id(),
-          'sid' => $share->id(),
-          'created' => REQUEST_TIME,
-        ))
-        ->execute();
-    }
+    $this->shareStorageController->bookmark($share);
+
     return new JsonResponse(array('bookmarked' => true));
   }
 
   public function unbookmark(Request $request, ShareInterface $share) {
-    db_delete('share_bookmarks')
-      ->condition('uid', $GLOBALS['user']->id())
-      ->condition('sid', $share->id())
-      ->execute();
+    $this->shareStorageController->unbookmark($share);
+
     return new JsonResponse(array('bookmarked' => false));
   }
 
@@ -226,14 +223,6 @@ class ShareController implements ContainerInjectionInterface {
   }
 
   /**
-   * page callback: admin/share/edit/{share}
-   */
-  public function shareAdminEdit(Request $request, ShareInterface $share) {
-    module_load_include('admin.inc', 'share');
-    return drupal_get_form('share_admin_edit_form', $share);
-  }
-
-  /**
    * page callback: admin/share/delete/{share}
    */
   public function shareAdminDelete(Request $request, ShareInterface $share) {
@@ -247,4 +236,100 @@ class ShareController implements ContainerInjectionInterface {
   public function shareSearch() {
     return array('#theme' => 'share_search');
   }
+
+  /**
+   * page callback: /admin/taobao/shares
+   */
+  public function shareFromTaobao() {
+    module_load_include('admin.inc', 'share');
+    return drupal_get_form('share_admin_get_form_taobao_form');
+  }
+
+
+  public function shareTitle(ShareInterface $share) {
+    return $share->label();
+  }
+
+  /**
+   * page callback: api/share/editor/list
+   */
+  public function advBlockShares(Request $request) {
+    global $base_url;
+    $size = $request->query->get('per_page', 100);
+    $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
+    $sort = $request->query->get('orderby', '最热商品');
+
+    $bid = db_query('SELECT bid FROM {adv_blocks} WHERE title = :title AND type = :type', array(':title' => '首页热门团购', ':type' => 'share'))->fetchField();
+    if (!$bid) {
+      $bid = \Drupal::config('app.adv_block.shares')->get('default_bid');
+    }
+
+    $query = db_select('adv_block_items', 'a');
+    $query->addExpression('COUNT(a.iid)');
+    $num_rows = $query->execute()->fetchField();
+
+    if ($num_rows % $size) {
+      $pages = (int)($num_rows / $size) + 1;
+    } else {
+      $pages = $num_rows / $size;
+    }
+
+    $select_sql = "SELECT s.sid FROM shares s INNER JOIN adv_block_items a ON a.entity_id = s.sid WHERE a.bid = $bid ";
+    $order_by_sql = "";
+    $limit = " LIMIT $start, $size";
+
+    switch ($sort) {
+      case '最热商品':
+        $order_by_sql = ' ORDER BY s.bookmark_count DESC,s.comment_count DESC, s.view_count DESC';
+        break;
+      case '最新发布':
+        $order_by_sql = ' ORDER BY s.created DESC';
+        break;
+    }
+
+    $sids = db_query($select_sql . $order_by_sql . $limit)->fetchCol();
+    $response = array();
+    foreach (share_load_multiple($sids) as $share) {
+      $response[] = $this->get_share_response($share);
+    }
+
+    $http_next = "<$base_url/api/share/editor/list?";
+    $http_last = $http_next;
+
+    $page = $request->query->get('page', 1);
+    
+    $http_next .= "per_page=$size&";
+    $http_last .= "per_page=$size&";
+
+    if ($request->query->get('orderby')) {
+      $http_next .= "orderby=" .$request->query->get('orderby') . "&";
+      $http_last .= "orderby=" .$request->query->get('orderby') . "&";
+    }
+    if ($page >= $pages) {
+      $http_next = "";
+    } else {
+      $http_next .= 'page=' . ($page + 1) . '>;rel="next",';
+    }
+    $http_last .= 'page=' . $pages . '>;rel="last"';
+
+    $header = array('Link' => $http_next . $http_last);
+
+    return new JsonResponse($response, 200, $header);
+  }
+
+  /**
+   * page callback: api/share_catalog/list
+   */
+  public function appShareCatalogList(Request $request) {
+    foreach (share_catalog_load_children(0) as $share_catalog) {
+      $response[] = array(
+        'id' => $share_catalog->id(),
+        'parent_cid' => $share_catalog->parent_cid->value,
+        'name' => $share_catalog->label(),
+        'weight' => $share_catalog->weight->value,
+      );
+    }
+    return new JsonResponse($response);
+  }
+
 }

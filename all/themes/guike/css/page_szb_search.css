@@ -112,7 +112,16 @@
 	line-height:30px;
 	font-size:14px;
 	padding:0 5px;
+	color:#ff6699;
+	font-weight:bold;
 	color:#999999;
+}
+.search_assort .assortlist a.active{	
+  font-weight:bold;
+  color:#ff6699;
+}
+.search_assort a.active {
+  color:#ff6699;
 }
 .search_assort .assortlist a.all:hover{
 	color:#ff6699;
@@ -128,13 +137,17 @@
 }
 .search_assort .assortlist ul li a{
 	padding:0 2px;
+	cursor:pointer;
 }
-.search_assort .assortlist ul li a:hover{
+.search_assort .assortlist ul li a span{
+	color:#999999;
+}
+.search_assort .assortlist ul li a:hover,.search_assort .assortlist ul li a:hover span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
 }
-.search_assort .assortlist ul li a.seclect{
+.search_assort .assortlist ul li a.seclect,.search_assort .assortlist ul li a.seclect span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
@@ -152,6 +165,16 @@
 	white-space:nowrap;
 	line-height:24px;
 	float:left;
+}
+.search_assort .open a span{
+	color:#999999;
+}
+.search_assort .open a:hover,.search_assort .open a:hover span{
+	color:#ff6699;
+}
+.search_assort .open a.c,.search_assort .open a.c span{
+	color:#ff6699;
+	font-weight:bold;
 }
 
 
@@ -258,7 +281,8 @@
 	line-height:25px;
 	border-top:3px solid #e81a60;
 	padding-top:13px;
-	width:98px;
+	width:105px;
+	text-align:center;
 }
 .hotlist ol{
 	padding-top:10px;
@@ -282,6 +306,7 @@
 	height:36px;
 	overflow:hidden;
 }
+
 .hotlist ol li.last{
 	border:none;
 }
@@ -316,6 +341,10 @@
 	overflow:hidden;
 	float:left;
 	padding-right:10px;
+}
+.hotlist .openbox .img img{
+	width:60px;
+	height:60px;
 }
 .hotlist .openbox .txt{
 	float:left;
@@ -526,4 +555,7 @@
 }
 .p16{
 	font-size:16px;
+}
+.no-keywords {
+  margin-bottom: 20px;
 }

@@ -8,10 +8,11 @@ namespace Drupal\account;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 use Drupal\user\Plugin\Core\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * Account Manager Service.
@@ -27,14 +28,14 @@ class AccountManager {
   /**
    * Entity manager Service Object.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
   
   /**
    * Constructs a AccountManager object.
    */
-  public function __construct(Connection $database, EntityManager $entityManager) {
+  public function __construct(Connection $database, EntityManagerInterface $entityManager) {
     $this->database = $database;
     $this->entityManager = $entityManager;
   }
@@ -406,10 +407,10 @@ class AccountManager {
   /**
    * user follow stores 
    */
-  public function followStoresList() {
+  public function followStoresList(Request $request) {
     global $base_url;
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
+    $size = $request->query->get('per_page', 10);
+    $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
     $account = $this->user_authenticate_by_http();
     if (!$account->id()) return FALSE;
     
@@ -430,7 +431,7 @@ class AccountManager {
     $http_next = "<$base_url/api/follows?";
     $http_last = $http_next;
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page', 1);
     
     $http_next .= "per_page=$size&";
     $http_last .= "per_page=$size&";
@@ -463,12 +464,10 @@ class AccountManager {
     if ($name && $pass) {
       $account = user_load_by_name($name);
       if (!$account) {
-        $uuid = new Uuid();
         $array = array(
           'name' => $name,
           'pass' => $pass,
           'status' => 1,
-          'uuid' => $uuid->generate(),
           'created' => time(),
         );
         $account = entity_create('user', $array);
@@ -616,6 +615,9 @@ class AccountManager {
     /*$form_state['uid'] = $account->id();
     user_login_finalize($form_state);*/
 
+    $coupon_bookmark_count = db_query('SELECT COUNT(cid) FROM {coupon_bookmarks} WHERE uid=:uid', array(':uid' => $account->id()))->fetchField();
+    $share_bookmark_count = db_query('SELECT COUNT(sid) FROM {share_bookmarks} WHERE uid=:uid', array(':uid' => $account->id()))->fetchField();
+
     $response = array(
       'exist' => $query || $query_revision ? 1 : 0,
       'store_id' => isset($store) ? $store->id() : 0,
@@ -624,8 +626,48 @@ class AccountManager {
       'login' => $account->getUsername(),
       'name' => (isset($account->nickname) && $account->nickname) ? $account->nickname : $account->getUsername(),
       'type' => isset($account->tripartite_login_type) ? $account->tripartite_login_type : '',
+      'follow_count' => isset($account->follow_count) ? $account->follow_count : 0,
+      'fans_count' => isset($account->fans_count) ? $account->fans_count : 0,
+      'store_follow_count' => isset($account->store_follow_count) ? $account->store_follow_count : 0,
+      'coupon_bookmark_count' => $coupon_bookmark_count,
+      'share_bookmark_count' => $share_bookmark_count,
     );
     return array('data' => $response, 'status' => $status);
   }
-  
+
+  function follow(UserInterface $user) {
+    $currentUser = \Drupal::currentUser();
+    db_insert('account_follows')
+      ->fields(array(
+        'uid' => $currentUser->id(),
+        'follow_uid' => $user->id(),
+        'created' => REQUEST_TIME,
+      ))
+      ->execute();
+
+    if ($account = account_load($currentUser->id())) {
+      $account->follow_count->value ++;
+      $account->save();
+    }
+    else {
+      db_insert('accounts')
+        ->fields(array(
+          'uid' => $currentUser->id(),
+          'follow_count' => 1,
+        ))
+        ->execute();
+    }
+    if($account = account_load($user->id())) {
+      $account->fans_count->value ++;
+      $account->save();
+    }
+    else {
+      db_insert('accounts')
+        ->fields(array(
+          'uid' => $user->id(),
+          'fans_count' => 1,
+        ))
+        ->execute();
+    }
+  }
 }

@@ -14,11 +14,21 @@
 <article{{ attributes }}>
   <div class="img_box">
     <div class="price">¥{{ price }}</div>
-    <a class="img" target="_blank" href="{{ share_url }}"  title = "{{picture.title}}">{{ picture }}</a>
+    <a class="img" target="_self" href="{{ share_url }}"  title = "{{picture.title}}">{{ picture }}</a>
   </div>
 
   <div class="comm_box">
-    <p><a class="imgtxt" target="_blank" href="{{ share_url }}">{{ label }}</a></p>
-    <p><span class="share">{{ author }}分享</span><span class="collect"><a href="{{ bookmark_url }}" class="bookmark" sid="{{ share.sid.value }}">喜欢</a></span></p>
-  </div>
+    <p><a class="imgtxt" target="_self" href="{{ share_url }}">{{ label }}</a></p>
+       <p>
+    <span class="share">{{ author }}分享</span> 
+    <span class="collect"><a target="_blank"
+    {% if current_uid  %}
+     href="{{ bookmark_url }}" 
+    {% else %}
+    href="{{ login_url }}"
+    {% endif %}
+    class="bookmark" sid="{{ share.sid.value }}">喜欢</a><span class="view_count" style="float:right"> {{ share.bookmark_count.value }} </span></span>
+    </p>
+   
+  </div> 
 </article>

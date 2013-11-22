@@ -13,10 +13,14 @@ use Drupal\file\Entity\File;
  * @EntityType(
  *   id = "coupon",
  *   label = "优惠券",
- *   module = "coupon",
  *   controllers = {
  *     "storage" = "Drupal\coupon\CouponStorageController",
- *     "view_builder" = "Drupal\coupon\CouponRenderController"
+ *     "view_builder" = "Drupal\coupon\CouponRenderController",
+ *     "list" = "Drupal\coupon\CouponListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
+ *     "form" = {
+ *       "default" = "Drupal\coupon\CouponFormController"
+ *     },
  *   },
  *   base_table = "coupons",
  *   render_cache = FALSE,
@@ -26,8 +30,7 @@ use Drupal\file\Entity\File;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "canonical" = "/coupon/{coupon}",
- *     "edit-form" = "/coupon/{coupon}/edit"
+ *     "edit-form" = "coupon.edit"
  *   }
  * )
  */
@@ -84,7 +87,7 @@ class Coupon extends ContentEntityBase implements CouponInterface {
    */
   public static function baseFieldDefinitions($entity_type) {
     $properties['cid'] = array(
-      'label' => 'cid',
+      'label' => 'ID',
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
@@ -94,7 +97,7 @@ class Coupon extends ContentEntityBase implements CouponInterface {
       'read-only' => TRUE,
     );
     $properties['sid'] = array(
-      'label' => '商家ID',
+      'label' => '商家',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'store',
@@ -102,11 +105,11 @@ class Coupon extends ContentEntityBase implements CouponInterface {
       ),
     );
     $properties['title'] = array(
-      'label' => t('Title'),
+      'label' => '标题',
       'type' => 'string_field',
     );
     $properties['fid'] = array(
-      'label' => 'file ID',
+      'label' => '图片',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'file',
@@ -114,7 +117,7 @@ class Coupon extends ContentEntityBase implements CouponInterface {
       ),
     );
     $properties['uid'] = array(
-      'label' => '用户ID',
+      'label' => '会员',
       'type' => 'entity_reference_field',
       'settings' => array(
         'target_type' => 'user',
@@ -122,23 +125,23 @@ class Coupon extends ContentEntityBase implements CouponInterface {
       ),
     );
     $properties['body'] = array(
-      'label' => ('描述'),
+      'label' => '描述',
       'type' => 'string_field',
     );
     $properties['note'] = array(
-      'label' => ('使用限制'),
+      'label' => '使用限制',
       'type' => 'string_field',
     );
     $properties['start'] = array(
-      'label' => 'start',
+      'label' => '开始日期',
       'type' => 'integer_field',
     );
     $properties['expire'] = array(
-      'label' => 'expire',
+      'label' => '结束日期',
       'type' => 'integer_field',
     );
     $properties['status'] = array(
-      'label' => 'status',
+      'label' => '状态',
       'type' => 'integer_field',
     );
     $properties['created'] = array(

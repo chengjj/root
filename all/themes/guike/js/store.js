@@ -107,6 +107,14 @@ Drupal.behaviors.guike_user = {
       });
     });
 
+    //周边热点排行第一名默认展开  by chengjj@72ec.com//
+    $(context).find('div.hotlist').once('hotlist', function() {
+	  var $first = $(this).children('article.store:first');
+	  $first.children('p.highlight').hide();
+	  $first.children('div.openbox').show();
+    });
+    //********************************************************//
+
     /*$(context).find('.store-picture').once('store-picture', function() {
       $(this).hover(
         function () {

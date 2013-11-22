@@ -3,6 +3,7 @@
 namespace Drupal\account\Form;
 
 use Drupal\Core\Form\FormBase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class EditPasswordForm extends FormBase {
 
@@ -66,5 +67,6 @@ class EditPasswordForm extends FormBase {
     $account->pass->value = $form_state['values']['new_pass'];
     $account->save();
     drupal_set_message("密码已修改");
+    $form_state['redirect'] = 'user/' . $user->id();
   }
 }

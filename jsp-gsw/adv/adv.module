@@ -45,7 +45,8 @@ function adv_menu() {
 function adv_load_multiple_by_city_id($city_id, $page = NULL, $per_page = NULL) {
   $query = db_select('advs', 'a')
     ->fields('a', array('aid'))
-    ->condition('status', 1);
+    ->condition('status', 1)
+    ->condition('type', 0);
   if ($city_id) {
     $query->condition('a.cid', $city_id);
   }
@@ -124,24 +125,6 @@ function _adv_load($aid) {
     ->condition('aid', $aid)
     ->execute()
     ->fetchObject();
-}
-/**
- * Implements hook_adv_delete()
- */
-function adv_adv_delete($adv) {
-  /*if ($cache = cache('Backend.Memcache')->get('Memcache')) { 
-    $cid = $_SERVER['SERVER_NAME'] . ':adv:aid:' . $adv->aid;
-    $cache->delete($cid);
-  }*/
-}
-/**
- * Implements hook_adv_update()
- */
-function adv_adv_update(&$edit, &$adv) {
-  /*if ($cache = cache('Backend.Memcache')->get('Memcache')) { 
-    $cid = $_SERVER['SERVER_NAME'] . ':adv:aid:' . $adv->aid;
-    $cache->delete($cid);
-  }*/
 }
 /**
  * Description other adv_save() 
@@ -280,17 +263,15 @@ function _adv_type() {
 
 function template_preprocess_adv_picture(&$variables) {
   $adv = $variables['adv'];
-  if (!empty($adv->picture)) {
-    if (is_numeric($adv->picture)) {
-      $adv->picture = file_load($adv->picture);
-    }
-    if ($adv->picture->getFileUri()) {
-      $filepath = $adv->picture->getFileUri();
+  $picture = $adv->getPicture();
+  if ($picture) {
+    if ($picture->getFileUri()) {
+      $filepath = $picture->getFileUri();
     }
   }
   
   if (isset($filepath)) {
-    $alt = $adv->title;
+    $alt = $adv->label();
     
     if (variable_get('adv_picture_url')) {
       $filepath = str_replace('public://', variable_get('adv_picture_url', 'advs'), $filepath); 
@@ -321,7 +302,7 @@ function adv_delete_multiple($aids = array()) {
   if (!empty($aids)) {
     $advs = adv_load_multiple($aids);
     foreach ($advs as $adv)
-      module_invoke_all('adv_adv_delete', $adv);
+      module_invoke_all('adv_delete', $adv);
   }
   db_delete('advs')
     ->condition('aid', $aids, 'IN')

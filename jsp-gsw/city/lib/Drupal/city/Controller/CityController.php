@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 //use Drupal\Core\Controller\ControllerInterface;
 use Drupal\city\CityManager;
-use Drupal;
 /**
  * Controller routines for city routes.
  */
@@ -82,6 +81,17 @@ class CityController implements ContainerInjectionInterface {
   public function districtDetail($city_id, $district_name) {
     $district = $this->cityManager->getDistrictByName($city_id, $district_name);
     return new JsonResponse(array('id' => $district->id(), 'city_id' => $district->cid->value, 'name' => $district->label()));
+  }
+
+
+  /**
+   * page callback: api/client/cities
+   */
+  public function clientCityList(Request $request) {
+    //todo settings.php 
+    //$conf['city.settings']['default_client_city'] = array(array('id' => 292, ‘name’ => '贵阳市', ‘default’ => 1), array('id' => 22, 'name' => '重庆'， ‘default’ => 0))
+    $cities = \Drupal::config('city.settings')->get('default_client_city');
+    return new JsonResponse($cities);
   }
 
 }

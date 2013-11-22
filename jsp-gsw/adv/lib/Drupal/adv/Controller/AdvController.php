@@ -14,7 +14,6 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 //use Drupal\Core\Controller\ControllerInterface;
 use Drupal\adv\Entity\AdvInterface;
 use Drupal\adv\AdvManager;
-use Drupal;
 /**
  * Controller routines for adv routes.
  */
@@ -88,11 +87,11 @@ class AdvController implements ContainerInjectionInterface {
   /**
    * page callback: adv/js/{action}
    */
-  public function advAjaxAction($action) {
+  public function advAjaxAction($action,Request $request) {
     switch ($action) {
       case 'store':
         $matches = array();
-        $string = $_GET['q'];
+        $string = $request->query->get('q');
         if (!empty($string)) {
           $result = db_select('stores', 's')
             ->fields('s', array('name'))
@@ -107,7 +106,7 @@ class AdvController implements ContainerInjectionInterface {
         break;
       case 'adv':
         $matches = array();
-        $string = $_GET['q'];
+        $string = $request->query->get('q');
         if (!empty($string)) {
           $result = db_select('advs', 's')
             ->fields('s', array('title'))
@@ -135,7 +134,7 @@ class AdvController implements ContainerInjectionInterface {
    */
   public function advEdit(Request $request, $adv_id) {
     //TODO use $adv entity
-    if ($adv = adv_load($adv_id)) {
+    if ($adv = entity_load('adv', $adv_id)) {
       module_load_include('admin.inc', 'adv');
       return drupal_get_form('admin_adv_edit_form', $adv);
     }

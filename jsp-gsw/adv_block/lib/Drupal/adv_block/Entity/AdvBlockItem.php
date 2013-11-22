@@ -16,11 +16,12 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *
  * @EntityType(
  *   id = "adv_block_item",
- *   label = "广告位项目",
- *   module = "adv_block",
+ *   label = "广告项",
  *   controllers = {
  *     "storage" = "Drupal\adv_block\AdvBlockItemStorageController",
  *     "view_builder" = "Drupal\adv_block\AdvBlockItemRenderController",
+ *     "list" = "Drupal\jsp\JspEntityListController",
+ *     "access" = "Drupal\jsp\JspEntityAccessController",
  *     "form" = {
  *       "default" = "Drupal\adv_block\AdvBlockItemFormController",
  *       "delete" = "Drupal\adv_block\Form\DeleteForm"
@@ -30,10 +31,12 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *   render_cache = FALSE,
  *   entity_keys = {
  *     "id" = "iid",
- *     "label" = "title"
+ *     "label" = "title",
+ *     "uuid" = "uuid",
+ *     "weight" = "weight"
  *   },
  *   links = {
- *     "edit-form" = "/admin/adv_block_item/{adv_block_item}/edit"
+ *     "edit-form" = "adv_block.edit"
  *   }
  * )
  */
@@ -55,8 +58,13 @@ class AdvBlockItem extends ContentEntityBase implements AdvBlockItemInterface {
       'type' => 'integer_field',
       'read-only' => TRUE,
     );
+    $properties['uuid'] = array(
+      'label' => t('UUID'),
+      'description' => t('The UUID.'),
+      'type' => 'uuid_field',
+    );
     $properties['bid'] = array(
-      'label' => '广告位 ID',
+      'label' => '广告位',
       'type' => 'entity_reference_field',
       'settings' => array('target_type' => 'adv_block'),
     );
@@ -85,6 +93,14 @@ class AdvBlockItem extends ContentEntityBase implements AdvBlockItemInterface {
       'label' => '推荐理由',
       'type' => 'string_field',
     );
+    $properties['city_id'] = array(
+      'label' => '城市',
+      'type' => 'entity_reference_field',
+      'settings' => array(
+        'target_type' => 'city',
+        'default_value' => 0,
+      ),
+    );
     $properties['weight'] = array(
       'label' => '排列顺序',
       'type' => 'integer_field',
@@ -93,4 +109,14 @@ class AdvBlockItem extends ContentEntityBase implements AdvBlockItemInterface {
     return $properties;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageControllerInterface $storage_controller) {
+    parent::preSave($storage_controller);
+
+    if ($this->city_id->target_id == 0) {
+      $this->city_id->target_id = city_get_current_city_id();
+    }
+  }
 }

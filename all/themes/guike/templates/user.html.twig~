@@ -29,9 +29,10 @@
   <div class="home_body_box">
     <div class="body_con">
       {% if activities %}
-      <div class="followlist p14h100">
+      <div class="followlist">
         {{ activities }}
       </div>
+      {{ pager }}
       {% endif %}
     </div>
 

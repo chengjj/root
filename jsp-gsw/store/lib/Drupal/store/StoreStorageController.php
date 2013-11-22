@@ -31,4 +31,16 @@ class StoreStorageController extends FieldableDatabaseStorageController implemen
       ->execute();
   }
 
+  public function loadUserStores($uid) {
+    $query = \Drupal::entityQuery($this->entityType);
+    $query
+      ->condition('uid', $uid)
+      ->sort('created');
+    if ($sids = $query->execute()) {
+      return $this->loadMultiple($sids);
+    }
+    else {
+      return FALSE;
+    }
+  }
 }

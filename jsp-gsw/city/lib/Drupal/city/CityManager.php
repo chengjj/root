@@ -7,7 +7,7 @@
 namespace Drupal\city;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,7 +24,7 @@ class CityManager {
   /**
    * Entity manager Service Object.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -38,7 +38,7 @@ class CityManager {
   /**
    * Constructs a CityManager object.
    */
-  public function __construct(Connection $database, EntityManager $entityManager) {
+  public function __construct(Connection $database, EntityManagerInterface $entityManager) {
     $this->database = $database;
     $this->entityManager = $entityManager;
   }

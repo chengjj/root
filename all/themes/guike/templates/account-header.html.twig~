@@ -20,10 +20,10 @@
        
         <p class="describe">
          {% if account.sex==0 %}
-		 <span class="male"></span>
-		 {% else %} 
-		 <span class="female">女</span>
-		 {% endif %}
+		 <img class="male" src="{{ theme_path }}/images/icon_male.png"/>男</span>
+         {% else %} 
+		 <img class="female" src="{{ theme_path }}/images/icon_female.png"/>女</span>
+         {% endif %}
          {{ account.signature.value }}
         </p>
         <p class="btn">

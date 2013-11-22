@@ -2,6 +2,12 @@
   {{ header }}
 
   <div class="home_body_box">
+     {% if search_form %}
+     <div class="follow_title">
+        <h2>我关注的会员</h2> 
+          {{ search_form }}
+     </div>
+    {% endif %}
     {{ links }}
     <div class="body_con">
       {{ contents }}

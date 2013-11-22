@@ -66,11 +66,11 @@ function coupons_pending_form_submit($form, &$form_state) {
 /**
  * Page callback: coupon/js/%
  */
-function coupon_js($action) {
+function coupon_js($action,  Response $request) {
   switch ($action) {
     case 'store':
       $matches = array();
-      $string = $_GET['q'];
+      $string = $request->query->get('q');
       if (!empty($string)) {
         $result = db_select('stores', 's')
           ->fields('s', array('name'))

@@ -11,23 +11,24 @@ function admin_adv_edit_form($form, &$form_state, $adv = NULL) {
 
   drupal_add_js(drupal_get_path('module', 'adv') . '/js/admin_adv_edit_form.js');
 
-  $form['adv'] = array('#type' => 'value', '#value' => $adv);
+  $form['adv'] = array('#type' => 'value', '#value' => isset($adv) ? $adv->id() : 0);
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => '广告名称',
-    '#default_value' => isset($adv->title) ? $adv->title : '',
+    '#default_value' => isset($adv) ? $adv->label() : '',
     '#required' => TRUE,
   ); 
   $form['picture'] = array(
     '#type' => 'fieldset',
     '#title' => '图片',
   );
+  $picture = isset($adv) ? $adv->getPicture() : FALSE;
   $form['picture']['picture'] = array(
     '#type' => 'value',
-    '#value' => isset($adv->fid) ? $adv->fid : 0,
+    '#value' => $picture ? $picture->id() : 0,
   );
   $form['picture']['picture_current'] = array(
-    '#markup' => theme('adv_picture', array('adv' => $adv, 'alt' => isset($alt) ? $alt : '')),
+    '#markup' => isset($adv) ? theme('adv_picture', array('adv' => $adv)) : '',
   );
   $form['picture']['picture_upload'] = array(
     '#type' => 'file',
@@ -36,39 +37,25 @@ function admin_adv_edit_form($form, &$form_state, $adv = NULL) {
   $form['redirect'] = array(
     '#type' => 'textfield',
     '#title' => '广告跳转地址',
-    '#default_value' => isset($adv->redirect) ? $adv->redirect : '',
+    '#default_value' => isset($adv) ? $adv->redirect->value : '',
     '#description' => '例如: http://www.google.com',
     '#weight' => 3,
   );
-  /*$locations = adv_get_taxonomy('adv', 0);
-  $form['lid'] = array(
-    '#type' => 'select',
-    '#title' => '广告位置',
-    '#options' => $locations,
-    '#default_value' => isset($adv->lid) ? $adv->lid : 0,
-    '#weight' => 6,
-  );*/
   $adv_type = _adv_type();
   $form['type'] = array(
     '#type' => 'select',
     '#title' => '广告类型',
     '#options' => $adv_type,
-    '#default_value' => isset($adv->type) ? $adv->type : 0,
+    '#default_value' => isset($adv) ? $adv->type->value : 0,
     '#weight' => 7,
   );  
-  if ($adv->sid) {
-    $store = store_load($adv->sid);;
+  if (isset($adv) && $adv->sid->value) {
+    $store = store_load($adv->sid->value);;
   }  
   $form['sid'] = array(
     '#title' => '商家名称',
     '#type' => 'textfield',
     '#default_value' => (isset($store) && $store) ? $store->label() : '',
-    '#autocomplete_path' => 'adv/js/store',
-    '#ajax' => array(
-      'callback' => 'store_adv_js',
-      'wrapper'  => 'store-wrapper',
-      'effect'   => 'fade',
-    ),
   );  
   $form['store_wrapper'] = array(
     '#prefix' => '<div id="store-wrapper">',
@@ -85,13 +72,13 @@ function admin_adv_edit_form($form, &$form_state, $adv = NULL) {
     '#type' => 'select',
     '#title' => '广告地区',
     '#options' => $cities,
-    '#default_value' => isset($adv->cid) ? $adv->cid : 0,
+    '#default_value' => isset($adv) ? $adv->cid->value : 0,
     '#weight' => 8,
   );  
   $form['start'] = array(
     '#type' => 'textfield',
     '#title' => '广告开始时间',
-    '#default_value' => isset($adv->start) ? date('Y-m-d', $adv->start) : '',
+    '#default_value' => isset($adv) ? date('Y-m-d', $adv->start->value) : '',
     '#description' => '例如: 2013-04-04, 2013/12/15',
     '#required' => TRUE,
     '#attributes' => array('autocomplete' => 'off'), 
@@ -100,7 +87,7 @@ function admin_adv_edit_form($form, &$form_state, $adv = NULL) {
   $form['expire'] = array(
     '#type' => 'textfield',
     '#title' => '广告结束时间',
-    '#default_value' => isset($adv->expire) ? date('Y-m-d', $adv->expire) : '',
+    '#default_value' => isset($adv) ? date('Y-m-d', $adv->expire->value) : '',
     '#description' => '例如: 2013-04-04, 2013/12/15',
     '#required' => TRUE,
     '#attributes' => array('autocomplete' => 'off'), 
@@ -116,7 +103,10 @@ function admin_adv_edit_form($form, &$form_state, $adv = NULL) {
 
 function admin_adv_edit_form_validate($form, &$form_state) {
   $user = \Drupal::currentUser();
-  $adv = $form_state['values']['adv']; 
+  $adv = FALSE;
+  if ($aid = $form_state['values']['adv']) {
+    $adv = entity_load('adv', $aid);
+  }
   $start = strtotime($form_state['values']['start']);
   $expire = strtotime($form_state['values']['expire']);
   $picture = $form_state['values']['picture'];
@@ -129,13 +119,13 @@ function admin_adv_edit_form_validate($form, &$form_state) {
   $form_state['values']['changed'] = $changed;
   if (!$type) {
     //TODO
-    $store = store_load_by_name($sid);
-    if (empty($store->sid)) {
-      form_set_error('sid', '商家ID不存在,确认后再添加');
+    if ($stores = entity_load_multiple_by_properties('store', array('name' => $sid))) {
+      $stores = array_values($stores);
+      $store = $stores[0];
+      $form_state['values']['sid'] = $store->id();
+    } else {
+      form_set_error('sid', '该商家不存在,确认后再添加');
     } 
-    else {
-      $form_state['values']['sid'] = $store->sid;
-    }
   } else {
     $form_state['values']['sid'] = 0;
   }
@@ -143,7 +133,7 @@ function admin_adv_edit_form_validate($form, &$form_state) {
     form_set_error('expire', '截止时间必须大于今天');
   }
   if ($adv) {
-    $form_state['values']['uid'] = $adv->uid;
+    $form_state['values']['uid'] = $adv->uid->value;
   } 
   else {
     $form_state['values']['uid'] = $user->id();
@@ -166,14 +156,42 @@ function admin_adv_edit_form_validate($form, &$form_state) {
 }
 
 function admin_adv_edit_form_submit($form, &$form_state) {
- $adv = $form_state['values']['adv'];
- $adv = adv_save($adv, $form_state['values']);
+  $values = $form_state['values'];
+  $array = array(
+    'title' => $values['title'],
+    'redirect' => $values['redirect'],
+    'start' => $values['start'],
+    'expire' => $values['expire'],
+    'cid' => $values['cid'],
+    'type' => $values['type'],
+    'sid' => $values['sid'],
+  );
+  if($values['adv']) {
+    $adv = entity_load('adv', $form_state['values']['adv']);
+    foreach ($array as $key => $value) {
+      $adv->{$key} = $value;
+    }
+    $adv->changed = REQUEST_TIME;
+  } else {
+    $user = \Drupal::currentUser();
 
+    $array['created'] = REQUEST_TIME;
+    $array['changed'] = REQUEST_TIME;
+    $array['uid'] = $user->id(); 
+    $array['status'] = 1;
+    $adv = entity_create('adv', $array);
+  }
+
+  $adv->save();
+
+  if ($file = $values['picture_upload']) {
+    $file->setTemporary();
+    $adv->setPicture($file);
+    $adv->save();
+  }
+
+  
   drupal_set_message('广告信息已保存!');
-}
-
-function store_adv_js($form, &$form_state) {
-  return $form['store-wrapper'];
 }
 
 /**
@@ -182,6 +200,7 @@ function store_adv_js($form, &$form_state) {
 function admin_adv_list_form($form, &$form_state) {
   $status = array(
     '-1' => '过期',
+    '0' => '未发布',
     '1'  => '正常',
   );
   $header = array(
@@ -289,7 +308,9 @@ function admin_adv_list_form_submit($form, &$form_state) {
   $op = $form_state['values']['op'];
   switch ($op) {
     case '删除':
-      adv_delete_multiple($aids);
+      foreach (entity_load_multiple('adv', $aids) as $adv) {
+        $adv->delete();
+      }
       drupal_set_message('广告删除成功');
       break;
     case '推荐到':

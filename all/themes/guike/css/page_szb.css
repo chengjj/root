@@ -101,12 +101,15 @@
 	padding:0 2px;
 	cursor:pointer;
 }
-.szbconbox .assortlist ul li a:hover{
+.szbconbox .assortlist ul li a span{
+	color:#999999;
+}
+.szbconbox .assortlist ul li a:hover,.szbconbox .assortlist ul li a:hover span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
 }
-.szbconbox .assortlist ul li a.seclect{
+.szbconbox .assortlist ul li a.seclect,.szbconbox .assortlist ul li a.seclect span{
 	background:#ff6196;
 	color:#ffffff;
 	border-radius:2px;
@@ -125,8 +128,15 @@
 	line-height:24px;
 	float:left;
 }
-.szbconbox .assort .open a.c{
+.szbconbox .assort .open a span{
+	color:#999999;
+}
+.szbconbox .assort .open a:hover,.szbconbox .assort .open a:hover span{
 	color:#ff6699;
+}
+.szbconbox .assort .open a.c,.szbconbox .assort .open a.c span{
+	color:#ff6699;
+	font-weight:bold;
 }
 
 .szbconlist{
@@ -135,6 +145,11 @@
 	overflow:hidden;
 }
 .szbconlist h2{
+	width:730px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconlist h2 a{
 	font-size:18px;
 	font-weight:bold;
 	color:#ff3366;
@@ -144,6 +159,21 @@
 	width:80px;
 	margin-left:15px;
 	text-align:center;
+	float:left;
+}
+.szbconlist h2 a.more{
+	font-size:12px;
+	font-weight:normal;
+	color:#666666;
+	border:none;
+	line-height:25px;
+	margin-left:0;
+	margin-right:15px;
+	width:40px;
+	float:right;
+}
+.szbconlist h2 a.more:hover{
+	color:#ff6699;
 }
 .szbconlist ul li{
 	padding:15px;
@@ -283,6 +313,10 @@
 	overflow:hidden;
 	float:left;
 	padding-right:10px;
+}
+.hotlist .openbox .img img{
+	width:60px;
+	height:60px;
 }
 .hotlist .openbox .txt{
 	float:left;

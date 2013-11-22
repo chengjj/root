@@ -12,8 +12,6 @@ Drupal.behaviors.inputTextHint = {
       $(this).blur();
       $(this).val(hint);
       $(this).focus(function () {
-        console.log(hint);
-        console.log($(this).value);
         if ($(this).val() == hint) {
           $(this).val('');
         }

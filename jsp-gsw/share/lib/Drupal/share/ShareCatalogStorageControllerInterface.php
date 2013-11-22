@@ -15,4 +15,12 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  */
 interface ShareCatalogStorageControllerInterface extends EntityStorageControllerInterface {
 
+  /**
+   * Loads child catalogs.
+   *
+   * @return array
+   *   An array keyed on cid listing all available categories.
+   */
+  public function loadChildKeyed($parent_id = 0);
+
 }

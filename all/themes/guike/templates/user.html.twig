@@ -33,7 +33,17 @@
         {{ activities }}
       </div>
       {% endif %}
+     {% if pager %}
+     <div class="page_number">
+     <div class="pageNav">
+      {{ pager }}
+     </div>
     </div>
+  {% endif %}
+
+    </div>
+
+
 
     {% if itsme %}
     <div class="browse space">

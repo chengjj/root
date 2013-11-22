@@ -170,13 +170,6 @@ account.store_image_edit:
   requirements:
     _user_is_logged_in: 'TRUE'
 
-account.add_coupon:
-  path: '/account/coupon/add'
-  defaults:
-    _form: 'Drupal\account\Form\AddCouponForm'
-  requirements:
-    _user_is_logged_in: 'TRUE'
-    
 account.coupon_list:
   path: '/account/coupon/list'
   defaults:
@@ -281,7 +274,7 @@ account.reset:
 user.bookmark_share:
   path: '/user/{user}/bookmark/share'
   defaults:
-    _title: '搜藏的商品'
+    _title_callback: '\Drupal\account\Controller\AccountController::userBookmarkShareTitle'
     _content: '\Drupal\account\Controller\AccountController::userBookmarkShare'
   requirements:
     _access: 'TRUE'
@@ -294,6 +287,14 @@ user.bookmark_coupon:
   requirements:
     _access: 'TRUE'
 
+user.unbookmark_coupon:
+  path: '/user/{user}/unbookmark/coupon'
+  defaults:
+    _title: '取消收藏的优惠'
+    _content: '\Drupal\account\Controller\AccountController::userunBookmarkCoupon'
+  requirements:
+    _access: 'TRUE'
+    
 user.share:
   path: '/user/{user}/share'
   defaults:
@@ -305,10 +306,19 @@ user.share:
 user.comment_share:
   path: '/user/{user}/comment/share'
   defaults:
-    _title: '我评价的'
+    _title: '我评价的商品'
     _content: '\Drupal\account\Controller\AccountController::userCommentShare'
   requirements:
     _access: 'TRUE'
+
+user.comment_coupon:
+  path: '/user/{user}/comment/coupon'
+  defaults:
+    _title: '我评价的优惠'
+    _content: '\Drupal\account\Controller\AccountController::userCommentCoupon'
+  requirements:
+    _access: 'TRUE'
+    
 account.reset_passwd:
   path: 'account/{user}/edit/password'
   defaults:

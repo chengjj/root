@@ -21,6 +21,6 @@ interface StoreCommentStorageControllerInterface extends EntityStorageController
    * @param $sid
    *   The store ID.
    */
-  public function updateStoreCommentCount($sid);
+  public function updateStoreStatistics($sid);
 
 }

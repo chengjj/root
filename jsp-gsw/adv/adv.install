@@ -10,6 +10,12 @@ function adv_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'uuid' => array(
+        'description' => 'Unique Key: Universally unique identifier for this entity.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ),
       'title' => array(
         'type' => 'varchar',
         'length' => 80,
@@ -81,6 +87,9 @@ function adv_schema() {
         'description' => 'User ID',
       ),
     ),
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
     'primary key' => array('aid'),
     'foreign keys' => array(
       'file' => array(
@@ -117,3 +126,24 @@ function adv_enable() {
   adv_install_node_field();
 }
 */
+
+
+function adv_update_1() {
+  $spec = array(
+    'description' => 'Unique Key: Universally unique identifier for this entity.',
+    'type' => 'varchar',
+    'length' => 128,
+    'not null' => FALSE,
+  );
+  $keys = array(
+    'unique keys' => array(
+      'uuid' => array('uuid'),
+    ),
+  );
+  if (db_field_exists('advs', 'uuid')) {
+    db_change_field('advs', 'uuid', 'uuid', $spec, $keys);
+  }
+  else {
+    db_add_field('advs', 'uuid', $spec, $keys);
+  }
+}

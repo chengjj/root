@@ -655,6 +655,17 @@ function adv_block_share_delete(EntityInterface $entity) {
 }
 
 /**
+ * hook_adv_delete
+ */
+function adv_block_adv_delete(EntityInterface $entity) {
+  $ids = db_query("SELECT bid FROM {adv_blocks} WHERE type='adv'")->fetchCol();
+  db_delete('adv_block_items')
+    ->condition('bid', $ids, 'IN')
+    ->condition('entity_id', $entity->id())
+    ->execute();
+}
+
+/**
  * page callback: admin/adv_block/%adv_block 广告位内容为item的广告位管理 
  */
 function admin_adv_block_item_list_form($form, &$form_state, $adv_block) {

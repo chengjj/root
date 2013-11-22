@@ -147,17 +147,18 @@ function store_audit_list_form_submit($form, &$form_state) {
  * Access callback for path admin/store/list.
  */
 function admin_store_list($form, &$form_state) {
+  $request = \Drupal::request();
   drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
   drupal_add_css(drupal_get_path('module', 'ec') . '/css/jquery-ui.css', 'file');
   drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery.ui.datepicker-zh-CN.js', 'file');
 
   drupal_add_js(drupal_get_path('module', 'store') . '/js/admin-store-list.js');
   global $base_url;
-  $keyword = isset($_GET['keyword']) ? check_plain($_GET['keyword']) : '';
-  $account_name = isset($_GET['account']) ? check_plain($_GET['account']) : '';
-  $city_id = isset($_GET['city_id']) ? check_plain($_GET['city_id']) : 0;
-  $start = isset($_GET['start']) ? check_plain($_GET['start']) : '';
-  $expire = isset($_GET['expire']) ? check_plain($_GET['expire']) : '';
+  $keyword = check_plain($request->query->get('keyword', ''));
+  $account_name = check_plain($request->query->get('account', ''));
+  $city_id = check_plain($request->query->get('city_id', 0));
+  $start = check_plain($request->query->get('start', ''));
+  $expire = check_plain($request->query->get('expire', ''));
 
   $header = array(
     array('data' => '商店名称', 'field' => 'name'),
@@ -221,7 +222,7 @@ function admin_store_list($form, &$form_state) {
   $form['filter']['keyword'] = array(
     '#title' => '关键字',
     '#type' => 'textfield',
-    '#default_value' => isset($_GET['keyword']) ? $_GET['keyword'] : '',
+    '#default_value' => $request->query->get('keyword', ''),
   );
   $form['filter']['account_name'] = array(
     '#title' => '用户帐号',
@@ -361,316 +362,6 @@ function admin_store_list_submit($form, &$form_state) {
   }
 }
 
-/**
- * Access callback for path store/add.
- */
-function admin_store_edit_form($form, &$form_state, $store = NULL) {
-  $default_city_id = \Drupal::config('city.settings')->get('default_city_id');
-  if (isset($store->hours)) {
-    $time = explode('-', $store->hours->value);
-    $begin = $time[0];
-    $over = $time[1];
-  }
-
-  $result = db_query('SELECT * FROM {store_catalog} WHERE parent_cid=0');;
-  $store_catalog = array();
-  $default_parent_cid = 0;
-  foreach ($result as $row) {
-    if (!$default_parent_cid) {
-      $default_parent_cid = $row->cid;
-    }
-    $store_catalog[$row->cid] = $row->name;
-  }
-
-  $dis = db_select('districts', 'd')
-    ->fields('d')
-    ->execute();
-  $districts = array();  
-  foreach ($dis as $row) {
-    $districts[$row->cid][$row->did] = $row->name;
-  }
-
-  $ci = db_select('cities', 'c')
-    ->fields('c')
-    ->execute();
-  $cities = array();
-  foreach ($ci as $row) {
-    $cities[$row->cid] = $row->name;
-  }
-  $form['store_id'] = array(
-    '#type' => 'value',
-    '#value' => isset($store) ? $store->id() : 0,
-  );
-  $form['name'] = array(
-    '#title' => '门店',
-    '#type' => 'textfield',
-    '#default_value' => isset($store) ? $store->label() : '',
-  );
-  $account = isset($store) ? $store->getAuthor() : NULL;
-  $form['uid'] = array(
-    '#title' => '用户帐号',
-    '#type' => 'textfield',
-    '#default_value' => isset($account) ? $account->getUsername() : '',
-    '#description' => '创建商户不指定用户则输入0',
-    /*'#autocomplete_path' => 'store/js/user',
-    '#ajax' => array(
-      'callback' => 'admin_store_edit_form_js',
-      'wrapper'  => 'store-wrapper',
-      'effect'   => 'fade',
-    ),*/
-  );
-  /*$form['store_wrapper'] = array(
-    '#prefix' => '<div id="store-wrapper">',
-    '#suffix' => '</div>',
-  );*/
-  $form['picture'] = array(
-    '#type' => 'fieldset',
-    '#title' => '图片',
-  );
-  $form['picture']['picture'] = array(
-    '#type' => 'value',
-    '#value' => isset($store->image_url) ? $store->image_url->value : NULL,
-  );
-  $form['picture']['picture_current'] = array(
-    '#markup' => isset($store) ? theme('store_picture', array('store' => $store)) : '',
-  );
-  $form['picture']['picture_upload'] = array(
-    '#type' => 'file',
-    '#title' => '上传logo',
-    '#size' => '20',
-  );
-  $form['latitude'] = array(
-    '#title' => '纬度',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->latitude) ? $store->latitude->value : '',
-  );
-  $form['longitude'] = array(
-    '#title' => '经度',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->longitude) ? $store->longitude->value : '',
-  );
-  $form['address'] = array(
-    '#title' => '地址',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->address) ? $store->address->value : '',
-  );
-  $form['phone'] = array(
-    '#title' => '电话',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->phone) ? $store->phone->value : '',
-  );
-  $form['discount'] = array(
-    '#title' => '折扣',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->discount) ? number_format($store->discount->value, 1) : '',
-  );  
-  //hours 拆分成 begin  over
-  $form['begin'] = array(
-    '#title' => '营业开始时间',
-    '#type' => 'textfield',
-    '#default_value' => isset($begin) ? $begin : '',
-    '#description' => '营业开始时间,如8:00',
-  );  
-  $form['over'] = array(
-    '#title' => '营业结束时间',
-    '#type' => 'textfield',
-    '#default_value' => isset($over) ? $over : '',
-    '#description' => '营业结束时间,如22:00',
-  );  
-  if (isset($store->cid)) {
-    $parent_catalog = store_catalog_get_top($store->cid->value);
-    $default_parent_cid = $parent_catalog->id();
-  }
-  $form['parent_cid'] = array(
-    '#title' => '分类',
-    '#type' => 'select',
-    '#options' => $store_catalog,
-    '#default_value' => isset($parent_catalog) ? $parent_catalog->id() : 0,
-    '#ajax' => array(
-      'callback' => 'admin_store_edit_form_catalog_js',
-      'wrapper' => 'catalog-template-wrapper',
-      'effect' => 'fade',
-    ),
-  );
-  $form['catalog_template_wrapper'] = array(
-    '#prefix' => '<div id="catalog-template-wrapper">',
-    '#suffix' => '</div>',
-  );
-  $parent_cid = isset($form_state['values']['parent_cid']) ? $form_state['values']['parent_cid'] : $default_parent_cid;
-  $children_catalog = array();
-  foreach (store_catalog_load_children($parent_cid) as $catalog) {
-    $children_catalog[$catalog->id()] = $catalog->label();
-  }
-  $form['catalog_template_wrapper']['cid'] = array(
-    '#type' => 'select',
-    '#options' => $children_catalog,
-    '#default_value' => isset($store->cid) ? $store->cid->value : 0,
-    '#required' => TRUE,
-  );
-  $form['city_id'] = array(
-    '#title' => '城市',
-    '#type' => 'select',
-    '#options' => $cities,
-    '#default_value' => isset($store->city_id) ? $store->city_id->value : $default_city_id,
-    '#ajax' => array(
-      'callback' => 'admin_store_edit_form_district_js',
-      'wrapper' => 'template-wrapper',
-      'effect' => 'fade',
-    ),
-  );  
-  $form['template_wrapper'] = array(
-    '#prefix' => '<div id="template-wrapper">',
-    '#suffix' => '</div>',
-  );
-  $city_id_def = isset($store->city_id) ? $store->city_id->value : $default_city_id;
-  $city_id =  isset($form_state['values']['city_id']) ? $form_state['values']['city_id'] : $city_id_def;
-  $form['template_wrapper']['district_id'] = array(
-    '#type' => 'select',
-    '#title' => t('区域'),
-    '#options' => $districts[$city_id],
-    '#default_value' => isset($store->district_id) ? $store->district_id->value : 0,
-    '#required' => TRUE,
-  );
-  $form['follow_count'] = array(
-    '#title' => '关注总数',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->follow_count) ? $store->follow_count->value : '',
-  );  
-  $form['user_num'] = array(
-    '#title' => '会员总数',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->user_num) ? $store->user_num->value : '',
-  );  
-  $form['deal_count'] = array(
-    '#title' => '消费总数',
-    '#type' => 'textfield',
-    '#default_value' => isset($store->deal_count) ? $store->deal_count->value : '',
-  );  
-  //$cities = variable_get('host_cities', array());
-  //$default_city_id = $cities[$_SERVER['HTTP_HOST']]; 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => '保存',
-  );
-  return $form;
-}
-
-function admin_store_edit_form_js($form, &$form_state) {
-  return $form['store-wrapper'];
-}
-
-function admin_store_edit_form_district_js($form, &$form_state) {
-  return $form['template_wrapper'];
-}
-
-function admin_store_edit_form_catalog_js($form, &$form_state) {
-  return $form['catalog_template_wrapper'];
-}
-
-function admin_store_edit_form_validate($form, &$form_state) {
-  $sid = $form_state['values']['store_id'];
-  $store_name = $form_state['values']['name'];
-  $name = $form_state['values']['uid'];
-  $discount = $form_state['values']['discount'];
-  $follow_count = $form_state['values']['follow_count'];
-  $user_num = $form_state['values']['user_num'];
-  $deal_count = $form_state['values']['deal_count'];
-  $district_id = $form_state['values']['district_id'];
-  
-  if ($store_name == '') {
-    form_set_error('name', '请填写商家名称！');
-    return;
-  }
-  if (store_name_repeat($store_name, $sid)) {
-    form_set_error('name', '商家名已存在！');
-  }
-  if ($name == '0') {
-    $form_state['values']['uid'] = 0;
-  } else {
-    $account = user_load_by_name($name);
-    if (!$account) {
-      form_set_error('uid', '用户帐号不存在！');
-      return;
-    } else {
-      $form_state['values']['uid'] = $account->id();
-    }
-  }
-  if ($discount >= 0 && $discount <= 10) {
-    $form_state['values']['discount'] = number_format($discount, 1);
-  } else {
-    form_set_error('discount', '折扣请用大于0，小于10的小数!');
-  }
-  if (!is_numeric($follow_count) || (int)$follow_count < 0) {
-    form_set_error('follow_count', '请填写大于0的整数');
-  }
-  if (!is_numeric($user_num) || (int)$user_num < 0) {
-    form_set_error('user_num', '请填写大于0的整数');
-  }
-  if (!is_numeric($deal_count) || (int)$deal_count < 0) {
-    form_set_error('deal_count', '请填写大于0的整数');
-  }
-
-  $validators = array(
-    'file_validate_is_image' => array(),
-    'file_validate_image_resolution' => array(variable_get('user_picture_dimentions', '85x85')),
-    'file_validate_size' => array(variable_get('account_picture_file_size', '300') * 1024),
-  ); 
-
-  $file = file_save_upload('picture_upload', $validators);
-  if ($file === FALSE) {
-    form_set_error('picture_upload', '保存图片失败。');
-  }
-  elseif ($file !== NULL) {
-    $form_state['values']['picture_upload'] = $file[0];
-  }
-} 
-
-function admin_store_edit_form_submit($form, &$form_state) {
-  $values = $form_state['values'];
-  $sid = $form_state['values']['store_id'];
-  if ($values['begin'] && $values['over']) {
-    $values['hours'] = $values['begin'] . '-' . $values['over'];
-  }
-  $array = array(
-    'name' => $values['name'], 
-    'uid' => $values['uid'], 
-    'latitude' => $values['latitude'], 
-    'longitude' => $values['longitude'], 
-    'address' => $values['address'], 
-    'phone' => $values['phone'], 
-    'discount' => $values['discount'], 
-    'hours' => $values['hours'], 
-    'cid' => $values['cid'], 
-    'city_id' => $values['city_id'], 
-    'district_id' => $values['district_id'], 
-    'follow_count' => $values['follow_count'], 
-    'user_num' => $values['user_num'], 
-    'deal_count' => $values['deal_count'], 
-    'update_at' => time(),
-  );
-
-  if ($sid) {
-    $store = store_load($sid);
-    foreach ($array as $key => $value) {
-      $store->{$key} = $value;
-    }
-    $store->save();
-  } else {
-    $array['created'] = time();
-  
-    $store = entity_create('store', $array);
-    $store->enforceIsNew();
-    $store->save();
-  }
-
-  $file = $form_state['values']['picture_upload'];
-  if ($file) {
-    $file->setTemporary();
-    $store->setPicture($file);
-    $store->save();
-  }
-}
-
 function admin_store_delete($store) {
   db_delete('store_account_follow')
     ->condition('sid', $store->id())
@@ -691,7 +382,7 @@ function admin_store_delete($store) {
 /**
  * store_js ajax
  */
-function store_js($action) {
+function store_js($action,Response $request) {
   switch ($action) {
     case 'store_follow':    
       $user = \Drupal::currentUser();
@@ -707,7 +398,7 @@ function store_js($action) {
       break;
     case 'user':
       $matches = array();
-      $string = $_GET['q'];
+      $string = $request->query->get('q');
       if (!empty($string)) {
         $result = db_select('users', 'u')
           ->fields('u', array('uid', 'name'))

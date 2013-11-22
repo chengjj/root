@@ -6,7 +6,6 @@
  */
 namespace Drupal\coupon\Controller;
 
-use Drupal;
 use Drupal\coupon\CouponManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -176,8 +175,8 @@ class CouponController implements ContainerInjectionInterface {
    * user bookmark coupons
    * page callback for: api/bookmark/coupons
    */
-  public function userBookmarkCoupons() {
-    $return = $this->couponManager->getUserBookmarkCoupons();
+  public function userBookmarkCoupons(Request $request) {
+    $return = $this->couponManager->getUserBookmarkCoupons($request);
     if (isset($return['message'])) {
       return new JsonResponse($return['message'], $return['status']);
     } else {
@@ -215,7 +214,7 @@ class CouponController implements ContainerInjectionInterface {
   }
 
   public function bookmarked(Request $request, CouponInterface $coupon) {
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     $bookmarked = false;
     if ($user->isAuthenticated()) {
       $query = db_select('coupon_bookmarks', 'b');
@@ -230,7 +229,7 @@ class CouponController implements ContainerInjectionInterface {
   }
 
   public function bookmark(Request $request, CouponInterface $coupon) {
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     db_insert('coupon_bookmarks')
       ->fields(array(
         'uid' => $user->id(),
@@ -238,24 +237,16 @@ class CouponController implements ContainerInjectionInterface {
         'created' => REQUEST_TIME,
       ))
       ->execute();
-    if(!$user->id()) {
-        new RedirectResponse(url('login?destination=front', array('absolute' => TRUE)));
-    }else{
-        return new JsonResponse(array('bookmarked' => true));
-    }
+    return new JsonResponse(array('bookmarked' => true));
   }
 
   public function unbookmark(Request $request, CouponInterface $coupon) {
-    $user = Drupal::currentUser();
+    $user = \Drupal::currentUser();
     db_delete('coupon_bookmarks')
       ->condition('uid', $user->id())
       ->condition('cid', $coupon->id())
       ->execute();
-    if(!$user->id()) {
-        new RedirectResponse(url('login?destination=front', array('absolute' => TRUE)));
-    }else{
-        return new JsonResponse(array('bookmarked' => true));
-    }
+    return new JsonResponse(array('bookmarked' => false));
   }
 
   /**

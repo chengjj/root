@@ -9,7 +9,7 @@ namespace Drupal\adv_block;
 
 use Drupal\Core\Entity\EntityControllerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\entity\Entity\EntityDisplay;

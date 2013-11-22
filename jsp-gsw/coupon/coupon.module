@@ -237,7 +237,7 @@ function coupon_get_blocked_keywords() {
  */
 function coupon_permission() {
   return array(
-    'admin coupon' => array(
+    'administer coupon' => array(
       'title' => '管理\审核促销信息',
       'description' => '管理促销列表、审核促销信息',
     ),
@@ -245,16 +245,19 @@ function coupon_permission() {
       'title' => '编辑/删除促销信息',
       'restrict access' => TRUE,
     ),
+    'create coupon' => array(
+      'title' => '创建优惠',
+      'description' => '创建优惠信息',
+    ),
+    'edit coupon' => array(
+      'title' => '编辑优惠信息',
+      'description' => '编辑优惠信息',
+    ),
   );
 }
-/*
 
-<<<<<<< HEAD
-  *APIs coupon_load 
-=======
- /**
+/**
  * APIs coupon_load 
->>>>>>> b6898082c7cedb646e8773d40b52208d6cf4037d
  */
 function coupon_load($cid, $reset = FALSE) {
   return entity_load('coupon', $cid, $reset);
@@ -286,7 +289,7 @@ function coupon_delete_multiple($cids) {
   if (!empty($cids)) {
     $coupons = coupon_load_multiple($cids);
     foreach ($coupons as $coupon)
-      module_invoke_all('coupon_coupon_delete', $coupon);
+      module_invoke_all('coupon_delete', $coupon);
   }
   db_delete('coupons')
     ->condition('cid', $cids, 'IN')
@@ -632,18 +635,14 @@ function coupon_account_is_bookmark_coupon($uid, $coupon_id) {
  * APIs coupon_bookmark
 */
 function coupon_bookmark($uid, $cid) {
-  if($user->isAuthenticated()){
-     db_insert('coupon_bookmarks')->fields(array('uid' => $uid, 'cid' => $cid, 'created' => time()))->execute();
-  }
-  else $variable['follow_url'] = url('login');
-  }
+  db_insert('coupon_bookmarks')->fields(array('uid' => $uid, 'cid' => $cid, 'created' => time()))->execute();
+}
 
 /**
  * APIs coupon_unbookmark
  */
 function coupon_unbookmark($uid, $cid) {
-  if($user-isAuthenticated)db_delete('coupon_bookmarks')->condition('uid', $uid)->condition('cid', $cid)->execute();
-  else $variable['follow_url'] = url('login');
+  db_delete('coupon_bookmarks')->condition('uid', $uid)->condition('cid', $cid)->execute();
 }
 
 /**
@@ -800,19 +799,19 @@ function template_preprocess_coupon_front_page(&$variables) {
    *  @ad_play: 休闲娱乐(促销推荐) bid=16
    */
 
-  //$variables['catalog'] = theme('store_search_catalog');
+  $variables['catalogs'] = array('#theme' => 'store_search_catalog');
 
     //store_catalogs
-    $catalogs = store_catalog_load_children(0);
+    /*$catalogs = store_catalog_load_children(0);
     $links = array();
     foreach ($catalogs as $catalog) {
       $link = array('title' => $catalog->label(), 'href' => 'store/search', 'query' => array('cid' => $catalog->id()));
       $links[] = $link;
     }
-    $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);
+    $variables['catalogs'] = array('#theme' => 'links', '#links' => $links);*/
 
   // districts
-  $districts = city_load_districts(city_get_current_city_id());
+  /*$districts = city_load_districts(city_get_current_city_id());
   $links = array();
   foreach ($districts as $district) {
     $q = $all_district_query;
@@ -820,7 +819,7 @@ function template_preprocess_coupon_front_page(&$variables) {
     $link = array('title' => $district->label(), 'href'=> 'store/search', 'query' => $q);
     $links[] = $link;
   }
-  $variables['districts'] = array('#theme' => 'links', '#links' => $links);
+  $variables['districts'] = array('#theme' => 'links', '#links' => $links);*/
 
   // 餐饮美食
   $variables['ad_foods'] = adv_block_view_items(15, 4, 'teaser');
@@ -848,6 +847,15 @@ function template_preprocess_coupon_front_page(&$variables) {
 
   // 休息娱乐
   $variables['ad_play'] = adv_block_view_items(17, 4, 'teaser');
+  //广告位更多链接
+  $food_cid = db_query('SELECT cid FROM {store_catalog} WHERE name=:name', array(':name' => '餐饮美食'))->fetchField();
+  $live_cid = db_query('SELECT cid FROM {store_catalog} WHERE name=:name', array(':name' => '生活服务'))->fetchField();
+  $play_cid = db_query('SELECT cid FROM {store_catalog} WHERE name=:name', array(':name' => '休闲娱乐'))->fetchField();
+  $variables['links'] = array(
+    'food_more' => url('store/search', array('query' => array('cid' => $food_cid))),
+    'live_more' => url('store/search', array('query' => array('cid' => $live_cid))),
+    'play_more' => url('store/search', array('query' => array('cid' => $play_cid))),
+  );
 
 }
 
@@ -1021,7 +1029,6 @@ function template_preprocess_coupon(&$variables) {
   $coupon = $variables['coupon'];
   $store = $coupon->getStore();
   $variables['store'] = $store;
-
   $uri = $store->uri();
   $variables['coupon_url'] = url($uri['path'], $uri['options']);
   $variables['label'] = check_plain($coupon->label());
@@ -1079,6 +1086,8 @@ function coupon_theme_suggestions_coupon(array $variables) {
  *        admin/coupons/list
  */
 function admin_coupon_list_form($form, &$form_state) {
+  $request = \Drupal::request();
+
   drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery-ui.custom.js', 'file');
   drupal_add_css(drupal_get_path('module', 'ec') . '/css/jquery-ui.css', 'file');
   drupal_add_js(drupal_get_path('module', 'ec') . '/js/jquery.ui.datepicker-zh-CN.js', 'file');
@@ -1101,7 +1110,7 @@ function admin_coupon_list_form($form, &$form_state) {
   $form['filters']['keywords'] = array(
     '#title' => '关键字',
     '#type' => 'textfield',
-    '#default_value' => !empty($_GET['keywords']) ? $_GET['keywords'] : '',
+    '#default_value' => $request->query->get('keywords', ''),
   );
   $form['filters']['advanced'] = array(
     '#type' => 'fieldset',
@@ -1112,25 +1121,25 @@ function admin_coupon_list_form($form, &$form_state) {
   $form['filters']['advanced']['store_id'] = array(
     '#title' => '门店',
     '#type' => 'textfield',
-    '#default_value' => !empty($_GET['store_id']) ? $_GET['store_id'] : '',
+    '#default_value' => $request->query->get('store_id', ''),
   );
   $form['filters']['advanced']['start'] = array(
     '#title' => '有效期开始',
     '#type' => 'textfield',
     '#attributes' => array('autocomplete' => 'off'), 
-    '#default_value' => !empty($_GET['start']) ? $_GET['start'] : '',
+    '#default_value' => $request->query->get('start', ''),
   );  
   $form['filters']['advanced']['expire'] = array(
     '#title' => '有效期结束',
     '#type' => 'textfield',
     '#attributes' => array('autocomplete' => 'off'), 
-    '#default_value' => !empty($_GET['expire']) ? $_GET['expire'] : '',
+    '#default_value' => $request->query->get('expire', ''),
   );  
   $form['filters']['advanced']['coupon_status'] = array(
     '#title' => '状态',
     '#type' => 'select',
     '#options' => $status,
-    '#default_value' => isset($_GET['coupon_status']) ? $_GET['coupon_status'] : 0,
+    '#default_value' => $request->query->get('coupon_status', 0),
   );
   $options = city_names();
   $options[0] = '所有城市';
@@ -1138,24 +1147,24 @@ function admin_coupon_list_form($form, &$form_state) {
     '#title' => '城市',
     '#type' => 'select',
     '#options' => $options,
-    '#default_value' => isset($_GET['city_id']) ? $_GET['city_id'] : 0,
+    '#default_value' => $request->query->get('city_id', city_get_current_city_id()),
   );
   $form['filters']['advanced']['coupon_editor'] = array(
     '#title' => '发布者',
     '#type' => 'textfield',
-    '#default_value' => !empty($_GET['coupon_editor']) ? $_GET['coupon_editor'] : '',
+    '#default_value' => $request->query->get('coupon_editor', ''),
   );
   $form['filters']['search'] = array(
     '#type' => 'submit',
     '#value' => '搜索',
   );
-  $keyword = isset($_GET['keywords']) ? check_plain($_GET['keywords']) : '';
-  $store_id = isset($_GET['store_id']) ? check_plain($_GET['store_id']) : '';
-  $start = isset($_GET['start']) ? check_plain($_GET['start']) : '';
-  $expire = isset($_GET['expire']) ? check_plain($_GET['expire']) : '';
-  $coupon_status = isset($_GET['coupon_status']) ? check_plain($_GET['coupon_status']) : '';
-  $city_id = isset($_GET['city_id']) ? check_plain($_GET['city_id']) : '';
-  $coupon_editor = isset($_GET['coupon_editor']) ? check_plain($_GET['coupon_editor']) : '';
+  $keyword = check_plain($request->query->get('keywords', ''));
+  $store_id = check_plain($request->query->get('store_id', ''));
+  $start = check_plain($request->query->get('start', ''));
+  $expire = check_plain($request->query->get('expire', ''));
+  $coupon_status = check_plain($request->query->get('coupon_status', ''));
+  $city_id = check_plain($request->query->get('city_id', ''));
+  $coupon_editor = check_plain($request->query->get('coupon_editor', ''));
   $query = db_select('coupons', 'c')
      ->fields('c', array('cid'))
      ->extend('Drupal\Core\Database\Query\PagerSelectExtender')

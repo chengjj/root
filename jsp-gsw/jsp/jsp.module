@@ -12,11 +12,6 @@ function jsp_menu() {
     'title' => '列表',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['admin/entity/%/create'] = array(
-    'title' => '添加',
-    'route_name' => 'jsp.admin_entity_create',
-    'type' => MENU_LOCAL_ACTION,
-  );
   return $items;
 }
 

@@ -246,6 +246,11 @@ function store_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'rank_count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'unique keys' => array(
       'uuid' => array('uuid'),
@@ -601,4 +606,64 @@ function store_update_12() {
   db_delete('store_catalog')
     ->condition('cid',57 , '=')
     ->execute();
+}
+
+/**
+ * add rank_count column for stores 避免 join
+ */
+function store_update_13() {
+  $spec = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+
+  db_add_field('stores', 'rank_count', $spec);
+  $sids = db_query('SELECT sid FROM {store_comment} WHERE rank=1 GROUP BY sid')->fetchCol();
+  foreach ($sids as $sid) {
+    db_query('UPDATE {stores} SET rank_count = :rank_count WHERE sid = :sid', array(':rank_count' => db_query('SELECT COUNT(cid) FROM {store_comment} WHERE rank=1 AND sid = :sid', array(':sid' => $sid))->fetchField(), ':sid' => $sid));
+  }
+}
+
+/**
+ *
+ */
+function store_update_14() {
+  $sids = db_query('SELECT sid FROM {stores} WHERE cid = 22 AND created < :time', array(':time' => strtotime('20131106')))->fetchCol();
+  if (count($sids)) {
+    db_delete('stores')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('store_comment')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('store_follow')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('store_history')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('store_revision')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('store_consumer_records')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('activity')
+      ->condition('sid', $sids, 'IN')
+      ->execute();
+    db_delete('adv_block_items')
+      ->condition('type', 'store')
+      ->condition('entity_id', $sids, 'IN')
+      ->execute();
+  }
+}
+
+function store_update_15(){
+
+  $sids = db_query('SELECT sid FROM {stores} GROUP BY sid')->fetchCol();
+  foreach ($sids as $sid) {
+    db_query('UPDATE {stores} SET coupon_count  = :coupon_count WHERE sid = :sid', array(':coupon_count' => db_query('SELECT COUNT(cid) FROM { coupons } WHERE status=1 AND sid = :sid', array(':sid' => $sid))->fetchField(), ':sid' => $sid));
+  }
+
 }

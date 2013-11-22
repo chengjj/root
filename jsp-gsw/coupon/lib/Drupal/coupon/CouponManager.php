@@ -7,7 +7,8 @@
 namespace Drupal\coupon;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 use Drupal\user\Plugin\Core\Entity\User;
@@ -26,14 +27,14 @@ class CouponManager {
   /**
    * Entity manager Service Object.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
   
   /**
    * Constructs a CouponManager object.
    */
-  public function __construct(Connection $database, EntityManager $entityManager) {
+  public function __construct(Connection $database, EntityManagerInterface $entityManager) {
     $this->database = $database;
     $this->entityManager = $entityManager;
   }
@@ -213,11 +214,12 @@ class CouponManager {
    * load coupons by user id
    */
   public function getCouponsByUserid($user_id) {
+    $request = \Drupal::request();
     $account = user_load($user_id);
     if (!$account->id()) return NULL;
 
-    $page = isset($_GET['page']) ? $_GET['page'] :  1;
-    $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
+    $page = $request->query->get('page', 1);
+    $per_page = $request->query->get('per_page', 10);
 
     $query = $this->database->select('coupons', 'c')
       ->fields('c', array('cid'))
@@ -380,6 +382,8 @@ class CouponManager {
    * load coupons by store id and status
    */
   public function getCouponsByStoreidStatus($store_id, $status) {
+    //TODO request 
+    $request = \Drupal::request();
     $store = store_load($store_id);
     if (!isset($store) || empty($store)) {
       return NULL;
@@ -399,8 +403,8 @@ class CouponManager {
         $coupon_status = 1;
         break;
     }
-    $page = isset($_GET['page']) ? $_GET['page'] : 1 ;
-    $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 5;
+    $page = $request->query->get('page', 1);
+    $per_page = $request->query->get('per_page', 5);
 
     $query = $this->database->select('coupons', 'c')
       ->fields('c', array('cid'))
@@ -464,10 +468,10 @@ class CouponManager {
   /**
    * get user bookmark coupons
    */
-  public function getUserBookmarkCoupons() {
+  public function getUserBookmarkCoupons(Request $request) {
     global $base_url;
-    $size = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
-    $start = isset($_GET['page'])? ($_GET['page'] - 1) * $size : 0;
+    $size = $request->query->get('per_page', 10);
+    $start = $request->query->has('page') ? ($request->query->get('page') - 1) * $size : 0;
     if (!is_numeric($size) || !is_numeric($start)) {
       return array('message' => array('message' => '参数错误!'), 'status' => 422);
     }
@@ -494,7 +498,7 @@ class CouponManager {
     }
     $http_next = $http_last = "<$base_url/api/bookmark/coupons?";
 
-    $page = isset($_GET['page']) ? $_GET['page'] : 1;
+    $page = $request->query->get('page', 1);
     
     $http_next .= "per_page=$size&";
     $http_last .= "per_page=$size&";

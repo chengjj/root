@@ -2,7 +2,7 @@
 /**
  * Access coupon/edit
  *        coupon/edit/%coupon
- */
+ *
 function admin_coupon_edit_form($form, &$form_state, $coupon = NULL) {
   if (isset($coupon)) {
     drupal_set_title('编辑促销信息');
@@ -49,7 +49,7 @@ function admin_coupon_edit_form($form, &$form_state, $coupon = NULL) {
       'wrapper'  => 'store-wrapper',
       'effect'   => 'fade',
     ),
-  );  
+  );
   $form['store_wrapper'] = array(
     '#prefix' => '<div id="store-wrapper">',
     '#suffix' => '</div>',
@@ -82,10 +82,11 @@ function admin_coupon_edit_form($form, &$form_state, $coupon = NULL) {
     '#attributes' => array('autocomplete' => 'off'), 
     '#default_value' => isset($coupon->expire) ? date('Y-m-d', $coupon->expire->value) : '',
   );
-  $form['submit'] = array(
+    $form['submit'] = array(
     '#type' => 'submit',
     '#value' => '保存',
   );
+
   return $form;
 }
 
@@ -169,4 +170,4 @@ function admin_coupon_edit_form_submit($form, &$form_state) {
 function store_coupon_js($form, &$form_state) {
   return $form['store-wrapper'];
 }
-
+**/
