@@ -1,0 +1,26 @@
+id: anonymous
+uuid: 4a916541-1cc7-4175-a55a-906ed2a005a0
+label: 'Anonymous user'
+weight: 0
+permissions:
+  - 'use text format plain_text'
+  - 'use text format restricted_html'
+  - 'access content'
+  - 'access comments'
+  - 'access site-wide contact form'
+  - 'access user profiles'
+  - 'restful get entity:adv'
+  - 'restful get entity:adv_block_item'
+  - 'restful get entity:adv_block'
+  - 'restful get entity:store_catalog'
+  - 'restful get entity:city'
+  - 'restful get entity:district'
+  - 'restful get entity:coupon'
+  - 'restful get entity:node'
+  - 'restful get entity:share'
+  - 'restful get entity:share_catalog'
+  - 'restful get entity:share_comment'
+  - 'restful get entity:store_comment'
+  - 'restful get entity:store'
+status: true
+langcode: en

@@ -1,0 +1,353 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+html,body,header,footer,nav,span,object,iframe,h1,h2,h3,h4,h5,h6,p,b,i,strong,blockquote,pre,a,abbr,acronym,address,code,dfn,em,img,q,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,u,sub{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: none;
+	font-family:Tahoma, Microsoft Yahei, Î¢ÈíÑÅºÚ, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight:normal;
+	text-decoration:none;
+	font-style:normal;
+}
+
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section,label{  
+   display:block; 
+} 
+
+a{
+	color:#666;
+}
+a:hover{
+	color:#ff3366;
+}
+body{
+	background: #fafafa;
+}
+
+#floating{
+	width:27px;
+	height:69px;
+	background:#ff6699;
+	text-align:center;
+	position:fixed;
+	bottom:10px;
+	right:10px;
+	z-index:999;
+}
+#floating a{
+	width:17px;
+	height:49px;
+	padding:19px 5px 0;
+	display:block;
+	font-size:12px;
+	line-height:14px;
+	color:#ffffff;
+	background:url(../images/base_bg.png) no-repeat -581px -130px transparent;
+}
+
+
+header{
+	width:100%;
+	height:auto;
+}
+#header_top{
+	width:100%;
+	height:85px;
+	text-align:center;
+	background: url("../images/head_bg.png") repeat-x scroll 0 0 transparent;
+}
+.headerbox{
+	width:980px;
+	height:auto;
+	margin:0 auto;
+	overflow:hidden;
+}
+#logo{
+	margin-top:18px;
+	width:300px;
+	height:auto;
+	overflow:hidden;
+	float:left;
+}
+#logo a,#logo sub{
+	display:block;
+	float:left;
+	font-size:12px;
+	color:#666666;
+	margin-left:15px;
+}
+#logo sub{
+	margin-top:33px;	
+}
+.topright{
+	float:right;
+	height:auto;
+	overflow:hidden;
+	text-align:right;
+	margin-top:37px;
+}
+.topright a,.topright span{
+	display:block;
+	float:left;
+	margin:0 5px;
+}
+.topright span{
+	height:28px;
+	line-height:28px;
+	color:#dedede;
+}
+.topright a.phonedown{
+	width:55px;
+	height:28px;
+	line-height:28px;
+	padding-left:35px;
+	text-align:center;
+	background: url("../images/base_bg.png") no-repeat scroll 0 -98px transparent;
+}
+.topright a.sina{
+	width:50px;
+	height:28px;
+	line-height:28px;
+	padding-left:25px;
+	text-align:center;
+	background: url("../images/icon_sina.png") no-repeat scroll 3px 5px transparent;
+}
+.topright a.login{
+	width:73px;
+	height:28px;
+	line-height:28px;
+	margin-left:10px;
+	text-align:center;
+	background: url("../images/base_bg.png") no-repeat scroll 0 -60px transparent;
+}
+.topright a.register{
+	width:71px;
+	height:28px;
+	line-height:28px;
+	text-align:center;
+	color:#ffffff;
+	background: url("../images/base_bg.png") no-repeat scroll -79px -60px transparent;
+}
+.topright a.register:hover{
+	color:#c50f4d;
+}
+.topright .loginafter{
+	float:left;
+}
+.topright .loginafter span{
+	color:#999999;
+}
+.topright .loginafter a.center{
+	line-height:28px;
+	text-align:center;
+	color:#666666;
+	text-decoration:underline;
+}
+.topright .loginafter a.center:hover{
+	color:#ff6699;
+	text-decoration:none;
+}
+.topright .loginafter a.message{
+	color:#ff6699;
+	font-weight:bold;
+	line-height:28px;
+	text-align:center;
+}
+
+.header_nav{
+	width:100%;
+	height:38px;
+	background: url("../images/base_bg.png") repeat-x scroll 0 0 transparent;
+}
+.navbox{
+	width:980px;
+	height:auto;
+	margin:0 auto;
+}
+ul.nav{
+	float:left;
+	margin-top:10px;
+}
+ul.nav li{
+	text-align:center;
+	border-left:1px dotted #ffffff;
+	float:left;
+	padding:0 22px;
+	height:17px;
+}
+ul.nav li a{
+	width:61px;
+	height:17px;
+	line-height:17px;
+	font-size:14px;
+	font-weight:bold;
+	color:#ffffff;
+	display:block;
+	padding-bottom:11px;
+}
+ul.nav li a:hover{	
+	background: url("../images/base_bg.png") no-repeat scroll 0 -136px transparent;	
+}
+ul.nav li a.seclect{	
+	background: url("../images/base_bg.png") no-repeat scroll 0 -136px transparent;	
+}
+ul.nav li.nav_first{
+	border:none;
+}
+.navright{
+	float:right;
+	text-align:right;
+}
+.navright a.show{
+	display:inline-block;
+	float:left;
+	width:88px;
+	height:26px;
+	line-height:26px;
+	font-size:14px;
+	font-weight:bold;
+	text-align:center;
+	color:#ffffff;
+	border-radius:3px;
+	background:#e81a60;
+	margin-top:7px;
+	margin-right:15px;
+}
+.navright a.show:hover{
+	color:#ffffff;
+}
+.navright .search_form{
+	float:left;
+	border-radius:3px;
+	width:265px;
+	height:25px;
+	margin-top:7px;
+	background:#ffffff;
+}
+.navright .search_form .selectbox{
+	float:left;
+	width:60px;
+	position:relative;
+	z-index:555;
+	text-align:center;
+}
+.navright .search_form .selectbox span{
+	display:block;
+	float:left;
+}
+.navright .search_form .selectbox .selected{
+	color:#333333;
+	cursor:pointer;
+	height:25px;
+	line-height:25px;
+	width:55px;
+	text-align:center;
+}
+.navright .search_form .selectbox .icon{
+	width:11px;
+	height:6px;
+	position:absolute;
+	right:-2px;
+	top:11px;
+	background: url("../images/base_bg.png") no-repeat scroll right -60px transparent;
+}
+.navright .search_form .selectbox ol{
+	display:block;
+	width:65px;
+	text-align:center;
+	background:#ffffff;
+	border-radius:0 0 3px 3px;
+	position:absolute;
+	top:23px;
+	left:0;
+	z-index:555;
+}
+.navright .search_form .selectbox ol li{
+	padding:3px 0 0;
+}
+.navright .search_form .selectbox ol li a{
+	color:#333333;
+	display:block;
+	height:19px;
+	padding:3px;
+	text-indent:-7px;
+}
+.navright .search_form .selectbox ol li a:hover{
+	background:#ebebeb;
+}
+.search_form .ts_txt{
+	border:none;
+	width:160px;
+	height:23px;
+	line-height:23px;
+	color:#919191;
+	float:left;
+	margin-left:10px;
+	padding:0 5px;
+}
+.search_form .ts_btn{
+	width:16px;
+	height:18px;
+	background: url("../images/base_bg.png") no-repeat scroll right -98px transparent;
+	float:right;
+	margin-top:2px;
+	margin-right:5px;
+	border:none;
+	cursor:pointer;
+}
+
+
+footer{
+	width:100%;
+	height:auto;
+	overflow:hidden;
+}
+#footer_box{
+	width:100%;
+	height:auto;
+	border-top:4px solid #ff6699;
+	background:#ffffff;
+	overflow:hidden;
+	margin-top:20px;
+}
+.footer_con{
+	width:980px;
+	height:auto;
+	padding:30px 0;
+	margin:0 auto;
+	overflow:hidden;
+}
+.linklist{
+	float:left;
+	padding:0 55px 0 5px;
+}
+.linklist h3{
+	font-size:16px;
+	font-weight:bold;
+	color:#8c8c8c;
+	line-height:30px;
+}
+.linklist ul{
+	padding-left:2px;
+}
+.linklist ul li{
+	line-height:22px;
+}
+.footer_logo{
+	float:right;
+	width:200px;
+	padding:10px;
+	border-left:1px dashed #c5c5c5;
+	text-align:center;
+}
+

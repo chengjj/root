@@ -1,0 +1,395 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+
+
+
+
+#content{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+
+}
+
+.wrap_border{
+	border:1px solid #e2e2e2;
+	background:#ffffff;
+}
+.col{
+	width:978px;
+	height:auto;
+	overflow:hidden;
+}
+.space{
+	margin-bottom:20px;
+}
+.szbconbox{
+	margin:20px 0;
+}
+
+.szbconbox .con_left{
+	width:732px;
+	height:auto;
+	float:left;
+	margin-right:12px;
+	overflow:hidden;
+}
+.szbconbox .con_right{
+	width:236px;
+	height:auto;
+	float:left;
+	overflow:hidden;
+}
+
+.szbconbox .assort{
+	padding:15px 10px;
+	width:710px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconbox .assortlist{
+	padding:5px 0;
+	width:710px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconbox .assortlist label{
+	width:72px;
+	height:30px;
+	line-height:30px;
+	text-align:center;
+	font-weight:bold;
+	font-size:18px;
+	color:#ffffff;
+	background:#ff6196;
+	border-radius:3px;
+	display:inline-block;
+	float:left;
+	margin:0 10px 0 5px;
+}
+.szbconbox .assortlist a.all{	
+	display:inline-block;
+	float:left;
+	line-height:30px;
+	font-size:14px;
+	padding:0 5px;
+	color:#ff6699;
+	font-weight:bold;
+}
+.szbconbox .assortlist a.all:hover{
+	color:#ff6699;
+}
+.szbconbox .assortlist ul{
+	float:left;
+}
+.szbconbox .assortlist ul li{
+	float:left;
+	padding:0 10px;
+	height:30px;
+	line-height:30px;
+}
+.szbconbox .assortlist ul li a{
+	padding:0 2px;
+	cursor:pointer;
+}
+.szbconbox .assortlist ul li a span{
+	color:#999999;
+}
+.szbconbox .assortlist ul li a:hover,.szbconbox .assortlist ul li a:hover span{
+	background:#ff6196;
+	color:#ffffff;
+	border-radius:2px;
+}
+.szbconbox .assortlist ul li a.seclect,.szbconbox .assortlist ul li a.seclect span{
+	background:#ff6196;
+	color:#ffffff;
+	border-radius:2px;
+}
+.szbconbox .assort .open{
+	margin-left:90px;
+	background:#f5f5f5;
+	padding:10px;
+	border-radius:3px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconbox .assort .open a{
+	padding:0 10px;
+	white-space:nowrap;
+	line-height:24px;
+	float:left;
+}
+.szbconbox .assort .open a span{
+	color:#999999;
+}
+.szbconbox .assort .open a:hover,.szbconbox .assort .open a:hover span{
+	color:#ff6699;
+}
+.szbconbox .assort .open a.c,.szbconbox .assort .open a.c span{
+	color:#ff6699;
+	font-weight:bold;
+}
+
+.szbconlist{
+	width:730px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconlist h2{
+	width:730px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconlist h2 a{
+	font-size:18px;
+	font-weight:bold;
+	color:#ff3366;
+	line-height:25px;
+	border-top:3px solid #e81a60;
+	padding-top:13px;
+	width:80px;
+	margin-left:15px;
+	text-align:center;
+	float:left;
+}
+.szbconlist h2 a.more{
+	font-size:12px;
+	font-weight:normal;
+	color:#666666;
+	border:none;
+	line-height:25px;
+	margin-left:0;
+	margin-right:15px;
+	width:40px;
+	float:right;
+}
+.szbconlist h2 a.more:hover{
+	color:#ff6699;
+}
+.szbconlist ul li{
+	padding:15px;
+	float:left;
+	width:335px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconlist ul li div.pic{
+	float:left;
+	margin-right:10px;
+}
+.szbconlist ul li div.pic img{
+	width:130px;
+	height:86px;
+	overflow:hidden;
+}
+.szbconlist ul li div.txt{
+	float:left;
+	width:195px;
+	height:auto;
+	overflow:hidden;
+}
+.szbconlist ul li div.txt a.title{
+	font-size:14px;
+	color:#333333;
+}
+.szbconlist ul li div.txt a.title:hover{
+	color:#ff6699;
+}
+.szbconlist ul li div.txt p{
+	font-size:12px;
+	color:#666666;
+	line-height:40px;
+	width:195px;
+	height:42px;
+	overflow:hidden;
+}
+.szbconlist ul li div.txt em{
+	color:#ff6699;
+	font-weight:bold;
+	font-size:14px;
+}
+.szbconlist ul li div.txt span{
+	padding:0 5px;
+}
+.szbconlist ul li div.txt p.address span.icon{
+	display:inline-block;
+	width:15px;
+	height:20px;
+	padding:0;
+	margin-right:5px;
+	background:url(../images/base_bg.png) no-repeat right -280px;
+}
+.szbconlist ul li div.txt p.address{
+	line-height:20px;
+}
+
+.ad_smallbanner{
+	width:732px;
+	height:auto;
+	overflow:hidden;
+}
+
+.hotlist{
+	padding:15px;
+	padding-top:0;
+	height:auto;
+	overflow:hidden;
+	float:left;
+	width:204px;
+}
+.hotlist h3{
+	font-size:16px;
+	font-weight:bold;
+	color:#555555;
+	line-height:25px;
+	border-top:3px solid #e81a60;
+	padding-top:13px;
+	width:105px;
+	text-align:center;
+}
+.hotlist ol{
+	padding-top:10px;
+}
+.hotlist ol li{
+	border-bottom:1px dotted #eaeaea;
+	cursor:pointer;
+	height:36px;
+	line-height:36px;
+	color:#666666;
+	overflow:hidden;
+}
+.hotlist ol li.open{
+	border-bottom:none;
+	cursor:pointer;
+	height:auto;
+	line-height:36px;
+	color:#666666;
+}
+.hotlist ol li.open p{
+	height:36px;
+	overflow:hidden;
+}
+
+.hotlist ol li.last{
+	border:none;
+}
+.hotlist ol li span{
+	display:inline-block;
+	width:21px;
+	height:20px;
+	text-align:center;
+	line-height:20px;
+	color:#ffffff;
+	background:#cccccc;
+	margin-right:15px;
+}
+.hotlist ol li.highlight span{
+	background:#ff7faa;
+}
+.hotlist ol li b{
+	color:#ff3366;
+	font-weight:normal;
+	padding-right:10px;
+}
+.hotlist .openbox{
+	background:#f5f5f5;
+	padding:10px;
+	width:184px;
+	height:auto;
+	overflow:hidden;
+}
+.hotlist .openbox .img{
+	width:60px;
+	height:60px;
+	overflow:hidden;
+	float:left;
+	padding-right:10px;
+}
+.hotlist .openbox .txt{
+	float:left;
+	color:#666666;
+	width:114px;
+	height:auto;
+	overflow:hidden;
+}
+.hotlist .openbox .txt a{
+	color:#ff3366;
+	width:114px;
+	height:24px;
+	line-height:24px;
+	display:block;
+	overflow:hidden;
+}
+.hotlist .openbox .txt a:hover{
+	text-decoration:underline;
+}
+.hotlist .openbox .txt p{
+	line-height:19px;
+	height:40px;
+	overflow:hidden;
+}
+
+.shoplist{
+	padding:15px;
+	height:auto;
+	overflow:hidden;
+	float:left;
+	width:204px;
+}
+.shoplist h3{
+	font-size:16px;
+	font-weight:bold;
+	color:#555555;
+	line-height:20px;
+}
+.shoplist .shop_ad{
+	width:204px;
+	height:auto;
+	margin-top:10px;
+	overflow:hidden;
+}
+.shoplist .shop_ad li{
+	float:left;
+	padding:3px;
+}
+.shoplist .shop_ad li img{
+	width:96px;
+	height:41px;
+	overflow:hidden;
+}
+
+
+
+
+#ad_rightbar{
+	width:236px;
+	height:auto;
+	overflow:hidden;
+}
+
+
+
+.red{
+	color:#ff6699;
+}
+.grey_d{
+	color:#cccccc;
+}
+.grey_q{
+	color:#999999;
+}
+.p14{
+	font-size:14px;
+}
+.p16{
+	font-size:16px;
+}

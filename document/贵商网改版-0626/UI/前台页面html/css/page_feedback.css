@@ -1,0 +1,163 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+
+
+
+
+#content{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+
+}
+
+.wrap_border{
+	border:1px solid #e2e2e2;
+	background:#ffffff;
+}
+.col{
+	width:978px;
+	height:auto;
+	overflow:hidden;
+}
+.space{
+	margin-bottom:20px;
+}
+
+.feedback_box{
+	margin:20px 0;
+	padding:0 20px;
+	width:938px;
+	height:auto;
+	overflow:hidden;
+}
+
+.path{
+	width:938px;
+	height:auto;
+	overflow:hidden;
+}
+.path ul{
+	padding:15px;
+	height:35px;
+	overflow:hidden;
+}
+.path ul li{
+	height:35px;
+	line-height:35px;
+	float:left;
+	font-size:15px;
+}
+.path ul li.current{
+	color:#ff6699;
+	padding-left:5px;
+	font-size:15px;
+}
+
+.register_form{
+	padding:15px;
+	padding-top:50px;
+	width:800px;
+	height:auto;
+	overflow:hidden;
+}
+.service{
+	padding:25px 0 25px 135px;
+	width:800px;
+	height:auto;
+	overflow:hidden;
+	border-top:1px dashed #cccccc;
+	
+}
+.field{
+	margin-bottom:25px;
+	width:800px;
+	height:auto;
+	overflow:hidden;
+}
+.field label{
+	width:150px;
+	text-align:right;
+	font-size:15px;
+	color:#333333;
+	vertical-align:middle;
+	float:left;
+	line-height:36px;
+}
+.field .text{
+    border: 1px solid #CFCFCF;
+    float: left;
+    height: 36px;
+    line-height: 36px;
+    margin-left: 5px;
+    padding: 0 8px;
+    width: 268px;
+	color:#999999;
+	box-shadow:2px 2px 2px #ebebeb inset;
+}
+
+.field p{
+	color:#666666;
+	line-height:46px;
+	width:500px;
+	float:left;
+	margin-left:155px;
+}
+
+.field .pub_txt{
+	width:470px;
+	height:180px;
+    border: 1px solid #CFCFCF;
+	color:#666666;
+	border-radius:3px;
+	font-size:12px;
+	line-height:24px;
+	padding:8px;
+	margin-left:5px;
+	box-shadow:2px 2px 2px #ebebeb inset;
+}
+.field .sub{
+	margin-left:215px;
+	font-weight:bold;
+	cursor:pointer;
+	width:92px;
+	height:28px;
+	text-align:center;
+	color:#999999;
+	border:none;
+	background:url(../images/base_bg.png) no-repeat 0 -620px;
+	font-family: Microsoft Yahei;
+}
+
+.service ul{
+	padding:10px 30px;
+	height:auto;
+	overflow:hidden;
+}
+.service ul li{
+	margin-bottom:30px;
+	color:#999999;
+	font-size:12px;
+	line-height:30px;
+}
+.service ul li h2{
+	color:#ff9900;
+	font-size:15px;
+	line-height:30px;
+}
+.service ul li p{
+	padding-left:10px;
+}
+
+.r3 {
+    border-radius: 3px 3px 3px 3px;
+}

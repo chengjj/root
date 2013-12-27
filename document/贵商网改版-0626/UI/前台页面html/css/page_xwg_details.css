@@ -1,0 +1,387 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-7-24
+ ----------------------------------------------------------------------*/
+ 
+
+
+
+
+#content{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+
+}
+
+.wrap_border{
+	border:1px solid #e2e2e2;
+	background:#ffffff;
+}
+.col{
+	width:978px;
+	height:auto;
+	overflow:hidden;
+}
+.space{
+	margin-bottom:20px;
+}
+
+
+.detailsbox{
+	margin:20px 0;
+}
+.left_side{
+	width:476px;
+	height:auto;
+	float:left;
+	overflow:hidden;
+}
+.right_side{
+	width:502px;
+	height:auto;
+	float:left;
+	overflow:hidden;
+}
+
+.details_pic{
+	padding:20px;
+}
+.details_pic img{
+	width:436px;
+	height:auto;
+	overflow:hidden;
+}
+
+.guess_like h2{
+	font-size:24px;
+	font-weight:bold;
+	color:#ff6699;
+	padding:0 20px;
+}
+.guess_like ul{
+	padding:20px 0 20px 20px;
+}
+.guess_like ul li{
+	float:left;
+	width:132px;
+	height:auto;
+	margin-right:20px;
+	margin-bottom:20px;
+	overflow:hidden;
+}
+.guess_like ul li img{
+	width:132px;
+	height:132px;
+	overflow:hidden;
+}
+
+.details_txt{
+	width:472px;
+	padding:20px 20px 20px 10px;
+	height:auto;
+	overflow:hidden;
+}
+.details_txt h1 a{
+	font-size:22px;
+	font-weight:bold;
+	color:#666666;
+	line-height:32px;
+}
+.details_txt h1 a:hover{
+	color:#ff6699;
+}
+.details_txt p{
+	font-size:14px;
+	color:#999999;
+	line-height:32px;
+	padding:10px 0;
+}
+.details_txt p.shopinfo{
+	background:#fefbf3;
+	border: 1px solid #ffd4b8;
+    border-radius: 3px 3px 3px 3px;
+	padding:3px 4px;
+	margin-bottom:10px;
+}
+.details_txt p.shopinfo img{
+	margin-left:5px;
+	vertical-align:middle;
+}
+.details_txt p.shopinfo img.rank{
+	margin-top:-4px;
+}
+.details_txt p.shopinfo span{
+	padding:0 8px;
+	color:#666666;
+	
+}
+.details_txt p.shopinfo span em{
+	padding-left:5px;
+	color:#ff692f;
+}
+.details_txt p.buy{
+	padding-right:10px;
+}
+.details_txt p.buy a,.details_txt p.buy span{
+    display:inline-block;
+}
+.details_txt p.buy a.price{
+	float:left;
+	width:212px;
+	height:42px;
+	color:#ffffff;
+	font-size:20px;
+	font-weight:bold;
+	text-align:center;
+	line-height:40px;
+	text-indent:-20px;
+	background:url(../images/base_bg.png) no-repeat -180px -280px transparent;
+}
+.details_txt p.buy a.price:hover{
+	text-decoration:none;
+}
+.details_txt p.buy span{
+	float:right;
+	color:#ff6699;
+	line-height:42px;
+	font-size:14px;
+}
+
+.details_share{
+	padding:20px 10px;
+}
+.details_share span{
+	display:inline-block;
+	float:left;
+	color:#999999;
+	line-height:25px;
+	padding:0 15px;
+}
+.details_share span a{
+	color:#ff6699;
+}
+.details_share span a:hover{
+	text-decoration:underline;
+}
+.details_share span.like{
+	color:#ff6699;
+	font-size:14px;
+	font-weight:bold;
+}
+.details_share span.like a{
+	display:inline-block;
+	margin-right:10px;
+	width:40px;
+	height:26px;
+	line-height:25px;
+	font-size:14px;
+	font-weight:bold;
+	color:#ffffff;
+	padding-left:25px;
+	background:url(../images/base_bg.png) no-repeat right -246px transparent;
+}
+.details_share span.like a.liked{
+	background:url(../images/base_bg.png) no-repeat right -220px transparent;
+}
+.details_share span.like a:hover{
+	text-decoration:none;
+	color:#ffffff;
+}
+.details_share span.share{
+	color:#ff6699;
+	float:right;
+	text-align:right;
+}
+.details_share span.share a{
+	display:inline-block;
+}
+.details_share span.share a.sina{
+	width:16px;
+	height:0;
+	padding-top:18px;
+	background:url(../images/icon_sina.png) no-repeat 0 2px transparent;
+	overflow:hidden;
+	margin:0 10px;
+}
+
+.pub_area{
+	padding:25px;
+	width:452px;
+	height:auto;
+	overflow:hidden;
+}
+
+.pub_area .pub_area_bd .pub_txt{
+	border: 1px solid #BBBBBB;
+    border-radius: 3px 3px 3px 3px;
+    color: #CCCCCC;
+    height: 60px;
+    line-height: 16px;
+    overflow: hidden;
+    padding: 5px;
+    resize: none;
+    width: 430px;
+	font-size:12px;
+	box-shadow:inset 1px 1px #eeeeee;
+}
+.pub_area .pub_area_ft{
+	margin-top:3px;
+	min-height:40px;
+	overflow:visible;
+	width:440px;
+	position:relative;
+}
+.pub_area .pub_area_ft .pub_opt{
+	float:left;
+}
+.pub_area .pub_area_ft a.red_btn{
+	display:inline-block;
+	float:right;
+	width:100px;
+	height:34px;
+	background:#ff6699;
+	text-align:center;
+	border-radius: 3px 3px 3px 3px;
+	font-size:14px;
+	font-weight:bold;
+	color:#ffffff;
+	line-height:34px;
+}
+
+.note_comment{
+	margin:0 0 20px 0;
+	height: auto;
+    overflow: hidden;
+    padding:0 25px;
+    width: 452px;
+}
+.note_comment ul li{
+	min-height: 40px;
+    padding: 10px 10px 10px 0;
+    position: relative;
+}
+.note_comment ul li img.head_img{
+	width:36px;
+	height:36px;
+	float:left;
+	overflow:hidden;
+	border-radius:3px;
+	margin:3px 10px 0;
+}
+.note_comment ul li .sms{
+   color: #666666;
+    font-size: 14px;
+    line-height: 18px;
+    padding: 0 45px 0 58px;
+}
+.note_comment ul li .sms .n{
+	font-size:12px;
+	color:#ff6699;
+}
+.note_comment ul li .sms a:hover{
+	text-decoration:underline;
+}
+.note_comment ul li .sms span{
+	font-size:12px;
+	color:#b3b3b3;
+}
+.note_comment .reply{
+	bottom: 10px;
+    line-height: 120%;
+    position: absolute;
+    right: 10px;
+    text-align: right;
+	visibility:hidden;
+
+}
+.note_comment .reply a{
+	color: #87BD34;
+    margin-left: 10px;
+    text-decoration: underline;
+}
+.note_comment ul li.hover{
+	background:#F8F8F8;
+}
+.note_comment ul li.hover .reply{
+	visibility:visible;
+}
+
+.page_number{
+	width:100%;
+	height:auto;
+	padding:30px 0;
+	
+}
+.page_number .pageNav{
+	text-align:center;
+	padding:30px 0 20px 0;
+	border-top:1px dotted #e581b6;
+}
+.pageNav a{
+	background:#FFE1EA;
+	border:1px solid #FCC8D9;
+	color:#ff6699;
+	display:inline-block;
+	font-size:14px;
+	font-weight:bold;
+	min-width:12px;
+	height:22px;
+	line-height:22px;
+	padding:0 4px;
+	margin:0 1px;
+	text-align:center;
+	white-space:nowrap;
+}
+.pageNav .pagePrev, .pageNav .pageNext{
+	width:50px;
+	height:22px;
+	font-size:14px;
+	font-weight:normal;
+}
+.pageNav .currentpage{
+	background:#ffffff;
+	border-color:#dddddd;
+	color:#000000;
+}
+.red{
+	color:#ff6699;
+}
+.grey_d{
+	color:#cccccc;
+}
+.grey_q{
+	color:#999999;
+}
+.p14{
+	font-size:14px;
+}
+.p16{
+	font-size:16px;
+}
+.reply_ok{
+	width:140px;
+	height:40px;
+	text-align:center;
+	font-size:14px;
+	color:#ff6699;
+	background:#fdebef;
+	border:1px solid #ff9cbf;
+	line-height:40px;
+	position:absolute;
+	left:150px;
+	top:10px;
+	float:left;
+	z-index:9999;
+}
+.p14h100{
+	font-size:14px;
+	color:#666666;
+	line-height:100px;
+}

@@ -1,0 +1,11 @@
+name: 贵商网
+mail: topiec100@gmail.com
+slogan: 贵州人的贵客生活
+page:
+  403: ''
+  404: ''
+  front: front
+admin_compact_mode: false
+weight_select_max: 100
+langcode: zh-hans
+mail_notification: ''

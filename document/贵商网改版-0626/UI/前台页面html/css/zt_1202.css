@@ -1,0 +1,306 @@
+
+/*---------------------------------------------------------------------
+ |-Version------ V1.0
+ |-Description-- gsw100
+ |-Author------- zhangjy
+ |-E-mail------- zhangjy@72ec.com
+ |-CopyRight---- Powered by gsw100 Inc. All rights reserved.
+ |-Modifies----- 2013-12-5
+ ----------------------------------------------------------------------*/
+body{
+	background: #d2edca;
+} 
+
+#content{
+	width:100%;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+	background:url(../images/background.jpg) no-repeat center 0 #d2edca;
+
+}
+
+#con_top,#floor{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+}
+.t_col{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+}
+.dh{
+	width:247px;
+	height:399px;
+	background:url(../images/top02.jpg) no-repeat;
+	float:left;
+}
+.dh ul{
+	margin-top:157px;
+	margin-left:88px;
+}
+.dh ul li{
+	width:90px;
+	height:30px;
+	
+}
+.dh ul li a{
+	color:#b4c2b2;
+	font-size:14px;
+	line-height:30px;
+	font-weight:bold;
+}
+.dh ul li a:hover{
+	color:#ffffff;
+}
+
+.con_fl{
+	width:980px;
+	height:auto;
+	overflow:hidden;
+	margin:0 auto;
+	background:#ffffff;
+}
+.con_fl h2{
+	width:980px;
+	height:0;
+	padding-top:49px;
+	overflow:hidden;
+	margin-bottom:5px;
+}
+.con_fl .con_left{
+	width:750px;
+	height:auto;
+	overflow:hidden;
+	float:left;
+}
+
+.con_fl .con_left ul{
+	padding:3px;
+}
+.con_fl .con_left ul li{
+	width:232px;
+	height:auto;
+	padding:7px 8px;
+	overflow:hidden;
+	float:left;
+}
+.con_fl .con_left ul li .p_img{
+	width:232px;
+	height:auto;
+	overflow:hidden;
+}
+.con_fl .con_left ul li .p_text{
+	width:226px;
+	height:54px;
+	padding:3px;
+	overflow:hidden;
+}
+.con_fl .con_left ul li .p_text span{
+	font-size:14px;
+	color:#ff8aaf;
+	font-weight:bold;
+	line-height:27px;
+	padding-right:5px;
+}
+.con_fl .con_left ul li .p_text a{
+	font-size:14px;
+	color:#666666;
+	line-height:27px;
+}
+.con_fl .con_left ul li .p_text a:hover{
+	color:#ff9900;
+}
+.con_fl .con_left ul li .p_an{
+	width:232px;
+	height:33px;
+	background:#ff9900;
+}
+.con_fl .con_left ul li .p_an span{
+	float:left;
+	padding-left:15px;
+	color:#ffffff;
+	font-size:14px;
+}
+.con_fl .con_left ul li .p_an span i{
+	font-size:20px;
+	font-weight:bold;
+	line-height:33px;
+}
+.con_fl .con_left ul li .p_an a{
+	float:right;
+}
+
+.con_fl .con_right{
+	width:230px;
+	height:auto;
+	overflow:hidden;
+	float:left;
+}
+.con_fl .con_right h3{
+	width:220px;
+	height:30px;
+	color:#ffffff;
+	font-size:14px;
+	font-weight:bold;
+	line-height:30px;
+	text-align:center;
+}
+.con_fl .con_right .sicon{
+	width:220px;
+	height:4px;
+}
+.con_fl .con_right ul{
+	margin-left:4px;
+	border-left:1px solid #dddddd;
+	width:215px;
+	height:auto;
+	overflow:hidden;
+}
+.con_fl .con_right ul li{
+	padding:15px 8px;
+	width:199px;
+	height:auto;
+	overflow:hidden;
+}
+.con_fl .con_right ul li .num{
+	width:14px;
+	height:14px;
+	line-height:14px;
+	background:#ff8800;
+	color:#ffffff;
+	text-align:center;
+	font-size:12px;
+	margin-right:8px;
+	float:left;
+}
+.con_fl .con_right ul li .img{
+	float:left;
+	width:60px;
+	height:60px;
+	border:1px solid #efefef;
+	margin-right:8px;
+}
+.con_fl .con_right ul li .img img{
+	width:60px;
+	height:60px;
+	overflow:hidden;
+}
+.con_fl .con_right ul li .text{
+	float:left;
+	font-size:12px;
+	font-weight:bold;
+	width:106px;
+	height:auto;
+	overflow:hidden;
+}
+.con_fl .con_right ul li .text a{
+	font-size:12px;
+	font-weight:bold;
+	color:#666666;
+	line-height:22px;
+	height:44px;
+	overflow:hidden;
+	display:block;
+}
+.con_fl .con_right ul li .text a:hover{
+	color:#ff9900;
+}
+.con_fl .con_right ul li .text span{
+	color:#ff9900;
+	font-weight:bold;
+}
+
+
+.fl01 h2{
+	background:url(../images/bt01.png) no-repeat;
+	margin-top:5px;
+}
+.fl01 h3{
+	background:#ff9900;
+}
+.fl01 .con_right .sicon{
+	background:url(../images/bts_1.png) no-repeat;
+}
+
+.fl02 h2{
+	background:url(../images/bt02.png) no-repeat;
+}
+.fl02 h3{
+	background:#9dce5b;
+}
+.fl02 .con_right .sicon{
+	background:url(../images/bts_2.png) no-repeat;
+}
+
+.fl03 h2{
+	background:url(../images/bt03.png) no-repeat;
+}
+.fl03 h3{
+	background:#80cef2;
+}
+.fl03 .con_right .sicon{
+	background:url(../images/bts_3.png) no-repeat;
+}
+
+.fl04 h2{
+	background:url(../images/bt04.png) no-repeat;
+}
+.fl04 h3{
+	background:#fca37c;
+}
+.fl04 .con_right .sicon{
+	background:url(../images/bts_4.png) no-repeat;
+}
+
+.fl05 h2{
+	background:url(../images/bt05.png) no-repeat;
+}
+.fl05 h3{
+	background:#ff7a94;
+}
+.fl05 .con_right .sicon{
+	background:url(../images/bts_5.png) no-repeat;
+}
+	
+
+#floor{
+	background:#ffffff;
+	padding-top:40px;
+	margin-bottom:40px;
+}
+.green{
+	width:908px;
+	height:109px;
+	padding:10px 36px;
+	background:url(../images/floor.png) no-repeat;
+}
+.green ul.download{
+	width:113px;
+	height:69px;
+	padding-left:98px;
+	padding-top:40px;
+	float:left;
+	margin-right:25px;
+}
+.green ul.download li a{
+	font-size:14px;
+	color:#999999;
+	line-height:30px;
+	font-weight:bold;
+}
+.green ul.download li a:hover{
+	color:#ff9900;
+}
+.green .xfz{
+	background:url(../images/download_1.png);
+}
+.green .sh{
+	background:url(../images/download_2.png);
+}
+.green .wb{
+	float:right;
+	margin-top:30px;
+}
